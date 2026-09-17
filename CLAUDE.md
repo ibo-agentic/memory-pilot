@@ -542,3 +542,150 @@ is exactly 0.15 by construction. Averaged over 30 seeds x 20,000 episodes,
 IPS and SNIPS both land within 0.01 of 0.15; Memory Worth (which estimates
 a different, confounded quantity — P(success|included), not a contrast) is
 asserted to be off by more than 0.1.
+
+## Part B (2026-09-17): Stage 2 infrastructure built, NO real API calls made
+
+Full design, code, and a 17-test mock-only suite live in `alfworld_pilot/`
+(its own README there has the details). Summary here for future sessions.
+
+### ALFWorld install: deferred, real blocker (not invented, not worked around)
+
+Attempted the official `pip install alfworld` directly in an isolated
+Python 3.11 venv (`alfworld_pilot/.venv/`, separate from this package's 3.14
+venv — ALFWorld's dependency chain is much older/riskier). It fails
+building `jericho` (a TextWorld dependency needing a native C build): no
+cmake/MSVC on this Windows machine, and even with one, `textworld`'s
+install runs a Linux-only `setup.sh` that fetches a Linux Inform7 binary.
+Neither Docker nor a WSL Linux distro was installed. **Decision (with the
+user): defer real ALFWorld, build everything else against a mock env that
+implements ALFWorld's exact real API** (confirmed from the official repo +
+the original ReAct paper's `alfworld.ipynb`) so swapping in real ALFWorld
+later (via WSL2 or Docker, user's choice when ready) needs no code changes
+— only a config switch. `env_interface.RealAlfredEnv` is written, gated
+behind a clear `ImportError` until alfworld is actually installed.
+
+### Design
+
+- **Randomized retrieval**: reused verbatim, not reimplemented —
+  `alfworld_pilot/retrieval_shared.py` adds the root package's `src/` to
+  `sys.path` (cross-venv, since the two packages use separate Pythons) and
+  imports `memory_ope.retrieval.retrieve` directly.
+- **Memories**: 30 short "lessons" (100-300 tokens, one per real ALFWorld
+  task type, tagged and repeated), not full trajectories, per spec. Mock
+  similarity is topic-aware (same task type -> higher base similarity +
+  noise) as a stand-in for a real embedding model — swapping in real
+  embeddings later doesn't require changing retrieval.py or episode_runner.py,
+  only `memory_store.similarity_scores`.
+- **Settings**: 30 memories, propensity range [0.3, 0.7], M=10 — per
+  `signal_boost_check.py`'s recommendation (the only grid cell where a
+  propensity-corrected estimator's interval excluded zero), as instructed.
+- **Episode cap**: 30 steps (below ALFWorld's usual 50-step research
+  norm, deliberately, to control cost) — one LLM call per step (Thought +
+  Action together in a single completion, not two separate calls, so the
+  Stage 2 budget estimate's "~1 call/step" assumption stays accurate).
+- **LLM client**: `OpenRouterClient` (OpenAI-compatible, `openai` SDK) —
+  refuses to construct with `model_id=None` or any id containing "latest";
+  sends `reasoning: {enabled: false}` (OpenRouter's documented unified
+  reasoning control; some models reject this with a mandatory-reasoning
+  400 error — surfaced, not swallowed, so Part C can see which models do
+  that); temperature=0 + an optional `seed` param when supported.
+- **Caching**: every request payload (model+messages+params) hashed to a
+  cache key; cache hits never touch the cost tracker.
+- **Cost control**: `CostTracker.check_before_call` runs BEFORE every real
+  call using a pre-call token estimate (chars/4), raising `CostCapExceeded`
+  before spending rather than after; `hard_cap_usd` starts at $10 in config.
+- **Determinism**: `determinism_check.check_determinism` makes two real
+  duplicate calls (bypassing cache, `complete_no_cache`) and compares text
+  — verifies temperature=0(+seed) actually holds rather than assuming it.
+  Every ground-truth session should run this probe before trusting its
+  results.
+- **Ground truth (paired, per Part A.3)**: `ground_truth_runner.py` forces
+  a memory in/out while holding task instance AND every other memory's
+  random draws identical between arms (same derived seed for both), and —
+  a bug this session's mock testing actually caught — only searches task
+  instances where the target memory is a NATURAL candidate under that
+  *same* seed (the candidacy probe must use the identical seed the real
+  run will use, or it predicts nothing real; originally it used an
+  unrelated seed and silently produced ground-truth pairs missing their
+  own target memory from `candidate_ids`). `paired_correlation()` computes
+  rho from real results; `power_analysis.redo_with_measured_rho()` reruns
+  Part A.3's sample-size formula with it once real pairs exist (Part C).
+- **Task-type logging**: every episode logs `task_type` (one of
+  ALFWorld's 6 official types, extracted from `info['extra.gamefile']`'s
+  path in the real backend, from the mock template directly in the mock
+  backend) — enables checking whether task-type difficulty reproduces the
+  task_difficulty simulator's confound in real data.
+
+### Bugs the mock testing caught before any real spend (the whole point of testing mock-first)
+
+1. `MockTaskTemplate.steps_to_win` was hand-specified and didn't match
+   `winning_action`'s actual position in `admissible_actions` for 5 of 6
+   templates — no mock episode could ever win (100% silent failure, hidden
+   step-cap timeouts). Fixed by deriving it (`admissible_actions.index(...)
+   + 1`) instead of hand-entering it, plus a `__post_init__` assertion so
+   this class of bug fails loudly if it ever regresses.
+2. The `pick_two_obj_and_place` template's `admissible_actions` list was
+   literally missing its own `winning_action` string (a copy-paste typo) —
+   same silent-failure symptom, caught by the same fix's assertion.
+3. `ground_truth_runner`'s natural-candidacy probe used a different random
+   seed (`task_seed` alone) than the actual paired run (`hash((memory_id,
+   pair_index, task_seed))`) — the probe was checking a candidacy draw
+   that had nothing to do with what the real run would draw. Also switched
+   away from Python's built-in `hash()` for the seed material, since
+   string hashing is randomized per-process by default and would silently
+   break reproducibility across runs. Fixed with one shared
+   `_pair_seed_material()` (stable `hashlib.md5`-based) used by both the
+   probe and the real run.
+4. An early test asserting "random actions shouldn't reliably win" failed
+   — not a pipeline bug, but a revealing one: at the realistic 30-step cap
+   with short (4-6 step) mock templates, blind random search has enough
+   retries to often stumble onto the right sequence by chance. Fixed the
+   *test*, not the pipeline (used a zero-slack step cap to actually
+   distinguish "follows the plan" from "guesses"), and noted this as a
+   real fact about the mock's difficulty at the realistic cap.
+
+### Mock test results
+
+17/17 tests pass (`alfworld_pilot/tests/`, run via its own Python 3.11
+venv): scripted-success LLM wins every mock episode; random LLM fails
+reliably only under a tight step budget (see bug 4 above); malformed-output
+LLM exercises the parse-failure fallback without crashing; episode log
+schema matches Stage 1's core fields (`candidate_ids`, `propensities`,
+`included`, `success`) plus `task_type`; paired ground truth holds every
+other memory's inclusion and full candidate set identical between forced-
+in/forced-out arms; ground-truth experiment only selects task instances
+where the target memory is a genuine candidate; cache/cost-tracker/
+determinism-check unit tests pass; `OpenRouterClient` correctly refuses
+`model_id=None` and any "latest"-aliased id without a network call.
+
+### Token estimates (mock; real numbers come from measure_mode with a real client)
+
+`measure_mode.py` over 5 mock episodes (23 calls, 100% success):
+avg 602.9 input tokens/call, 14.7 output tokens/call, 4.6 calls/episode.
+Projected for the now-larger full plan (50 store-construction + 1000 main
+logging + 2000 ground-truth reruns [10 memories x 100 pairs x 2 arms, up
+from the original 480 — see Part A.3's revised recommendation] = 3050
+episodes): ~14,030 calls, ~8.46M input tokens, ~0.21M output tokens. These
+are word counts, not a real tokenizer, and the mock's 4.6 calls/episode is
+far below the ~31 calls/episode assumed in the original budget estimate
+(mock templates are much shorter than real ALFWorld tasks) — **treat this
+as a pipeline smoke test, not a cost projection; rerun measure_mode with a
+real client once Part C picks a model** for real numbers.
+
+`token_breakdown.py`'s per-call decomposition (word counts): system prompt
+~49 tokens (fixed), retrieved memories ~340 tokens (2 memories included in
+this example, 100-300 tokens each), admissible actions list ~26 tokens
+(fixed per template), step history growing ~10 tokens/step in this
+synthetic example (real ALFWorld observations are more verbose, so expect
+faster real growth) — total prompt ~450-520 tokens across the first 6
+steps in this example. This decomposition, not just a single "~2000
+tokens" guess, is what should be re-measured once real ALFWorld episodes
+are running.
+
+### What's still needed before Part C
+
+1. Exact pinned model ids + current OpenRouter prices for the 3 candidate
+   models (GPT-5.6 Luna, Ling 3.0 Flash VL, Gemini 3.8 Flash) — not yet
+   checked, per the plan ("only after I say go").
+2. `config.yaml`'s `llm.model_id` set to one of them.
+3. A real determinism-check run before trusting any real ground-truth pair.

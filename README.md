@@ -70,23 +70,27 @@ python -m memory_ope.evaluation.ground_truth_selection_bias_check  # demonstrate
 Each writes its own `results/*.json` (and a `.png` where relevant). See
 `CLAUDE.md`'s "Design review" section for what the last run of each found.
 
-## Stage 2 — ALFWorld pilot (not yet implemented)
+## Stage 2 — ALFWorld pilot (infrastructure built, no real API calls made yet)
 
-Gated on approval of the Stage 1 results above. When it starts:
-install ALFWorld from the **official repo** — https://github.com/alfworld/alfworld
-— following its own instructions (Python ≥3.9 venv, `pip install -e .`,
-`alfworld-download` for game/data files). Do not follow install steps from
-anywhere else.
+Full design + a mock-only test suite live in `alfworld_pilot/` — see its
+own README for the details, including why real ALFWorld itself is
+deferred (a genuine Windows install blocker: ALFWorld's TextWorld
+dependency needs a Linux-oriented native build; decided with the user to
+build everything else against a mock env matching ALFWorld's real API
+exactly, so swapping in real ALFWorld later needs no code changes).
 
-Planned shape (see `alfworld_pilot/README.md`):
-- A ReAct-style agent over a ~50-trajectory memory store, using the same
-  randomized top-M / known-propensity retrieval as Stage 1.
-- Forced-in/forced-out ground truth for 10 chosen memories, several seeds
-  each.
-- All LLM calls cached under `cache/` (never re-billed on rerun) and gated
-  by a cost-limit + dry-run mode in `config/config.yaml`'s `stage2` section
-  that estimates call counts before spending anything.
-- API keys via `.env` (copy `.env.example`), never in code.
+```bash
+cd alfworld_pilot
+set PYTHONPATH=src
+.venv\Scripts\python.exe -m pytest tests/ -v                 # 17 tests, mock-only, zero cost
+.venv\Scripts\python.exe -m alfworld_pilot.measure_mode       # mock cost-projection smoke test
+.venv\Scripts\python.exe -m alfworld_pilot.token_breakdown    # per-section prompt token breakdown
+```
+
+Real spend requires: `config.yaml`'s `llm.model_id` set to an exact pinned
+OpenRouter id (never "latest"), `OPENROUTER_API_KEY` in the repo-root
+`.env`, and stays under `cost_control.hard_cap_usd` (checked before every
+call, not after).
 
 ## Project layout
 
@@ -98,7 +102,7 @@ src/memory_ope/
   simulator/                 Stage 1 synthetic DGPs + Monte Carlo oracle
   estimators/                memory_worth, ips/snips, doubly_robust
   evaluation/                metrics + report/plot generation
-alfworld_pilot/              Stage 2 skeleton (not implemented)
+alfworld_pilot/              Stage 2: built, mock-tested, no real API calls yet (own venv, own README)
 tests/
 logs/, cache/, results/      gitignored except results/*.json
 ```

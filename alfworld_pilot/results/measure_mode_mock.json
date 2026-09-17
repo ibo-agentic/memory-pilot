@@ -1,0 +1,17 @@
+{
+  "n_episodes_measured": 5,
+  "n_calls_measured": 23,
+  "avg_input_tokens_per_call": 602.8695652173913,
+  "avg_output_tokens_per_call": 14.73913043478261,
+  "avg_calls_per_episode": 4.6,
+  "success_rate_measured": 1.0,
+  "episode_plan": {
+    "memory_store_construction": 50,
+    "main_randomized_logging": 1000,
+    "ground_truth_reruns": 2000
+  },
+  "total_plan_episodes": 3050,
+  "projected_total_calls": 14029.999999999998,
+  "projected_total_input_tokens": 8458259.999999998,
+  "projected_total_output_tokens": 206789.99999999997
+}

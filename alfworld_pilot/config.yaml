@@ -1,0 +1,62 @@
+# Stage 2 (ALFWorld pilot) config. See ../CLAUDE.md for the research context.
+
+env:
+  # ALFWorld itself is not yet installed (see README.md) -- "mock" is the
+  # only backend that actually runs right now. "real" will use
+  # env_interface.RealAlfredEnv once alfworld is installed via WSL2/Docker.
+  backend: mock   # mock | real
+  max_steps: 30   # deliberately below ALFWorld's usual 50-step research cap, to control cost
+  # config passed through to alfworld's own get_environment(...) when backend=real;
+  # unused by the mock backend.
+  real_alfworld_config_path: null
+
+memory_store:
+  n_memories: 30          # per signal_boost_check's recommendation (Part A follow-up)
+  lesson_min_tokens: 100  # memories are short "lessons", not full trajectories
+  lesson_max_tokens: 300
+
+retrieval:
+  M: 10                    # unchanged from Stage 1
+  propensity_min: 0.3      # per signal_boost_check's recommendation (was 0.1 in Stage 1 default)
+  propensity_max: 0.7      # per signal_boost_check's recommendation (was 0.9 in Stage 1 default)
+
+llm:
+  # OpenAI-compatible client pointed at OpenRouter. Model id is an EXACT
+  # pinned string, never a "latest" alias -- set this after Part C's model
+  # selection test confirms real ids/prices. Left null so nothing can
+  # accidentally call an API with an unintended default.
+  model_id: null
+  base_url: "https://openrouter.ai/api/v1"
+  api_key_env_var: OPENROUTER_API_KEY
+  reasoning_enabled: false   # sent as {"reasoning": {"enabled": false}}; some models reject this (mandatory reasoning) -- see llm_client.py
+  temperature: 0.0           # 0 for determinism; ground-truth paired runs also try a fixed `seed` param when the provider supports it
+  max_output_tokens: 100     # a ReAct Thought+Action is short
+
+cost_control:
+  hard_cap_usd: 10.0   # run stops itself once cumulative spend reaches this
+  # measure_mode runs a small number of real episodes, records actual
+  # input/output tokens per call, and projects total cost for the full
+  # plan (see ../results/stage2_budget_estimate.json for that plan).
+  measure_mode_n_episodes: 5
+
+cache:
+  dir: cache   # relative to this directory; every LLM call is cached here, keyed by a hash of (model, messages, params)
+
+paths:
+  logs_dir: logs
+  results_dir: results
+
+ground_truth:
+  n_memories: 10
+  pairs_per_memory: 100
+  # Selection uses a HELD-OUT split of the main logging phase (first half
+  # for selection, second half for the estimates that get compared against
+  # ground truth) -- see ground_truth_selection_bias_check.py in the main
+  # Stage 1 package for why.
+
+# Mirrors ../results/stage2_budget_estimate.json's plan, kept here too so
+# measure_mode's cost projection is self-contained within this package.
+episode_plan:
+  memory_store_construction: 50
+  main_randomized_logging: 1000
+  ground_truth_reruns: 2000   # 10 memories x 100 pairs x 2 arms

@@ -1,0 +1,50 @@
+{
+  "note": "word counts (proxy for tokens), not a real tokenizer -- consistent with measure_mode's mock numbers",
+  "n_memories_in_store": 30,
+  "lesson_token_range_config": [
+    100,
+    300
+  ],
+  "steps": {
+    "step_0": {
+      "system_prompt_tokens": 49,
+      "memories_tokens": 340,
+      "n_memories_included": 3,
+      "history_tokens": 0,
+      "n_history_steps": 0,
+      "admissible_actions_tokens": 26,
+      "sum_of_sections": 415,
+      "actual_prompt_tokens": 452
+    },
+    "step_2": {
+      "system_prompt_tokens": 49,
+      "memories_tokens": 340,
+      "n_memories_included": 3,
+      "history_tokens": 20,
+      "n_history_steps": 2,
+      "admissible_actions_tokens": 26,
+      "sum_of_sections": 435,
+      "actual_prompt_tokens": 472
+    },
+    "step_4": {
+      "system_prompt_tokens": 49,
+      "memories_tokens": 340,
+      "n_memories_included": 3,
+      "history_tokens": 40,
+      "n_history_steps": 4,
+      "admissible_actions_tokens": 26,
+      "sum_of_sections": 455,
+      "actual_prompt_tokens": 494
+    },
+    "step_6": {
+      "system_prompt_tokens": 49,
+      "memories_tokens": 340,
+      "n_memories_included": 3,
+      "history_tokens": 60,
+      "n_history_steps": 6,
+      "admissible_actions_tokens": 26,
+      "sum_of_sections": 475,
+      "actual_prompt_tokens": 516
+    }
+  }
+}
