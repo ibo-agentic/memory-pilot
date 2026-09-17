@@ -63,6 +63,8 @@ python -m memory_ope.evaluation.small_data_results        # n=250..2000, spearma
 python -m memory_ope.evaluation.stage2_budget_estimate     # ALFWorld LLM-call/cost estimate (no API calls)
 python -m memory_ope.evaluation.stage2_scale_check         # task_difficulty at Stage-2 scale (50 memories, n=1000)
 python -m memory_ope.evaluation.ground_truth_power_analysis  # paired forced-in/forced-out rerun sample sizes
+python -m memory_ope.evaluation.signal_boost_check              # n_memories x propensity range grid at Stage-2 scale
+python -m memory_ope.evaluation.ground_truth_selection_bias_check  # demonstrates why selection uses a held-out split
 ```
 
 Each writes its own `results/*.json` (and a `.png` where relevant). See

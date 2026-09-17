@@ -460,6 +460,79 @@ those are exactly the cases this pilot's hypothesis lives or dies on, so
 ground truth should resolve them, not the memories every estimator already
 agrees on.
 
+## Pre-Part-B checks (2026-09-17, same day, before scoping ALFWorld build)
+
+### Check 1: do A.2's intervals exclude zero?
+
+Read directly from `results/stage2_scale_check.json`: **memory_worth's
+95% interval excludes zero (-0.527, -0.307, reliably negative); none of
+IPS/SNIPS/DR's do** (ips: [-0.104, 0.395]; snips: [-0.022, 0.447];
+doubly_robust: [-0.025, 0.434]). Important caveat for Stage 2: a real
+pilot only gets ONE seed's worth of data, not 20 to average over — at this
+scale, a single real run could plausibly show a near-zero or even
+slightly negative Spearman for IPS/SNIPS/DR purely by chance, even though
+the underlying mean is positive. This motivated check 2.
+
+### Check 2: signal-boost grid (`signal_boost_check.py` -> `results/signal_boost_check.json`)
+
+n_episodes=1000, 20 seeds, grid over n_memories in {30, 50} x propensity
+range in {[0.1,0.9] default, [0.3,0.7] closer to uniform}, plus a coarser
+precision@top5/bottom5 metric (of the estimator's top/bottom 5 ranked
+memories, what fraction are in the causal oracle's true top/bottom 5):
+
+| n_memories | propensity | memory_worth spearman | doubly_robust spearman | dr prec@top5 | dr prec@bottom5 |
+|---|---|---|---|---|---|
+| 30 | [0.1,0.9] | -0.311 [-0.456,-0.194] | 0.226 [-0.078,0.513] | 0.23 | 0.24 |
+| **30** | **[0.3,0.7]** | -0.323 [-0.481,-0.224] | **0.321 [0.148,0.566]** | 0.26 | 0.25 |
+| 50 | [0.1,0.9] | -0.399 [-0.527,-0.307] | 0.214 [-0.025,0.434] | 0.19 | 0.16 |
+| 50 | [0.3,0.7] | -0.404 [-0.551,-0.284] | 0.285 [-0.041,0.572] | 0.18 | 0.15 |
+
+**Recommendation: 30 memories, propensity range [0.3, 0.7].** This is the
+only cell where a propensity-corrected estimator's 95% interval excludes
+zero (doubly_robust: 0.148-0.566) — i.e. the only setting where a single
+real run would reliably show a positive correlation, not just the 20-seed
+mean. Fewer memories helps (less multiple-comparison noise per candidate
+episode); propensity closer to 0.5 helps (better effective sample size,
+consistent with the earlier randomness_sweep finding). **Used this
+setting (30 memories, propensity [0.3,0.7]) for Part B.**
+
+Aside worth noting: Memory Worth's precision@bottom5 is exactly 0.00 in
+*every* cell — it never identifies even one of the true worst memories.
+Mechanistic reason: on easy tasks (78% base success, generalist-only
+candidates), even a genuinely low-value generalist tends to co-occur with
+success just from the high base rate, so MW's absolute level is dominated
+by the easy/hard base-rate mixture a memory happens to land in, not its
+own (much smaller) causal contribution — the signal that would let MW
+find the worst memories is swamped by that base-rate noise.
+
+### Check 3: ground-truth selection bias (`ground_truth_selection_bias_check.py`)
+
+**Design chosen: fixed split by episode index** — first half of a log
+(set A) used only to *select* which memories go into the expensive
+ground-truth rerun set; second half (set B) used only to compute the
+"official" estimates that get compared against that ground truth. Decided
+in advance, not tuned after looking at results. (Considered a fixed a
+priori rule with no data at all — e.g. "always ground-truth the 10 highest
+and lowest MW-scored memories" — but that can't adapt to where MW and
+IPS/DR actually disagree, which is the whole point of the pilot; the
+split preserves adaptivity while removing the same-data selection bias.)
+
+Demonstrated the effect empirically: selected the top-5 memories by
+MW-vs-doubly_robust **rank** disagreement (percentile rank within each
+estimator's own distribution — a raw value difference is meaningless here
+since MW lives on a ~0.5 scale and DR on a ~0.03-0.06 scale) using set A,
+then re-measured that disagreement on A again (in-sample) vs. B
+(out-of-sample):
+
+- in-sample (same data used to select): mean rank disagreement = 0.672
+- out-of-sample (independent data): mean rank disagreement = 0.360
+- **inflation ratio: 1.87x**
+
+Confirms the concern directly: picking "biggest disagreement" memories
+from a log and then re-citing that same log's disagreement as evidence
+overstates it by ~87% here. The split design is necessary, not just
+defensive.
+
 ### 7. IPS unbiasedness test
 
 `tests/test_ips_unbiased.py` — a hand-built two-context confounded DGP
