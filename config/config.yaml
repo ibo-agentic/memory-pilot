@@ -1,0 +1,52 @@
+seed_count: 20
+
+retrieval:
+  M: 10
+  propensity_min: 0.1
+  propensity_max: 0.9
+  # p_i is scaled linearly from propensity_min to propensity_max by similarity rank
+  # within the top-M candidates (highest similarity -> propensity_max).
+
+simulators:
+  task_difficulty:
+    n_generalists: 70
+    n_specialists: 30
+    specialist_utility: 0.85
+    easy_task_base_success: 0.78
+    hard_task_base_success: 0.28
+    p_hard: 0.5              # fraction of episodes that are hard tasks
+    beta: 0.4                # logistic-link scale of each included memory's utility deviation from 0.5
+    n_episodes: 10000
+    oracle_episodes: 200000   # Monte Carlo contexts per forced arm for the true-value oracle
+    oracle_seed: 20260917
+    utility_seed: 2026        # fixed seed for drawing generalist utilities (independent of episode seed)
+
+  hitchhiker:
+    anchor_utility: 0.90
+    hitchhiker_utility: 0.05
+    n_filler_memories: 30
+    base_success: 0.5
+    beta: 0.4
+    independent_retrieval_fraction: 0.3
+    # Swept over this grid in the evaluation report to show the recoverability threshold.
+    independent_retrieval_fraction_sweep: [0.0, 0.1, 0.2, 0.3, 0.5]
+    n_episodes: 10000
+    oracle_episodes: 200000
+    oracle_seed: 20260917
+    utility_seed: 2026
+
+estimators:
+  dr_outcome_model: logistic_regression
+  dr_l2_C: 1.0
+
+paths:
+  logs_dir: logs
+  cache_dir: cache
+  results_dir: results
+
+stage2:   # placeholders only; unused until Stage 2 (ALFWorld) is scoped and approved
+  cost_limit_usd: 5.0
+  dry_run: true
+  model: null
+  n_memories: 50
+  n_ground_truth_memories: 10

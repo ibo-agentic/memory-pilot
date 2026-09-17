@@ -1,0 +1,125 @@
+{
+  "explanation": "\n\"Independent\" is being used for two unrelated things in this project, and\ncheck #4 is about the one that hasn't been swept yet:\n\n1. INCLUSION independence (retrieval.py / _common.draw_inclusion): given a\n   candidate's propensity p_i, its inclusion Z_i ~ Bernoulli(p_i) is drawn\n   independently of every other candidate's draw, for every episode. This is\n   fixed by design and is NOT what this sweep varies -- it's already true\n   regardless of how spread out p_i is.\n\n2. CANDIDACY correlation (hitchhiker.py's independent_retrieval_fraction):\n   controls how often the hitchhiker's *similarity score* (hence whether it\n   ends up in the top-M at all) is drawn independently of the anchor's,\n   versus jittered to track it. This affects whether two memories tend to be\n   CANDIDATES together, not whether their inclusion draws are independent\n   given candidacy (which they always are, per #1).\n\nThis sweep is about a third, separate axis: how far propensity_min/max sit\nfrom 0.5. Propensities near 0.5 mean retrieval is close to a fair coin flip\n(most exploratory, best-behaved importance weights). Propensities near 0/1\nmean retrieval is close to deterministic top-M (closer to plain top-k),\nwhich is more realistic/less exploratory but gives IPS-style estimators much\nhigher-variance importance weights (1/p or 1/(1-p) blows up) and lower\neffective sample size.\n",
+  "rows": [
+    {
+      "propensity_min": 0.45,
+      "propensity_max": 0.55,
+      "spearman": {
+        "memory_worth": {
+          "mean": -0.2953007932040409,
+          "std": 0.020835206175267303
+        },
+        "ips": {
+          "mean": 0.3983000300030003,
+          "std": 0.09378016176868689
+        },
+        "snips": {
+          "mean": 0.526927092709271,
+          "std": 0.07135387662676902
+        },
+        "doubly_robust": {
+          "mean": 0.5577923792379238,
+          "std": 0.07268001467613237
+        }
+      },
+      "mean_ess_pos_ratio": 0.9959249763335258,
+      "mean_ess_neg_ratio": 0.9959226497055103
+    },
+    {
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "spearman": {
+        "memory_worth": {
+          "mean": -0.29679337887634205,
+          "std": 0.022201322145302623
+        },
+        "ips": {
+          "mean": 0.36760276027602756,
+          "std": 0.09765265068331064
+        },
+        "snips": {
+          "mean": 0.5020300030002999,
+          "std": 0.10087284383981428
+        },
+        "doubly_robust": {
+          "mean": 0.5264980498049805,
+          "std": 0.09297709415764831
+        }
+      },
+      "mean_ess_pos_ratio": 0.9315378973503774,
+      "mean_ess_neg_ratio": 0.9314012148289397
+    },
+    {
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "spearman": {
+        "memory_worth": {
+          "mean": -0.29230832082665736,
+          "std": 0.022319821233104154
+        },
+        "ips": {
+          "mean": 0.3009744974497449,
+          "std": 0.11342767397873621
+        },
+        "snips": {
+          "mean": 0.423071107110711,
+          "std": 0.09935223671986243
+        },
+        "doubly_robust": {
+          "mean": 0.44966636663666354,
+          "std": 0.09417762833328008
+        }
+      },
+      "mean_ess_pos_ratio": 0.6517583366977947,
+      "mean_ess_neg_ratio": 0.6501625576806656
+    },
+    {
+      "propensity_min": 0.05,
+      "propensity_max": 0.95,
+      "spearman": {
+        "memory_worth": {
+          "mean": -0.29394937599321674,
+          "std": 0.021274330656293597
+        },
+        "ips": {
+          "mean": 0.2482346234623462,
+          "std": 0.1161155836625109
+        },
+        "snips": {
+          "mean": 0.3625070507050705,
+          "std": 0.08644843467292024
+        },
+        "doubly_robust": {
+          "mean": 0.3925586558655865,
+          "std": 0.08722741167673927
+        }
+      },
+      "mean_ess_pos_ratio": 0.48653136668933233,
+      "mean_ess_neg_ratio": 0.48599433476428544
+    },
+    {
+      "propensity_min": 0.02,
+      "propensity_max": 0.98,
+      "spearman": {
+        "memory_worth": {
+          "mean": -0.29233744091178476,
+          "std": 0.020732925228290705
+        },
+        "ips": {
+          "mean": 0.19316051605160514,
+          "std": 0.10731680662593304
+        },
+        "snips": {
+          "mean": 0.3077383738373837,
+          "std": 0.0942273156385908
+        },
+        "doubly_robust": {
+          "mean": 0.32383378337833785,
+          "std": 0.09906222799488112
+        }
+      },
+      "mean_ess_pos_ratio": 0.34034570580299384,
+      "mean_ess_neg_ratio": 0.3395658278463559
+    }
+  ]
+}

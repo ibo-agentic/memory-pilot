@@ -1,0 +1,16 @@
+{
+  "task_difficulty": {
+    "n_episodes": 200000,
+    "memory_worth_spearman": -0.177029702970297,
+    "ips_spearman": 0.8374557455745574,
+    "snips_spearman": 0.9145154515451546,
+    "doubly_robust_spearman": 0.9197719771977196
+  },
+  "hitchhiker": {
+    "n_episodes": 200000,
+    "memory_worth_spearman": 0.9871700879765395,
+    "ips_spearman": 0.9453812316715541,
+    "snips_spearman": 0.9816715542521994,
+    "doubly_robust_spearman": 0.9798387096774193
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "task_difficulty": {
+    "cross_fit": {
+      "spearman_mean": 0.44966636663666354,
+      "spearman_std": 0.09417762833328008,
+      "bias_mean": -0.0013034059321451969,
+      "variance_mean": 0.0014709492240468044
+    },
+    "no_cross_fit": {
+      "spearman_mean": 0.45134113411341137,
+      "spearman_std": 0.09196660641102501,
+      "bias_mean": -0.0012389039887336821,
+      "variance_mean": 0.00145147432580606
+    }
+  },
+  "hitchhiker": {
+    "cross_fit": {
+      "spearman_mean": 0.7499266862170086,
+      "spearman_std": 0.08164417216313677,
+      "bias_mean": 0.0006738520714481026,
+      "variance_mean": 0.0004714193100063791
+    },
+    "no_cross_fit": {
+      "spearman_mean": 0.7517045454545455,
+      "spearman_std": 0.08206775412659019,
+      "bias_mean": 0.0007172964289184835,
+      "variance_mean": 0.0004687699083004989
+    }
+  }
+}
