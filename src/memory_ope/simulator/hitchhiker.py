@@ -29,13 +29,19 @@ def _build_ids_and_utility(cfg: dict) -> tuple[list[str], np.ndarray]:
 
 
 def _simulate_batch(
-    cfg: dict, rng: np.random.Generator, n: int, independent_fraction: float
+    cfg: dict,
+    rng: np.random.Generator,
+    n: int,
+    independent_fraction: float,
+    propensity_min: float | None = None,
+    propensity_max: float | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[str], np.ndarray]:
     """Returns (candidate_mask, propensity, included, base_rate, ids, utility)."""
     sc = cfg["simulators"]["hitchhiker"]
     ids, utility = _build_ids_and_utility(cfg)
     n_filler = sc["n_filler_memories"]
-    n_memories = len(ids)
+    p_min = cfg["retrieval"]["propensity_min"] if propensity_min is None else propensity_min
+    p_max = cfg["retrieval"]["propensity_max"] if propensity_max is None else propensity_max
 
     filler_sims = rng.random((n, n_filler))
     anchor_sim = rng.random(n)
@@ -48,9 +54,7 @@ def _simulate_batch(
         [anchor_sim[:, None], hitchhiker_sim[:, None], filler_sims], axis=1
     )
 
-    candidate_mask, propensity = _common.top_m_candidate_info(
-        similarities, cfg["retrieval"]["M"], cfg["retrieval"]["propensity_min"], cfg["retrieval"]["propensity_max"]
-    )
+    candidate_mask, propensity = _common.top_m_candidate_info(similarities, cfg["retrieval"]["M"], p_min, p_max)
     included = _common.draw_inclusion(propensity, rng)
     base_rate = np.full(n, sc["base_success"])
     return candidate_mask, propensity, included, base_rate, ids, utility
@@ -62,13 +66,20 @@ def all_ids(cfg: dict) -> list[str]:
 
 
 def generate_episodes(
-    cfg: dict, seed: int, independent_fraction: float | None = None, n_episodes: int | None = None
+    cfg: dict,
+    seed: int,
+    independent_fraction: float | None = None,
+    n_episodes: int | None = None,
+    propensity_min: float | None = None,
+    propensity_max: float | None = None,
 ) -> list[dict]:
     sc = cfg["simulators"]["hitchhiker"]
     frac = sc["independent_retrieval_fraction"] if independent_fraction is None else independent_fraction
     n = sc["n_episodes"] if n_episodes is None else n_episodes
     rng = np.random.default_rng(seed)
-    candidate_mask, propensity, included, base_rate, ids, utility = _simulate_batch(cfg, rng, n, frac)
+    candidate_mask, propensity, included, base_rate, ids, utility = _simulate_batch(
+        cfg, rng, n, frac, propensity_min, propensity_max
+    )
     prob = _common.success_probability(base_rate, included, utility, sc["beta"])
     success = _common.sample_success(prob, rng)
 
@@ -90,25 +101,35 @@ def generate_episodes(
     return episodes
 
 
-def true_values(cfg: dict, independent_fraction: float | None = None) -> dict[str, float]:
+def true_values(
+    cfg: dict,
+    independent_fraction: float | None = None,
+    propensity_min: float | None = None,
+    propensity_max: float | None = None,
+) -> dict[str, float]:
     sc = cfg["simulators"]["hitchhiker"]
     frac = sc["independent_retrieval_fraction"] if independent_fraction is None else independent_fraction
     rng = np.random.default_rng(sc["oracle_seed"])
     candidate_mask, _propensity, included, base_rate, ids, utility = _simulate_batch(
-        cfg, rng, sc["oracle_episodes"], frac
+        cfg, rng, sc["oracle_episodes"], frac, propensity_min, propensity_max
     )
     values = _common.oracle_values(candidate_mask, included, base_rate, utility, sc["beta"])
     return {mem_id: float(v) for mem_id, v in zip(ids, values)}
 
 
-def naive_observational_values(cfg: dict, independent_fraction: float | None = None) -> dict[str, float]:
+def naive_observational_values(
+    cfg: dict,
+    independent_fraction: float | None = None,
+    propensity_min: float | None = None,
+    propensity_max: float | None = None,
+) -> dict[str, float]:
     """Naive population contrast: E[Y|Z_m=1] - E[Y|Z_m=0] among candidate
     contexts, using each context's factual (not forced) inclusion draw."""
     sc = cfg["simulators"]["hitchhiker"]
     frac = sc["independent_retrieval_fraction"] if independent_fraction is None else independent_fraction
     rng = np.random.default_rng(sc["oracle_seed"])
     candidate_mask, _propensity, included, base_rate, ids, utility = _simulate_batch(
-        cfg, rng, sc["oracle_episodes"], frac
+        cfg, rng, sc["oracle_episodes"], frac, propensity_min, propensity_max
     )
     values = _common.naive_observational_values(candidate_mask, included, base_rate, utility, sc["beta"])
     return {mem_id: float(v) for mem_id, v in zip(ids, values)}

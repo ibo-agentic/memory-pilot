@@ -1,0 +1,73 @@
+{
+  "assumptions": {
+    "max_steps_cap": 50,
+    "avg_steps_if_success": 12,
+    "avg_steps_if_failure": 50,
+    "assumed_success_rate": 0.5,
+    "avg_prompt_tokens_per_call_scenarios": {
+      "low": 1000,
+      "base": 2000,
+      "high": 4000
+    },
+    "avg_completion_tokens_per_call": 60
+  },
+  "episode_plan": {
+    "memory_store_construction": 50,
+    "main_randomized_logging": 1000,
+    "ground_truth_reruns": {
+      "n_memories": 10,
+      "n_arms": 2,
+      "n_base_tasks": 6,
+      "n_seeds_per_task": 4
+    }
+  },
+  "total_episodes": 1530,
+  "avg_llm_calls_per_episode": 31.0,
+  "total_llm_calls_estimate": 47430,
+  "pricing_per_million_tokens_usd": {
+    "deepseek-v4.1-flash": {
+      "input": 0.15,
+      "output": 0.6
+    },
+    "ling-3.0-flash-vl": {
+      "input": 0.06,
+      "output": 0.18
+    },
+    "mercury-2.5": {
+      "input": 0.04,
+      "output": 0.15
+    }
+  },
+  "cost_table": {
+    "low": {
+      "avg_prompt_tokens_per_call": 1000,
+      "total_input_tokens_millions": 47.43,
+      "total_output_tokens_millions": 2.85,
+      "cost_by_model_usd": {
+        "deepseek-v4.1-flash": 8.82,
+        "ling-3.0-flash-vl": 3.36,
+        "mercury-2.5": 2.32
+      }
+    },
+    "base": {
+      "avg_prompt_tokens_per_call": 2000,
+      "total_input_tokens_millions": 94.86,
+      "total_output_tokens_millions": 2.85,
+      "cost_by_model_usd": {
+        "deepseek-v4.1-flash": 15.94,
+        "ling-3.0-flash-vl": 6.2,
+        "mercury-2.5": 4.22
+      }
+    },
+    "high": {
+      "avg_prompt_tokens_per_call": 4000,
+      "total_input_tokens_millions": 189.72,
+      "total_output_tokens_millions": 2.85,
+      "cost_by_model_usd": {
+        "deepseek-v4.1-flash": 30.17,
+        "ling-3.0-flash-vl": 11.9,
+        "mercury-2.5": 8.02
+      }
+    }
+  }
+}

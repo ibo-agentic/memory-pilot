@@ -53,11 +53,16 @@ See `CLAUDE.md` for a summary of what the last run found.
 A deeper review pass beyond the main report — run any of these independently:
 
 ```bash
-python -m memory_ope.evaluation.true_value_check     # causal oracle vs naive observational vs U*
-python -m memory_ope.evaluation.large_n_sanity        # 200k-episode sanity check
-python -m memory_ope.evaluation.episode_sweep         # spearman vs n_episodes, both simulators
-python -m memory_ope.evaluation.randomness_sweep      # propensity extremity vs accuracy + ESS
-python -m memory_ope.evaluation.dr_cross_fit_check    # doubly robust with vs without cross-fitting
+python -m memory_ope.evaluation.true_value_check         # causal oracle vs naive observational vs U*
+python -m memory_ope.evaluation.large_n_sanity            # 200k-episode sanity check
+python -m memory_ope.evaluation.episode_sweep             # spearman vs n_episodes, both simulators
+python -m memory_ope.evaluation.randomness_sweep          # propensity extremity vs accuracy + ESS
+python -m memory_ope.evaluation.dr_cross_fit_check        # doubly robust with vs without cross-fitting
+python -m memory_ope.evaluation.randomization_ablation    # randomization alone vs the propensity correction
+python -m memory_ope.evaluation.small_data_results        # n=250..2000, spearman + MAE + bias, task_difficulty
+python -m memory_ope.evaluation.stage2_budget_estimate     # ALFWorld LLM-call/cost estimate (no API calls)
+python -m memory_ope.evaluation.stage2_scale_check         # task_difficulty at Stage-2 scale (50 memories, n=1000)
+python -m memory_ope.evaluation.ground_truth_power_analysis  # paired forced-in/forced-out rerun sample sizes
 ```
 
 Each writes its own `results/*.json` (and a `.png` where relevant). See

@@ -105,6 +105,20 @@ def true_values(
     return {mem_id: float(v) for mem_id, v in zip(ids, values)}
 
 
+def paired_design_stats(
+    cfg: dict, propensity_min: float | None = None, propensity_max: float | None = None
+) -> dict[str, dict[str, float]]:
+    """Per-memory paired forced-in/forced-out variance/covariance/rho stats
+    (see _common.paired_design_stats), keyed by memory id."""
+    sc = cfg["simulators"]["task_difficulty"]
+    rng = np.random.default_rng(sc["oracle_seed"])
+    candidate_mask, _propensity, included, base_rate, _task_type, ids, utility = _simulate_batch(
+        cfg, rng, sc["oracle_episodes"], propensity_min, propensity_max
+    )
+    stats = _common.paired_design_stats(candidate_mask, included, base_rate, utility, sc["beta"])
+    return {ids[idx]: v for idx, v in stats.items()}
+
+
 def naive_observational_values(
     cfg: dict, propensity_min: float | None = None, propensity_max: float | None = None
 ) -> dict[str, float]:

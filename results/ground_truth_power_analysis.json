@@ -1,0 +1,87 @@
+{
+  "empirical_rho_stats_from_task_difficulty_simulator": {
+    "rho_mean": 0.15360170223240582,
+    "rho_min": 0.010259378523140471,
+    "rho_max": 0.21665299387382309,
+    "var_y1_mean": 0.23732377213042205,
+    "var_y0_mean": 0.23446407573350928
+  },
+  "power_analysis_assumptions": {
+    "alpha_two_sided": 0.05,
+    "power": 0.8,
+    "z_alpha_2": 1.96,
+    "z_beta": 0.8416
+  },
+  "sample_size_table_pairs_needed": {
+    "unpaired (rho=0)": {
+      "0.05": 1481.218061658789,
+      "0.1": 370.3045154146973,
+      "0.15": 164.57978462875437
+    },
+    "paired, empirical mean rho": {
+      "0.05": 1253.704625616932,
+      "0.1": 313.426156404233,
+      "0.15": 139.30051395743692
+    },
+    "paired, empirical max rho": {
+      "0.05": 1160.313629295085,
+      "0.1": 290.0784073237713,
+      "0.15": 128.92373658834282
+    }
+  },
+  "tradeoff_table_within_budget": {
+    "total_rerun_budget_episodes": 2000,
+    "rows": [
+      {
+        "n_memories": 3,
+        "pairs_per_memory": 333,
+        "episodes_per_memory": 666,
+        "total_episodes": 1998,
+        "mde_80pct_power": 0.097
+      },
+      {
+        "n_memories": 5,
+        "pairs_per_memory": 200,
+        "episodes_per_memory": 400,
+        "total_episodes": 2000,
+        "mde_80pct_power": 0.1252
+      },
+      {
+        "n_memories": 8,
+        "pairs_per_memory": 125,
+        "episodes_per_memory": 250,
+        "total_episodes": 2000,
+        "mde_80pct_power": 0.1583
+      },
+      {
+        "n_memories": 10,
+        "pairs_per_memory": 100,
+        "episodes_per_memory": 200,
+        "total_episodes": 2000,
+        "mde_80pct_power": 0.177
+      },
+      {
+        "n_memories": 13,
+        "pairs_per_memory": 76,
+        "episodes_per_memory": 152,
+        "total_episodes": 1976,
+        "mde_80pct_power": 0.2031
+      },
+      {
+        "n_memories": 15,
+        "pairs_per_memory": 66,
+        "episodes_per_memory": 132,
+        "total_episodes": 1980,
+        "mde_80pct_power": 0.2179
+      },
+      {
+        "n_memories": 20,
+        "pairs_per_memory": 50,
+        "episodes_per_memory": 100,
+        "total_episodes": 2000,
+        "mde_80pct_power": 0.2504
+      }
+    ]
+  },
+  "recommendation": "Recommend n_memories=10, ~100 pairs/memory (200 episodes/memory, 2000 total) -> MDE ~0.18 at 80% power (empirical mean rho). This matches the original Stage 2 plan's 10-memory ground-truth target and reliably resolves large effects (>=0.15) while giving noisier but still informative signal for 0.10; 0.05 is not reliably detectable at this budget for more than ~1 memory at a time (see sample_size_table: delta=0.05 needs on the order of 1000+ pairs even with pairing). Prioritizing memory COUNT over per-memory precision is deliberate: Stage 1 found Spearman correlation itself needs enough points to be informative (noisy at n<~1000 episodes, see small_data_results.json), and the pilot's real target is whether IPS/DR rank memories better than Memory Worth -- a Spearman check needs multiple ground-truth points more than it needs each point pinned exactly.\n\nMemory selection: after the main randomized-logging phase, don't pick ground-truth memories randomly or purely top/bottom-ranked. Choose a stratified sample across the IPS/DR-estimated value distribution (e.g. one from each estimated-value quintile) PLUS deliberately oversample memories where Memory Worth and IPS/DR estimates disagree most (largest rank or magnitude gap) -- those are exactly the cases the pilot's hypothesis lives or dies on, so ground truth should be spent resolving them, not memories all estimators already agree on."
+}

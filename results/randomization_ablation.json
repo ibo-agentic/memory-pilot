@@ -1,0 +1,73 @@
+{
+  "task_difficulty": {
+    "memory_worth_deterministic_topk": {
+      "mean": -0.2421193335392117,
+      "std": 0.01608463305261083
+    },
+    "memory_worth_randomized": {
+      "mean": -0.29230832082665736,
+      "std": 0.022319821233104154
+    },
+    "ips_randomized": {
+      "mean": 0.3009744974497449,
+      "std": 0.11342767397873621
+    },
+    "snips_randomized": {
+      "mean": 0.423071107110711,
+      "std": 0.09935223671986243
+    },
+    "doubly_robust_randomized": {
+      "mean": 0.44966636663666354,
+      "std": 0.09417762833328008
+    }
+  },
+  "hitchhiker": {
+    "memory_worth_deterministic_topk": {
+      "mean": 0.8397727272727271,
+      "std": 0.02981490021852554
+    },
+    "memory_worth_randomized": {
+      "mean": 0.849961791309633,
+      "std": 0.03875156873276484
+    },
+    "ips_randomized": {
+      "mean": 0.6327529325513196,
+      "std": 0.11762209336484719
+    },
+    "snips_randomized": {
+      "mean": 0.7580461876832845,
+      "std": 0.07818241036505769
+    },
+    "doubly_robust_randomized": {
+      "mean": 0.7557184750733137,
+      "std": 0.07548546739123983
+    },
+    "pair_metrics": {
+      "memory_worth_deterministic_topk": {
+        "fraction_anchor_above_hitchhiker": 0.9,
+        "mean_estimated_gap": 0.004627038782969994,
+        "true_gap": 0.08360334087453958
+      },
+      "memory_worth_randomized": {
+        "fraction_anchor_above_hitchhiker": 1.0,
+        "mean_estimated_gap": 0.03239088136268394,
+        "true_gap": 0.08409612814041767
+      },
+      "ips": {
+        "fraction_anchor_above_hitchhiker": 1.0,
+        "mean_estimated_gap": 0.08592720517396091,
+        "true_gap": 0.08409612814041767
+      },
+      "snips": {
+        "fraction_anchor_above_hitchhiker": 1.0,
+        "mean_estimated_gap": 0.07978710419870202,
+        "true_gap": 0.08409612814041767
+      },
+      "doubly_robust": {
+        "fraction_anchor_above_hitchhiker": 1.0,
+        "mean_estimated_gap": 0.08046058931577678,
+        "true_gap": 0.08409612814041767
+      }
+    }
+  }
+}

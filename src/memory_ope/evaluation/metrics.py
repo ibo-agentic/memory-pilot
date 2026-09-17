@@ -36,6 +36,31 @@ def bias_and_variance(
     return bias, variance
 
 
+def mean_absolute_error(estimates: dict[str, float], true_values: dict[str, float]) -> float:
+    """Tie-free complement to Spearman: mean |estimate - true| across memories
+    that are candidates in both. Note this is on whatever scale the estimator
+    lives on -- Memory Worth (~P(success|included)) is not on the same scale
+    as the causal contrast IPS/SNIPS/DR target, so a large MAE for it is
+    partly a scale mismatch, not purely inaccuracy; still reported as asked,
+    since it's informative about that mismatch itself."""
+    common = [mem_id for mem_id in true_values if mem_id in estimates]
+    if not common:
+        return float("nan")
+    diffs = np.array([abs(estimates[mem_id] - true_values[mem_id]) for mem_id in common])
+    return float(diffs.mean())
+
+
+def mean_signed_bias(estimates: dict[str, float], true_values: dict[str, float]) -> float:
+    """Mean signed (estimate - true) across memories, for a single seed's
+    estimate set (distinct from bias_and_variance, which averages ACROSS
+    SEEDS per memory; this averages ACROSS MEMORIES for one seed)."""
+    common = [mem_id for mem_id in true_values if mem_id in estimates]
+    if not common:
+        return float("nan")
+    diffs = np.array([estimates[mem_id] - true_values[mem_id] for mem_id in common])
+    return float(diffs.mean())
+
+
 def summarize(values: dict[str, float]) -> dict[str, float]:
     arr = np.array([v for v in values.values() if not np.isnan(v)], dtype=float)
     if arr.size == 0:
