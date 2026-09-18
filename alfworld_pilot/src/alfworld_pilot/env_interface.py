@@ -52,6 +52,13 @@ class AlfredEnv(Protocol):
         """Returns (observation, reward, done, info)."""
         ...
 
+    def close(self) -> None:
+        """Release any underlying resources (subprocesses, sockets). Always
+        call this once you're done with a short-lived env (e.g. one built
+        per ground-truth pair) -- a long-lived env reused across many
+        episodes (e.g. measure_mode's) is instead closed once, at the end."""
+        ...
+
 
 @dataclass
 class MockTaskTemplate:
@@ -170,37 +177,61 @@ class MockAlfredEnv:
         }
         return obs, (1.0 if won else 0.0), won, info
 
+    def close(self) -> None:
+        pass  # nothing to release -- pure in-memory mock
+
 
 class RealAlfredEnv:
     """Thin wrapper around the real alfworld package's batched API.
 
-    Installed and running under WSL2 Ubuntu (the native-Windows attempt
-    documented in alfworld_pilot/README.md hit a build toolchain wall that
-    WSL2's build-essential doesn't have). One real, Python-version-specific
-    issue found and patched: see _textworld_py313_compat.py -- textworld
-    1.7.0's grammar engine breaks under Python 3.13+'s PEP 667 locals()
-    semantics, patched at construction time here, before textworld is asked
-    to render any game text.
+    Installed and running under WSL2 Ubuntu on Python 3.11 (the native-
+    Windows attempt documented in alfworld_pilot/README.md hit a build
+    toolchain wall that WSL2's build-essential doesn't have). Python 3.11,
+    not the repo's earlier 3.14, because textworld 1.7.0's PDDL grammar
+    engine relies on a locals()-mutation trick that Python 3.13's PEP 667
+    permanently breaks -- rebuilding the venv on 3.11 (within ALFWorld's own
+    documented "Python 3.9+" support range, and short of that break) let us
+    drop what would otherwise be a standing monkeypatch of third-party
+    library internals. See alfworld_pilot/README.md for the full story.
+
+    `gamefile_path`, if given, restricts this env to exactly ONE game file
+    instead of the full split -- every reset() then replays that same task
+    instance. This is what paired ground truth needs (forced-in and
+    forced-out must play the identical task); see ground_truth_runner.py.
     """
 
-    def __init__(self, config: dict, split: str = "train"):
+    def __init__(self, config: dict, split: str = "train", gamefile_path: str | None = None):
         try:
             from alfworld.agents.environment import get_environment
+            from alfworld.agents.environment.alfred_tw_env import AlfredTWEnv
         except ImportError as e:
             raise ImportError(
                 "alfworld is not installed in this environment. See alfworld_pilot/README.md "
                 "for why and how to install it."
             ) from e
 
-        from . import _textworld_py313_compat
-        _textworld_py313_compat.apply()
-
-        env_type = config["env"]["type"]
-        # get_environment() imports the requested class LOCALLY (it's not a
-        # module-level attribute of alfworld.agents.environment), so this
-        # must go through it rather than getattr(module, env_type).
-        self._env = get_environment(env_type)(config, train_eval=split)
-        self._env = self._env.init_env(batch_size=1)
+        if gamefile_path is not None:
+            # Skip AlfredTWEnv.__init__'s collect_game_files() (an expensive
+            # walk over the ENTIRE split) by constructing the object without
+            # running __init__, then calling its real init_env() -- the same
+            # method the normal path below uses -- restricted to one file.
+            # Verified empirically (see alfworld_pilot/README.md): two
+            # independently-constructed envs pointed at the same gamefile
+            # give byte-identical reset() observations, admissible commands,
+            # and post-step results.
+            tw_env = AlfredTWEnv.__new__(AlfredTWEnv)
+            tw_env.config = config
+            tw_env.train_eval = split
+            tw_env.game_files = [gamefile_path]
+            tw_env.num_games = 1
+            self._env = tw_env.init_env(batch_size=1)
+        else:
+            env_type = config["env"]["type"]
+            # get_environment() imports the requested class LOCALLY (it's
+            # not a module-level attribute of alfworld.agents.environment),
+            # so this must go through it rather than getattr(module, env_type).
+            self._env = get_environment(env_type)(config, train_eval=split)
+            self._env = self._env.init_env(batch_size=1)
         self._task_type: str = "unknown"
 
     @staticmethod
@@ -227,3 +258,26 @@ class RealAlfredEnv:
         infos = dict(infos)
         infos["task_type"] = self._task_type
         return obs[0], float(scores[0]), bool(dones[0]), infos
+
+    def close(self) -> None:
+        """AlfredTWEnv.init_env() registers games with asynchronous=True,
+        which spawns a subprocess per env even at batch_size=1 -- harmless
+        for one long-lived episode-logging env, but constructing many
+        short-lived single-game envs (as ground truth / difficulty checks
+        do) without closing them leaks subprocesses and memory. Always
+        close() a gamefile_path-restricted env once you're done with it."""
+        self._env.close()
+
+
+def list_real_game_files(config: dict, split: str = "train") -> list[str]:
+    """The list of individual game.tw-pddl file paths real ALFWorld would
+    play for this config/split -- same filtering AlfredTWEnv.__init__ does
+    (solvable-only, config's env.task_types, this split's data_path).
+    Expensive (walks the entire split directory tree once, a few seconds for
+    ~3500 games) -- call ONCE per ground-truth session and reuse the result,
+    not once per pair. Indexing into the returned list by a stable integer
+    (e.g. a task_seed) is how paired ground truth picks "the same task
+    instance" for both the forced-in and forced-out arms."""
+    from alfworld.agents.environment.alfred_tw_env import AlfredTWEnv
+
+    return list(AlfredTWEnv(config, train_eval=split).game_files)

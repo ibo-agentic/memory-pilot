@@ -3,6 +3,7 @@ import random
 from alfworld_pilot.env_interface import TASK_TYPES, MockAlfredEnv
 from alfworld_pilot.episode_runner import run_logged_episode
 from alfworld_pilot.ground_truth_runner import (
+    MockTaskSource,
     paired_correlation,
     run_ground_truth_experiment,
     run_ground_truth_pair,
@@ -95,7 +96,7 @@ def test_paired_ground_truth_holds_everything_else_fixed():
     assert found_matching_task, "test setup: need at least one task_seed matching memory_0's type in range"
 
     ep_in, ep_out = run_ground_truth_pair(
-        MockAlfredEnv(), llm, memories, M, P_MIN, P_MAX, MAX_STEPS, task_seed=task_seed, pair_index=0, memory_id=target
+        MockTaskSource(), llm, memories, M, P_MIN, P_MAX, MAX_STEPS, task_seed=task_seed, pair_index=0, memory_id=target
     )
     assert ep_in["included"][target] == 1
     assert ep_out["included"][target] == 0
@@ -110,7 +111,7 @@ def test_ground_truth_experiment_only_uses_natural_candidacy():
     llm = MockLLMClient(strategy="scripted_success", seed=0)
     target = memories[0].mem_id
     pairs = run_ground_truth_experiment(
-        MockAlfredEnv(), llm, memories, M, P_MIN, P_MAX, MAX_STEPS, memory_id=target, n_pairs=5, start_seed=0
+        MockTaskSource(), llm, memories, M, P_MIN, P_MAX, MAX_STEPS, memory_id=target, n_pairs=5, start_seed=0
     )
     assert len(pairs) == 5
     for ep_in, ep_out in pairs:
@@ -119,6 +120,28 @@ def test_ground_truth_experiment_only_uses_natural_candidacy():
     stats = paired_correlation(pairs)
     assert stats["n_pairs"] == 5
     assert "rho" in stats
+
+
+def test_real_task_source_maps_task_seed_to_stable_gamefile_and_task_type():
+    # RealTaskSource's indexing/path-parsing logic doesn't touch alfworld
+    # itself (that import is lazy, inside list_real_game_files), so this
+    # runs in the standard mock-only suite without real ALFWorld installed
+    # or its data downloaded -- it's exactly the logic paired ground truth
+    # depends on to make forced-in/forced-out agree on "the same task".
+    from alfworld_pilot.env_interface import TASK_TYPES
+    from alfworld_pilot.ground_truth_runner import RealTaskSource
+
+    ts = RealTaskSource.__new__(RealTaskSource)
+    ts.config = {}
+    ts.split = "train"
+    ts.game_files = [
+        f"/data/{TASK_TYPES[i % len(TASK_TYPES)]}-obj-recep-recep-{i}/trial_0/game.tw-pddl" for i in range(7)
+    ]
+
+    assert ts._gamefile_for(3) == ts._gamefile_for(3), "same task_seed must always map to the same file"
+    assert ts._gamefile_for(10) == ts.game_files[10 % len(ts.game_files)], "must wrap around by len(game_files)"
+    for seed in range(len(ts.game_files)):
+        assert ts.task_type(seed) == TASK_TYPES[seed % len(TASK_TYPES)]
 
 
 def test_measure_mode_reports_positive_averages():

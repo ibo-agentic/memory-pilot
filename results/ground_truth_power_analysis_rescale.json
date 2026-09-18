@@ -1,0 +1,71 @@
+{
+  "empirical_rho_stats_from_task_difficulty_simulator": {
+    "rho_mean": 0.1536017022324058,
+    "rho_min": 0.010259378523140465,
+    "rho_max": 0.21665299387382328,
+    "var_y1_mean": 0.23732377213042205,
+    "var_y0_mean": 0.23446407573350928
+  },
+  "power_analysis_assumptions": {
+    "alpha_two_sided": 0.05,
+    "power": 0.8,
+    "z_alpha_2": 1.96,
+    "z_beta": 0.8416
+  },
+  "old_budget_episodes": 2000,
+  "new_budget_episodes": 5000,
+  "tradeoff_table_within_new_budget": {
+    "total_rerun_budget_episodes": 5000,
+    "rows": [
+      {
+        "n_memories": 10,
+        "pairs_per_memory": 250,
+        "episodes_per_memory": 500,
+        "total_episodes": 5000,
+        "mde_80pct_power": 0.112
+      },
+      {
+        "n_memories": 13,
+        "pairs_per_memory": 192,
+        "episodes_per_memory": 384,
+        "total_episodes": 4992,
+        "mde_80pct_power": 0.1278
+      },
+      {
+        "n_memories": 15,
+        "pairs_per_memory": 166,
+        "episodes_per_memory": 332,
+        "total_episodes": 4980,
+        "mde_80pct_power": 0.1374
+      },
+      {
+        "n_memories": 18,
+        "pairs_per_memory": 138,
+        "episodes_per_memory": 276,
+        "total_episodes": 4968,
+        "mde_80pct_power": 0.1507
+      },
+      {
+        "n_memories": 20,
+        "pairs_per_memory": 125,
+        "episodes_per_memory": 250,
+        "total_episodes": 5000,
+        "mde_80pct_power": 0.1583
+      },
+      {
+        "n_memories": 25,
+        "pairs_per_memory": 100,
+        "episodes_per_memory": 200,
+        "total_episodes": 5000,
+        "mde_80pct_power": 0.177
+      },
+      {
+        "n_memories": 30,
+        "pairs_per_memory": 83,
+        "episodes_per_memory": 166,
+        "total_episodes": 4980,
+        "mde_80pct_power": 0.1943
+      }
+    ]
+  }
+}

@@ -779,3 +779,122 @@ fixes, are in `alfworld_pilot/README.md`; summary here:
   can run — flagged, not solved, since it was out of this session's scope
   (swap the env backend in and smoke-test it, not build ground-truth-on-
   real-ALFWorld).
+
+## Part C prep (2026-09-19): both pre-Part-C blockers solved, plan rescaled, difficulty confound confirmed in real data
+
+Four items requested before Part C spend. Still zero real LLM API calls.
+Full details in `alfworld_pilot/README.md`; summary here.
+
+### 1. Paired ground truth against real ALFWorld: SOLVED
+
+The previous session's flagged limitation (`ground_truth_runner` needed
+`env.reset(task_seed=...)` to seek back to a specific task instance, which
+real ALFWorld doesn't support) is fixed. Verified FIRST, empirically, before
+writing any pipeline code: registering one specific `game.tw-pddl` file
+directly (`textworld.gym.register_games([gamefile], ...)`) gives
+byte-identical resets/steps across independently-built envs and repeated
+resets of the same env. `RealAlfredEnv` now takes an optional
+`gamefile_path` that restricts it to exactly one game (reusing
+`AlfredTWEnv`'s own real `init_env()`, not a reimplementation — skips its
+expensive `collect_game_files()` walk via `AlfredTWEnv.__new__`).
+`ground_truth_runner.py` now routes both backends through a small
+`TaskSource` interface (`MockTaskSource`, `RealTaskSource`) instead of a
+bare `env`; `RealTaskSource` maps a `task_seed` to a specific game file by
+stable index, so forced-in/forced-out (and repeated candidacy probes)
+agree on "the same task" by construction. Verified end to end against real
+ALFWorld: identical `candidate_ids`, identical other-memory inclusion,
+identical `task_type`, identical first-step observation and admissible
+actions between the forced-in and forced-out arms of a real pair.
+
+Operational finding along the way: constructing many single-game
+`RealAlfredEnv`s without closing them grows memory substantially (~1.25GB
+after ~100 unclosed constructions in a run that had to be killed) — not
+from subprocess spawning (`asynchronous=True` is a documented no-op at
+`batch_size=1`); root cause not fully tracked down, but adding
+`RealAlfredEnv.close()` and calling it after every single-game episode
+(`run_ground_truth_pair`, `task_type_difficulty_check.py`) keeps growth far
+more modest. **Flagged for Part C**: the real ground-truth phase will
+construct on the order of ~10,000 single-game envs; monitor memory and
+chunk the run (process restarts every N pairs) if growth reappears despite
+closing.
+
+### 2. Python version: rebuilt on 3.11, PEP 667 patch dropped
+
+ALFWorld's own docs only ever claim "Python 3.9+" (its quickstart pins
+`python=3.9`); nothing targets 3.13+, where the previous session's
+`textworld` incompatibility lives. Installed Python 3.11 via `uv python
+install 3.11` (user-space, no sudo — this Ubuntu release is too new for
+`apt`'s python3.10/3.11 packages, and `sudo apt-add-repository` needs an
+interactive password this non-interactive session doesn't have). Rebuilt
+`.venv` on it (`uv venv --python 3.11`, `ensurepip` since uv-built pythons
+ship no `pip` script, then reinstalled everything). Confirmed empirically:
+the same quickstart that raised `NameError` on 3.14 runs with **zero
+patches** on 3.11. Deleted `_textworld_py313_compat.py` and its one call
+site in `RealAlfredEnv.__init__`.
+
+### 3. Scaled-up plan: 3050 -> 10030 episodes, new cost projection
+
+`scale_up_check.py` (new, root package) swept n_episodes in {1000, 3000,
+4000, 5000} at this pilot's actual setting (30 memories, propensity
+[0.3,0.7]) on both Stage 1 simulators, 20 seeds:
+
+| n_episodes | task_difficulty: ips 95% CI | task_difficulty: DR 95% CI | hitchhiker: ips 95% CI | hitchhiker: DR 95% CI |
+|---|---|---|---|---|
+| 1000 | [-0.088, 0.404] (crosses 0) | [0.148, 0.566] | [0.013, 0.534] | [0.298, 0.621] |
+| 3000 | [0.145, 0.639] | [0.284, 0.758] | [0.265, 0.731] | [0.520, 0.806] |
+| 4000 | [0.147, 0.678] | [0.360, 0.777] | [0.396, 0.766] | [0.505, 0.821] |
+| 5000 | [0.167, 0.685] | [0.337, 0.824] | [0.220, 0.701] | [0.435, 0.813] |
+
+**n=3000 is where plain IPS's interval stops crossing zero on
+task_difficulty** (the harder of the two confounds for it); SNIPS/DR
+already excluded zero from n=1000. 5000 gives the best mean Spearman of the
+range tested (DR: 0.547 at 3000 -> 0.640 at 5000 on task_difficulty) at
+negligible added real-measured cost, so that's what was chosen, at the top
+of the requested 3000-5000 range. Full table: `results/scale_up_check.json`.
+
+Ground-truth pairs rescaled to match: `ground_truth_power_analysis_
+rescale.py` reruns the original power analysis's trade-off table (same
+empirical rho=0.154) at a 5000-episode rerun budget instead of the original
+2000 — **15 memories x 166 pairs/memory (4980 episodes) gives MDE~0.137 at
+80% power**, better than the original 10-memory/100-pair plan's MDE~0.177
+on both memory count AND resolution. `results/
+ground_truth_power_analysis_rescale.json` has the full n_memories grid; the
+original 2000-budget file is untouched for comparison.
+
+New plan: 50 (store construction, unchanged) + 5000 (main logging, was
+1000) + 4980 (ground truth, was 2000) = **10030 episodes** (was 3050).
+`alfworld_pilot/config.yaml`'s `episode_plan` and `ground_truth` sections
+updated to match. Rerunning `measure_mode.py` with the SAME real-measured
+per-call rates (1054.7 in / 14.0 out tokens/call, 30.0 calls/episode --
+unchanged, since only the episode count changed) against the new plan:
+**$50.13 (deepseek-v4.1-flash) / $19.80 (ling-3.0-flash-vl) / $13.33
+(mercury-2.5)** — all still under the $100 budget, deepseek using about
+half of it. `cost_control.hard_cap_usd` raised 10.0 -> 75.0 accordingly.
+The root package's `stage2_budget_estimate.py` (pure pre-real-ALFWorld
+assumptions, 1530 episodes) is now superseded by this real-measured
+projection and kept only as a historical reference.
+
+### 4. Task types: coverage confirmed, real difficulty spread measured at zero cost
+
+Confirmed against the REAL dataset (not just the mock) that all 6 official
+ALFWorld task types are present (population: 22.2% pick_and_place_simple,
+8.7% look_at_obj_in_light, 18.3% pick_clean_then_place_in_recep, 12.9%
+pick_heat_then_place_in_recep, 15.0% pick_cool_then_place_in_recep, 22.9%
+pick_two_obj_and_place) and correctly parsed by `RealAlfredEnv.
+task_type_from_gamefile` (`episode_runner.py` already logs `task_type` per
+episode; this verifies the parsing that field depends on).
+
+Difficulty spread measured with ALFWorld's own built-in scripted expert
+(`info['extra.expert_plan']`, zero LLM calls, n=30 games/type): mean steps
+to solve ranges from 13.1 (look_at_obj_in_light) to **43.6
+(pick_two_obj_and_place)** — and at this pilot's `env.max_steps: 30` cap, an
+OPTIMAL scripted policy can only finish `pick_two_obj_and_place` **13% of
+the time**, versus 73-90% for every other task type. This is the real-data
+analogue of the task_difficulty simulator's confound (task-type-correlated
+base success rate, decoupled from any memory's causal value) — and since
+task type also determines which memories are similarity-relevant
+candidates, it couples task difficulty to retrieval exactly as the
+simulator models. Left `max_steps` unchanged (an explicit prior cost
+control) rather than fixing it as a side effect of this check — flagging it
+as a deliberate call worth making, not silently changing it. Full table
+and per-type sample counts: `results/task_type_difficulty_check.json`.

@@ -42,4 +42,26 @@ def build_env_factory(cfg: dict):
     raise ValueError(f"Unknown env.backend: {backend!r} (expected 'mock' or 'real')")
 
 
-__all__ = ["AlfredEnv", "build_env_factory", "load_real_alfworld_config"]
+def build_task_source(cfg: dict):
+    """Returns a ground_truth_runner.TaskSource for config.yaml's
+    env.backend, resolving the real ALFWorld config the same way
+    build_env_factory does -- callers should never need to load
+    real_alfworld_config_path themselves."""
+    from .ground_truth_runner import MockTaskSource, RealTaskSource
+
+    backend = cfg["env"]["backend"]
+    if backend == "mock":
+        return MockTaskSource()
+    if backend == "real":
+        real_cfg_path = cfg["env"]["real_alfworld_config_path"]
+        if not real_cfg_path:
+            raise ValueError(
+                "env.backend is 'real' but env.real_alfworld_config_path is not set in config.yaml"
+            )
+        real_cfg = load_real_alfworld_config(real_cfg_path)
+        split = cfg["env"].get("real_split", "train")
+        return RealTaskSource(real_cfg, split=split)
+    raise ValueError(f"Unknown env.backend: {backend!r} (expected 'mock' or 'real')")
+
+
+__all__ = ["AlfredEnv", "build_env_factory", "build_task_source", "load_real_alfworld_config"]

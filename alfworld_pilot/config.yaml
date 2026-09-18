@@ -33,7 +33,13 @@ llm:
   max_output_tokens: 100     # a ReAct Thought+Action is short
 
 cost_control:
-  hard_cap_usd: 10.0   # run stops itself once cumulative spend reaches this
+  # Raised 2026-09-19 from 10.0 for the rescaled plan below: real-env-measured
+  # projection for the full 10030-episode plan is $13-50 depending on model
+  # (see results/measure_mode_real.json) -- 75.0 covers the priciest
+  # candidate model with margin for real tokenizers counting more tokens
+  # than this projection's word-count proxy, while staying under the
+  # user-stated $100 budget.
+  hard_cap_usd: 75.0   # run stops itself once cumulative spend reaches this
   # measure_mode runs a small number of episodes, records actual
   # input/output tokens per call, and projects total cost for the full
   # plan (see ../results/stage2_budget_estimate.json for that plan). Kept
@@ -50,16 +56,26 @@ paths:
   results_dir: results
 
 ground_truth:
-  n_memories: 10
-  pairs_per_memory: 100
+  # Rescaled 2026-09-19 (see ../results/ground_truth_power_analysis_rescale.json):
+  # within a 5000-episode ground-truth budget (matching the new
+  # main_randomized_logging scale), 15 memories x 166 pairs/memory gives
+  # MDE~0.137 at 80% power -- MORE memories covered AND a tighter MDE than
+  # the original 10-memory/100-pair plan's ~0.177 at the old 2000-episode
+  # budget.
+  n_memories: 15
+  pairs_per_memory: 166
   # Selection uses a HELD-OUT split of the main logging phase (first half
   # for selection, second half for the estimates that get compared against
   # ground truth) -- see ground_truth_selection_bias_check.py in the main
   # Stage 1 package for why.
 
-# Mirrors ../results/stage2_budget_estimate.json's plan, kept here too so
-# measure_mode's cost projection is self-contained within this package.
+# Rescaled 2026-09-19 for Part C (see CLAUDE.md): main_randomized_logging
+# raised from 1000 -> 5000 per scale_up_check.py (at n=3000+, IPS/SNIPS/DR's
+# 95% Spearman interval reliably excludes zero on BOTH Stage 1 confound
+# simulators; 5000 gives the best mean Spearman of the range tested at
+# negligible added real-measured cost). ground_truth_reruns raised to match
+# (15 memories x 166 pairs x 2 arms).
 episode_plan:
   memory_store_construction: 50
-  main_randomized_logging: 1000
-  ground_truth_reruns: 2000   # 10 memories x 100 pairs x 2 arms
+  main_randomized_logging: 5000
+  ground_truth_reruns: 4980   # 15 memories x 166 pairs x 2 arms
