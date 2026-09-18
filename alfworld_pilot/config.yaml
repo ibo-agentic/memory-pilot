@@ -1,14 +1,14 @@
 # Stage 2 (ALFWorld pilot) config. See ../CLAUDE.md for the research context.
 
 env:
-  # ALFWorld itself is not yet installed (see README.md) -- "mock" is the
-  # only backend that actually runs right now. "real" will use
-  # env_interface.RealAlfredEnv once alfworld is installed via WSL2/Docker.
-  backend: mock   # mock | real
+  # ALFWorld is installed (WSL2 Ubuntu; see README.md). "mock" is used by
+  # the unit test suite only -- real pilot runs use "real".
+  backend: real   # mock | real
   max_steps: 30   # deliberately below ALFWorld's usual 50-step research cap, to control cost
   # config passed through to alfworld's own get_environment(...) when backend=real;
-  # unused by the mock backend.
-  real_alfworld_config_path: null
+  # unused by the mock backend. Resolved relative to this file's directory (see config.py).
+  real_alfworld_config_path: configs/base_config.yaml
+  real_split: train   # train | eval_in_distribution | eval_out_of_distribution
 
 memory_store:
   n_memories: 30          # per signal_boost_check's recommendation (Part A follow-up)
@@ -34,10 +34,13 @@ llm:
 
 cost_control:
   hard_cap_usd: 10.0   # run stops itself once cumulative spend reaches this
-  # measure_mode runs a small number of real episodes, records actual
+  # measure_mode runs a small number of episodes, records actual
   # input/output tokens per call, and projects total cost for the full
-  # plan (see ../results/stage2_budget_estimate.json for that plan).
-  measure_mode_n_episodes: 5
+  # plan (see ../results/stage2_budget_estimate.json for that plan). Kept
+  # small (2) now that env.backend defaults to "real": each episode
+  # constructs/steps a real ALFWorld game, not a mock, so this is no longer
+  # a free instant loop.
+  measure_mode_n_episodes: 2
 
 cache:
   dir: cache   # relative to this directory; every LLM call is cached here, keyed by a hash of (model, messages, params)

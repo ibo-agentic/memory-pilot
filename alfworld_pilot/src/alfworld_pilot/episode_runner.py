@@ -33,7 +33,7 @@ def run_logged_episode(
     the listed memory ids (used by the forced-in/forced-out ground-truth
     mode) while everything else (candidacy, propensities, other memories'
     natural draws) is untouched."""
-    _obs, info = env.reset(task_seed=task_id)
+    obs, info = env.reset(task_seed=task_id)
     task_type = info["task_type"]
 
     sims = similarity_scores(memories, task_type, rng)
@@ -46,7 +46,7 @@ def run_logged_episode(
     mem_by_id = {mem.mem_id: mem for mem in memories}
     included_texts = [mem_by_id[mid].text for mid in candidate_ids if included[mid] == 1]
 
-    result = react_agent.run_episode(env, llm_client, included_texts, max_steps)
+    result = react_agent.run_episode(env, llm_client, included_texts, max_steps, obs, info)
 
     total_input_tokens = sum(s.input_tokens for s in result.steps)
     total_output_tokens = sum(s.output_tokens for s in result.steps)

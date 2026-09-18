@@ -1,6 +1,6 @@
 """Single-episode environment interface matching ALFWorld's real API, plus a
-mock implementation so the rest of the pilot can be built and tested before
-ALFWorld itself is installed.
+mock implementation used by the unit test suite (fast, free, no data/install
+dependency).
 
 Real ALFWorld's batched API (confirmed from the official repo + the
 original ReAct paper's alfworld.ipynb, batch_size=1 throughout this
@@ -15,11 +15,10 @@ project):
     task_type = <matched from info['extra.gamefile'][0] path>
 
 `RealAlfredEnv` below wraps that batched API into the single-episode shape
-the rest of this pilot uses; it is NOT yet runnable because ALFWorld is not
-installed in this environment (see alfworld_pilot/README.md for why, and
-the options for installing it). `MockAlfredEnv` implements the exact same
+the rest of this pilot uses. `MockAlfredEnv` implements the exact same
 interface so `react_agent.py` / `episode_runner.py` etc. don't need to
-change when ALFWorld is later swapped in.
+change based on which backend is selected (see env_factory.py) -- use the
+mock for unit tests, the real env for actual pilot runs.
 
 Official ALFWorld task types (from the official repo + ALFWorld paper),
 encoded in each game's file path as `task_type-object-movableReceptacle-
@@ -175,26 +174,34 @@ class MockAlfredEnv:
 class RealAlfredEnv:
     """Thin wrapper around the real alfworld package's batched API.
 
-    NOT YET RUNNABLE in this environment -- alfworld's install requires a
-    Linux-oriented native build (jericho + a Linux-only Inform7 CLI fetched
-    by a bash setup.sh), which failed on native Windows with no C toolchain
-    (confirmed by attempting `pip install alfworld` directly -- see
-    alfworld_pilot/README.md). Deferred per project decision: install via
-    WSL2 or Docker when ready, then this class should work unmodified
-    against a real `alfworld.agents.environment` config.
+    Installed and running under WSL2 Ubuntu (the native-Windows attempt
+    documented in alfworld_pilot/README.md hit a build toolchain wall that
+    WSL2's build-essential doesn't have). One real, Python-version-specific
+    issue found and patched: see _textworld_py313_compat.py -- textworld
+    1.7.0's grammar engine breaks under Python 3.13+'s PEP 667 locals()
+    semantics, patched at construction time here, before textworld is asked
+    to render any game text.
     """
 
     def __init__(self, config: dict, split: str = "train"):
         try:
-            import alfworld.agents.environment as alfworld_env
+            from alfworld.agents.environment import get_environment
         except ImportError as e:
             raise ImportError(
                 "alfworld is not installed in this environment. See alfworld_pilot/README.md "
-                "for why (Linux-oriented native build) and how to install it (WSL2 or Docker)."
+                "for why and how to install it."
             ) from e
+
+        from . import _textworld_py313_compat
+        _textworld_py313_compat.apply()
+
         env_type = config["env"]["type"]
-        self._env = getattr(alfworld_env, env_type)(config, train_eval=split)
+        # get_environment() imports the requested class LOCALLY (it's not a
+        # module-level attribute of alfworld.agents.environment), so this
+        # must go through it rather than getattr(module, env_type).
+        self._env = get_environment(env_type)(config, train_eval=split)
         self._env = self._env.init_env(batch_size=1)
+        self._task_type: str = "unknown"
 
     @staticmethod
     def task_type_from_gamefile(gamefile_path: str) -> str:
@@ -206,13 +213,17 @@ class RealAlfredEnv:
     def reset(self, task_seed: int | None = None) -> tuple[str, dict]:
         obs, info = self._env.reset()
         gamefile = info["extra.gamefile"][0]
+        self._task_type = self.task_type_from_gamefile(gamefile)
         info = dict(info)
-        info["task_type"] = self.task_type_from_gamefile(gamefile)
+        info["task_type"] = self._task_type
         return obs[0], info
 
     def step(self, action: str) -> tuple[str, float, bool, dict]:
+        # `extra.gamefile` is only populated by TextWorld on reset(), not on
+        # every step() -- confirmed empirically (it comes back None mid-
+        # episode) -- so task_type is cached from the episode's reset() call
+        # instead of being re-derived here.
         obs, scores, dones, infos = self._env.step([action])
-        gamefile = infos["extra.gamefile"][0]
         infos = dict(infos)
-        infos["task_type"] = self.task_type_from_gamefile(gamefile)
+        infos["task_type"] = self._task_type
         return obs[0], float(scores[0]), bool(dones[0]), infos

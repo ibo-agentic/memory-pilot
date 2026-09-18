@@ -3,8 +3,11 @@ tokens per call (from the client's actual usage, not the estimate used for
 the pre-call cost-cap check), and project total cost for the full episode
 plan in config.yaml's `episode_plan` section.
 
-Usage (mock backend, no cost, exercised by the test suite):
-    python -m alfworld_pilot.measure_mode
+Usage:
+    python -m alfworld_pilot.measure_mode   # uses config.yaml's env.backend (real by default); LLM is
+                                             # always MockLLMClient here, so this never spends API money
+                                             # regardless of backend. The test suite calls run_measure_mode
+                                             # directly against MockAlfredEnv, independent of config.yaml.
 """
 
 from __future__ import annotations
@@ -16,9 +19,18 @@ import random
 from . import config as config_mod
 from .cache import LLMCache
 from .cost_tracker import CostTracker
-from .env_interface import MockAlfredEnv
 from .episode_runner import run_logged_episode
 from .memory_store import build_mock_store
+
+# Same pricing snapshot (OpenRouter, fetched 2026-09-17) used by the root
+# package's stage2_budget_estimate.py, duplicated here rather than imported
+# since the two packages are independently installable -- re-check both
+# copies together if pricing is refreshed.
+PRICING_PER_MILLION_TOKENS = {
+    "deepseek-v4.1-flash": {"input": 0.15, "output": 0.60},
+    "ling-3.0-flash-vl": {"input": 0.06, "output": 0.18},
+    "mercury-2.5": {"input": 0.04, "output": 0.15},
+}
 
 
 def run_measure_mode(cfg: dict, llm_client, env_factory, n_episodes: int) -> dict:
@@ -31,8 +43,13 @@ def run_measure_mode(cfg: dict, llm_client, env_factory, n_episodes: int) -> dic
     per_call_output = []
     calls_per_episode = []
     episodes = []
+    # Construct ONE env and reuse it across episodes via repeated .reset()
+    # calls -- real ALFWorld's AlfredTWEnv walks its entire game-file
+    # dataset at construction time, and .reset() is what hands out the next
+    # game; a fresh env per episode would re-walk that dataset every time
+    # (harmless but wasteful for the mock, very slow for real).
+    env = env_factory()
     for task_id in range(n_episodes):
-        env = env_factory()
         ep = run_logged_episode(
             env, llm_client, memories,
             m=cfg["retrieval"]["M"], propensity_min=cfg["retrieval"]["propensity_min"], propensity_max=cfg["retrieval"]["propensity_max"],
@@ -78,19 +95,28 @@ def project_cost(measured: dict, price_per_million_input: float, price_per_milli
 
 
 def main() -> None:
+    from .env_factory import build_env_factory
     from .mock_llm import MockLLMClient
 
     cfg = config_mod.load_config()
     config_mod.ensure_dirs(cfg)
     results_dir = pathlib.Path(cfg["paths"]["results_dir"])
+    backend = cfg["env"]["backend"]
 
     llm_client = MockLLMClient(strategy="scripted_success", seed=0)
-    measured = run_measure_mode(cfg, llm_client, MockAlfredEnv, cfg["cost_control"]["measure_mode_n_episodes"])
+    env_factory = build_env_factory(cfg)
+    measured = run_measure_mode(cfg, llm_client, env_factory, cfg["cost_control"]["measure_mode_n_episodes"])
+    measured["pricing_per_million_tokens_usd"] = PRICING_PER_MILLION_TOKENS
+    measured["projected_cost_usd_by_model"] = {
+        model: round(project_cost(measured, price["input"], price["output"]), 2)
+        for model, price in PRICING_PER_MILLION_TOKENS.items()
+    }
 
-    with open(results_dir / "measure_mode_mock.json", "w", encoding="utf-8") as f:
+    out_path = results_dir / f"measure_mode_{backend}.json"
+    with open(out_path, "w", encoding="utf-8") as f:
         json.dump(measured, f, indent=2)
 
-    print(f"Measured over {measured['n_episodes_measured']} MOCK episodes ({measured['n_calls_measured']} calls):")
+    print(f"Measured over {measured['n_episodes_measured']} {backend.upper()} episodes ({measured['n_calls_measured']} calls):")
     print(f"  avg input tokens/call:  {measured['avg_input_tokens_per_call']:.1f}")
     print(f"  avg output tokens/call: {measured['avg_output_tokens_per_call']:.1f}")
     print(f"  avg calls/episode:      {measured['avg_calls_per_episode']:.1f}")
@@ -99,8 +125,13 @@ def main() -> None:
     print(f"  total calls:  {measured['projected_total_calls']:.0f}")
     print(f"  total input tokens:  {measured['projected_total_input_tokens']:.0f}")
     print(f"  total output tokens: {measured['projected_total_output_tokens']:.0f}")
-    print("\n(mock tokens are word counts, not real tokenization -- this is a pipeline smoke test, not a real cost estimate. Rerun with a real client + cheap model for real numbers, within the cost cap.)")
-    print(f"\nWrote {results_dir / 'measure_mode_mock.json'}")
+    print(f"\nProjected full-plan cost by model (using these token counts, {backend}-env-measured):")
+    for model, cost in measured["projected_cost_usd_by_model"].items():
+        print(f"  {model:<20} ${cost:,.2f}")
+    print(f"\n(LLM is still MockLLMClient here -- {backend} env, mock LLM, zero API cost. Token counts are word "
+          "counts, not real tokenization, regardless of backend. Rerun with a real LLM client + cheap model for "
+          "real token counts, within the cost cap.)")
+    print(f"\nWrote {out_path}")
 
 
 if __name__ == "__main__":

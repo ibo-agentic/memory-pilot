@@ -21,6 +21,8 @@ def load_config(path: pathlib.Path | str | None = None) -> dict:
     for key in ("logs_dir", "results_dir"):
         cfg["paths"][key] = str(PILOT_ROOT / cfg["paths"][key])
     cfg["cache"]["dir"] = str(PILOT_ROOT / cfg["cache"]["dir"])
+    if cfg["env"].get("real_alfworld_config_path"):
+        cfg["env"]["real_alfworld_config_path"] = str(PILOT_ROOT / cfg["env"]["real_alfworld_config_path"])
     return cfg
 
 

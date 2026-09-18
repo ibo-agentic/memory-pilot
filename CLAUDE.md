@@ -59,6 +59,9 @@ Simsek). Key facts that shaped this pilot's design:
 
 ## Repo layout
 
+- `pyproject.toml` — makes `memory_ope` a `pip install -e .` package (added
+  2026-09-18, under WSL2 Ubuntu); `alfworld_pilot/retrieval_shared.py`
+  imports it directly now, no cross-venv `sys.path` shim.
 - `config/config.yaml` — all tunables for both stages.
 - `src/memory_ope/simulator/` — Stage 1 synthetic DGPs + Monte Carlo oracle
   for true per-memory causal values (forced-in/forced-out on the natural
@@ -68,9 +71,11 @@ Simsek). Key facts that shaped this pilot's design:
 - `src/memory_ope/evaluation/` — Spearman correlation / bias / variance
   comparison against the oracle, across 20 seeds; writes
   `results/stage1_report.json` + plots.
-- `alfworld_pilot/` — Stage 2 skeleton only, gated on Stage 1 approval. Use
-  the official ALFWorld repo (github.com/alfworld/alfworld) for install
-  steps when it's implemented — do not invent them.
+- `alfworld_pilot/` — Stage 2, real ALFWorld installed and running as of
+  2026-09-18 (see that section below and `alfworld_pilot/README.md` for the
+  install path, a real textworld/Python-3.13+ incompatibility found and
+  patched, and two real bugs in this package's own env-wiring code found
+  once ALFWorld was actually exercised).
 - `tests/` — includes an explicit check that IPS is unbiased for the true
   causal contrast under confounding when propensities are correct
   (`test_ips_unbiased.py`).
@@ -689,3 +694,88 @@ are running.
    checked, per the plan ("only after I say go").
 2. `config.yaml`'s `llm.model_id` set to one of them.
 3. A real determinism-check run before trusting any real ground-truth pair.
+
+## Part B, real ALFWorld (2026-09-18): installed and running under WSL2 Ubuntu, still no LLM API calls made
+
+Moved from the mock-only environment described above to real ALFWorld,
+under a fresh WSL2 Ubuntu venv with `build-essential` installed (the
+earlier native-Windows attempt's blocker). Also made `memory_ope` a real
+`pip install -e .` package (`pyproject.toml`, repo root) — `alfworld_pilot/
+retrieval_shared.py` now just imports it directly, no more cross-venv
+`sys.path` shim, and both packages' test suites (11 + 17 = 28 tests) run
+from the one shared venv. Full details, including the exact patch and bug
+fixes, are in `alfworld_pilot/README.md`; summary here:
+
+- **`pip install alfworld`** (base install, no `[full]`/`[vis]` — those pull
+  in ai2thor/torch/opencv for the embodied/visual THOR backend, unused by
+  this text-only pilot) built cleanly against `textworld[pddl]` once a C
+  toolchain was available. `alfworld-download` fetched ~2.3GB of game/PDDL/
+  logic/detector data into `~/.cache/alfworld`.
+- **Real, non-obvious blocker found and fixed**: `textworld` 1.7.0's PDDL
+  grammar engine relies on a `locals().update(...); eval(...)` trick that
+  Python 3.13's PEP 667 ("Consistent views of namespaces") permanently
+  broke — `NameError` on the very first `env.reset()`, before any of this
+  project's own code even runs. No upstream fix exists yet. Patched via a
+  small, documented monkeypatch (`alfworld_pilot/src/alfworld_pilot/
+  _textworld_py313_compat.py`) that passes an explicit `eval()` namespace
+  instead — the PEP 667-documented migration path, applied to the one call
+  site affected (confirmed via grep: `locals().update(` appears exactly
+  once in the installed package).
+- **Two real bugs in this project's own code**, never caught because
+  `RealAlfredEnv` had never actually been run before real ALFWorld existed:
+  (1) `getattr(alfworld_env, env_type)` instead of `get_environment
+  (env_type)` — the class is imported locally inside `get_environment`, not
+  exposed as a module attribute; (2) a **double `env.reset()` per episode**
+  (once in `episode_runner.py` for `task_type`/retrieval, once again inside
+  `react_agent.run_episode`) — harmless-looking on `MockAlfredEnv` in
+  existing tests (each test constructs a fresh mock env right before a
+  single `run_logged_episode` call) but actually meant the task memories
+  were retrieved FOR never matched the task instance actually PLAYED, and
+  would have silently burned two real ALFWorld games per logged episode.
+  Fixed by having `react_agent.run_episode` take the already-fetched
+  `obs`/`info` instead of resetting internally — exactly one `reset()` per
+  episode now. Also fixed: `extra.gamefile` (source of `task_type`) is only
+  populated by TextWorld on `reset()`, not on `step()` (`None` mid-episode)
+  — `task_type` is now cached from `reset()` and reused.
+- **`env_factory.py`** (new) selects `MockAlfredEnv`/`RealAlfredEnv` from
+  `config.yaml`'s `env.backend` (now defaults to `real`; the unit test
+  suite still imports `MockAlfredEnv` directly, independent of that
+  default) and constructs the env ONCE for reuse across episodes via
+  repeated `.reset()` calls — constructing fresh per episode would re-walk
+  real ALFWorld's entire game-file dataset (thousands of directories) every
+  time.
+- **2 real ALFWorld episodes, `MockLLMClient`, zero API spend** (`python -m
+  alfworld_pilot.measure_mode`, `env.backend: real`): both episodes ran a
+  genuinely different real ALFWorld game end to end (confirmed by
+  inspecting each episode's opening observation) and hit the 30-step cap
+  without winning — expected and unimportant here, since `MockLLMClient`'s
+  `scripted_success` strategy assumes the MOCK env's simplifying "admissible
+  actions list order = winning sequence" property, which doesn't hold for
+  real ALFWorld's actual (much larger, unordered) admissible-commands list.
+  The point of this run was confirming the real env <-> agent <-> logging
+  plumbing works end to end, which it does. Measured: **avg 1054.7 input /
+  14.0 output tokens per call, 30.0 calls/episode** (both episodes ran the
+  full step cap) — vs. the OLD mock-env numbers (602.9 in / 14.7 out, 4.6
+  calls/episode) from Part B's original mock-only measurement: real
+  ALFWorld's actual room/object descriptions are far more verbose than the
+  mock's synthetic templates, and its longer, harder tasks mean more calls/
+  episode before hitting the step cap. Recorded in `results/
+  measure_mode_real.json` (kept alongside the original `measure_mode_mock.
+  json` for comparison, not overwriting it). Updated cost projection for
+  the full 3050-episode plan using these real-env numbers, same 3-model
+  OpenRouter pricing snapshot as `stage2_budget_estimate.py`: **$15.24
+  (deepseek-v4.1-flash) / $6.02 (ling-3.0-flash-vl) / $4.05 (mercury-2.5)**
+  — still well under any reasonable budget, and these are now real-env-
+  measured token counts rather than the mock-env proxy or the original
+  pure-assumption budget estimate.
+- **Known real limitation, NOT fixed this session**: `ground_truth_runner`'s
+  paired forced-in/forced-out design needs `env.reset(task_seed=...)` to
+  seek back to the SAME task instance twice. `MockAlfredEnv` supports this
+  by construction; real ALFWorld's `env.reset()` ignores `task_seed`
+  entirely and just advances to the next game in sequence, so real-backend
+  ground-truth pairs would land on two different task instances today. This
+  needs solving (likely via TextWorld's lower-level `env.load(gamefile)`
+  against `AlfredTWEnv.game_files`) before Part C's real ground-truth reruns
+  can run — flagged, not solved, since it was out of this session's scope
+  (swap the env backend in and smoke-test it, not build ground-truth-on-
+  real-ALFWorld).

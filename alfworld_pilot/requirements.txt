@@ -3,3 +3,6 @@ pyyaml
 python-dotenv
 openai
 pytest
+alfworld           # text-only (no [full]/[vis] extras -- those pull in ai2thor/torch/opencv, unused here)
+tqdm               # imported directly by alfworld's AlfredTWEnv but not declared in alfworld's own install_requires
+termcolor          # same

@@ -94,8 +94,13 @@ def _parse_action(text: str, admissible_actions: list[str]) -> tuple[str, str, b
     return thought, admissible_actions[0], False
 
 
-def run_episode(env, llm_client: LLMClient, memory_texts: list[str], max_steps: int) -> EpisodeResult:
-    obs, info = env.reset()
+def run_episode(env, llm_client: LLMClient, memory_texts: list[str], max_steps: int, obs: str, info: dict) -> EpisodeResult:
+    """`obs`/`info` must come from the SAME `env.reset()` call whose
+    `task_type` drove memory retrieval upstream -- this function must not
+    reset the env itself, since a second reset would (a) hand the agent a
+    different task instance than the one memories were retrieved for, and
+    (b) advance a real ALFWorld env's game iterator an extra, unaccounted-for
+    step per episode."""
     admissible = info["admissible_commands"][0] if isinstance(info["admissible_commands"], list) and info["admissible_commands"] and isinstance(info["admissible_commands"][0], list) else info["admissible_commands"]
 
     result = EpisodeResult(success=False)
