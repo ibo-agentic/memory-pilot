@@ -898,3 +898,73 @@ simulator models. Left `max_steps` unchanged (an explicit prior cost
 control) rather than fixing it as a side effect of this check — flagging it
 as a deliberate call worth making, not silently changing it. Full table
 and per-type sample counts: `results/task_type_difficulty_check.json`.
+
+## Part C, round 2 (2026-09-19, same day): step cap fixed, a real resource leak found and mitigated, checkpointing built, model selection run with real spend
+
+Full details in `alfworld_pilot/README.md`. Summary:
+
+**Step cap raised 30 -> 50.** `step_cap_check.py` swept optimal-policy
+solvability at 30/40/50 steps: at 30, `pick_two_obj_and_place` solved only
+18% of the time (vs. 78-92% for other types) -- not a difficulty gap, a
+near-guaranteed structural failure. 40 barely helped (22%); only 50
+(ALFWorld's own standard cap) brought every type to ~100%. Re-measured real
+cost at the new cap: full 10030-episode plan now projects to $25.85-$97.19
+(word-count proxy) depending on model, vs. $13-50 at the old cap.
+`hard_cap_usd` raised 75 -> 90.
+
+**Real, upstream resource leak found and mitigated.** Running the
+difficulty/step-cap checks at a larger sample crashed twice with "No space
+left on device". Root cause: `fast_downward` (a `textworld`/`alfworld`
+dependency) `dlopen()`s a fresh ~32.5MB copy of its shared library on every
+PDDL game load and never `dlclose()`s it -- this machine's 5.8GB tmpfs
+`/tmp` fills after ~178 loads; confirmed the leak is scoped to the process
+(killing it reclaimed everything). Mitigated two ways: pointing `TMPDIR` at
+disk-backed storage (951GB free vs. 5.8GB tmpfs), and a new
+subprocess-per-chunk supervisor (`run_chunked.py`) that restarts the
+process periodically, built on new checkpointing infrastructure
+(`checkpointed_runner.py`: resumable logging/ground-truth phases, JSONL
+append+flush, per-task_id-seeded randomization so a crash+resume run
+reproduces an uninterrupted one byte-for-byte). `CostTracker` now persists
+its state across restarts too (was purely in-memory before -- a real gap,
+since a restarted process would otherwise start counting spend from $0).
+
+**Wall-clock estimate**: local overhead ~11.7 hours for the full plan;
+LLM call latency (pre-Part-C assumption: 1.5s/call, 50 calls/episode worst
+case) would add ~209 hours -- latency dominates by ~2 orders of magnitude.
+Serial execution: ~9 days. Parallelization flagged as needed before the
+real production run, not built yet.
+
+**Part C model-selection test run, REAL SPEND ($0.063 total)**: 5 real
+ALFWorld episodes each for `openai/gpt-5.6-luna`, `inclusionai/ling-3.0-
+flash-vl` (the paid variant), `google/gemini-3.8-flash`. Results:
+- `gpt-5.6-luna`: 60% success (3/5), 1594.2/33.3 avg in/out tokens per
+  call, 25.6 calls/episode, 5 parse failures. Full-plan projection: **$92.13**.
+- `ling-3.0-flash-vl`: hit a transient 429 (upstream rate limit) after 2
+  episodes on the first attempt -- caught cleanly by the test's per-model
+  exception handling, which moved on rather than crashing. Retried once;
+  the LLM cache made gpt-5.6-luna's replay free and ling only needed 3 new
+  episodes' worth of real calls. Second attempt: 60% success (3/5),
+  1718.9/74.2 avg in/out tokens per call, 29.0 calls/episode, but a much
+  higher parse-failure rate (40/145 ≈ 28% vs. gpt-5.6-luna's ≈4%). Full-plan
+  projection: **$33.88**.
+- `gemini-3.8-flash`: failed immediately, every attempt, with `400
+  Reasoning is mandatory for this endpoint and cannot be disabled` -- a
+  real, clean incompatibility with this pilot's `reasoning_enabled: false`
+  design (llm_client.py's docstring specifically calls out this failure
+  mode as something to surface, not swallow or silently work around).
+  Zero spend, zero episodes. Not retried with reasoning enabled -- that
+  changes the cost/latency profile and is a real design decision for the
+  user, not something to change unilaterally mid-test.
+
+Net: 2 of 3 candidates work; they differ meaningfully on cost ($92 vs $34
+for the full plan) and format-compliance (4% vs 28% parse failures) --
+worth weighing explicitly when picking a model for the real production run.
+The $10 test spending cap was never close to being hit by real usage
+(~$0.06 total); what it DID validate is that the exception handling for two
+different real failure modes (rate limit, incompatible API requirement)
+works as intended.
+
+**Still not done before the full production run**: pick a model,
+`determinism_check` against it, decide on parallelization, and run via
+`run_chunked.py` (not a single long process) with `TMPDIR` on disk-backed
+storage.

@@ -1,0 +1,10 @@
+{
+  "n_episodes": 10030,
+  "calls_per_episode_assumed": 50,
+  "llm_latency_s_assumed": 1.5,
+  "local_overhead_hours": 11.67,
+  "llm_call_hours_serial": 208.96,
+  "total_hours_serial": 220.63,
+  "total_days_serial": 9.19,
+  "note": "llm_latency_s_assumed is a STATED ASSUMPTION, not a measurement -- no real LLM calls have been made yet. Replace with Part C's real measured per-call latency once available. calls_per_episode_assumed=50 is a worst-case upper bound (every episode runs the full step cap); a real agent that sometimes succeeds early will use fewer calls on average."
+}

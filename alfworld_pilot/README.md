@@ -1,18 +1,20 @@
 # Stage 2 — ALFWorld pilot
 
-## Status (2026-09-19): real ALFWorld running, paired ground truth solved, still no real LLM API calls made
+## Status (2026-09-19, later): Part C started — real LLM spend has happened (~$0.06 total, model-selection test only)
 
 ALFWorld is installed and `env.backend: real` is config.yaml's default
-(`MockAlfredEnv` is kept for the unit test suite only, which imports it
-directly regardless of config.yaml). Everything has still been exercised
-only against `MockLLMClient` — `config.yaml`'s `llm.model_id` is `null` on
-purpose — `OpenRouterClient` refuses to construct with a null or
-"latest"-aliased model id, so nothing can accidentally spend money with an
-unintended default. Real API calls start only in Part C, after explicit
-approval, with a hard spending cap (`cost_control.hard_cap_usd`) enforced
-before every call. As of 2026-09-19, the venv runs Python 3.11 (down from
-3.14) and paired forced-in/forced-out ground truth works against real
-ALFWorld (see below) — the two items previously blocking Part C.
+(`MockAlfredEnv` is kept for the unit test suite only). The full
+10030-episode production run has NOT happened yet — what's run so far is a
+small (5 episodes x 3 candidate models), cost-capped model-selection test.
+See "Part C: model selection test results" below for what that found, and
+"Step cap raised to 50" / "Real resource leak found + mitigated" /
+"Checkpointing and chunked runs" for the infrastructure work that preceded
+it. `config.yaml`'s `llm.model_id` is still `null` (deliberately — no
+single model is picked yet) — `OpenRouterClient` refuses to construct with
+a null or "latest"-aliased model id, so nothing else can accidentally spend
+money with an unintended default. The venv runs Python 3.11 and paired
+forced-in/forced-out ground truth works against real ALFWorld (both solved
+earlier in the day — see git history for that story).
 
 ## Installing real ALFWorld (under WSL2 Ubuntu, Python 3.11)
 
@@ -216,6 +218,19 @@ src/alfworld_pilot/
   token_breakdown.py       decomposes one call's prompt into system/memories/history/actions
   task_type_difficulty_check.py  confirms 6-task-type coverage + a zero-cost (ALFWorld's own
                            scripted expert) difficulty-spread proxy per task type
+  step_cap_check.py        sweeps step-cap solvability (30/40/50) from ONE expert run per
+                           task type, reused from task_type_difficulty_check.py
+  checkpointed_runner.py   resumable logging/ground-truth phases (JSONL append+flush,
+                           per-task_id seeding) -- a chunk boundary and a mid-chunk crash
+                           are handled identically
+  run_chunked.py           subprocess-per-chunk supervisor built on checkpointed_runner.py --
+                           needed because real ALFWorld leaks ~32.5MB per new game load
+                           (see README's "Real resource leak" section) and only a process
+                           restart reclaims it
+  runtime_estimate.py      wall-clock estimate for the full plan (measured local overhead +
+                           an assumed, pre-Part-C LLM latency)
+  model_selection_test.py  Part C's real-spend model comparison (5 episodes x N candidate
+                           models, one shared cost-capped CostTracker)
 ```
 
 Settings (30 memories, propensity range [0.3, 0.7], M=10 unchanged) come
@@ -266,14 +281,175 @@ estimate.py` is an OLDER, pre-real-ALFWorld assumption-only estimate,
 superseded by this real-measured one and kept only as a historical
 reference point (its own docstring already says as much).
 
-## Before Part C (real spend)
+## Step cap raised 30 -> 50 (2026-09-19)
 
-1. Set `llm.model_id` in `config.yaml` to an exact pinned id (checked
-   against openrouter.ai's current listing, never a "latest" alias).
-2. Confirm `OPENROUTER_API_KEY` is set in the repo-root `.env`.
-3. Confirm `cost_control.hard_cap_usd` is what you want to risk.
-4. Run `determinism_check.check_determinism` against the real client before
-   trusting any ground-truth pair's determinism.
-5. Watch memory during the ground-truth rerun phase (see the operational
-   note above) — chunk it (restart the process every N pairs) if growth
-   reappears despite `RealAlfredEnv.close()`.
+`step_cap_check.py` (reuses one `task_type_difficulty_check.py` expert run,
+evaluated at several candidate caps rather than re-running the expert per
+cap) swept solvability at 30/40/50 steps, n=40 games/type:
+
+| task_type | cap=30 | cap=40 | cap=50 |
+|---|---|---|---|
+| pick_and_place_simple | 92% | 95% | 100% |
+| look_at_obj_in_light | 85% | 90% | 100% |
+| pick_clean_then_place_in_recep | 80% | 88% | 100% |
+| pick_heat_then_place_in_recep | 78% | 85% | 100% |
+| pick_cool_then_place_in_recep | 78% | 80% | 100% |
+| pick_two_obj_and_place | **18%** | **22%** | **100%** |
+
+At 30 (the original cost-controlled choice), `pick_two_obj_and_place` was
+solvable by an OPTIMAL policy only 18% of the time — not a difficulty gap,
+a near-guaranteed structural failure regardless of memories. 40 barely
+helps (22%) — the type's median solve length is right around there. Only
+50 (ALFWorld's own standard research cap) brings every type to ~100%
+optimal-policy solvability, while still leaving a real difficulty gap for a
+fallible real agent (more steps = more chances to err) — the kind of
+confound this pilot's OPE method is built to correct for, not "impossible
+by construction". `env.max_steps` raised to 50; re-measured real-env cost
+(2 real episodes, mock LLM): avg 1235.5 input / 14.1 output tokens/call,
+50.0 calls/episode (both hit the now-higher cap) — full 10030-episode plan
+now projects to **$25.85 (mercury-2.5) - $97.19 (deepseek-v4.1-flash)**,
+notably higher than at cap=30 ($13-50). `cost_control.hard_cap_usd` raised
+75.0 -> 90.0 accordingly. See "Part C: model selection test results" below
+for the REAL (non-word-count-proxy) version of this projection.
+
+## Real resource leak found + mitigated: fast_downward's un-closed dlopen (2026-09-19)
+
+Running `task_type_difficulty_check.py`/`step_cap_check.py` at a larger
+sample (n=40/type = 240 single-game env constructions) crashed twice with
+`OSError: [Errno 28] No space left on device`. Root cause, confirmed by
+reading the traceback into `fast_downward` (a `textworld`/`alfworld`
+dependency, upstream code): `fast_downward.interface.load_lib()` copies its
+~32.5MB native shared library to a **fresh** temp directory and `dlopen()`s
+it on **every** PDDL game load (i.e. every `env.reset()`/`.load()` to a NEW
+game, regardless of whether you reuse one long-lived env or build a fresh
+one per episode) — the temp directory is cleaned up right after (so `ls
+/tmp` shows nothing), but the loaded library is never `dlclose()`d, so its
+pages stay resident for the process's entire lifetime. This machine's
+`/tmp` is a 5.8GB tmpfs (RAM-backed) — at ~32.5MB/load, ~178 game loads
+exhausts it. Confirmed the leak is scoped to the PROCESS, not permanent:
+killing the crashed process immediately dropped tmpfs usage from ~5.4GB
+back to ~500KB.
+
+Two complementary mitigations (both needed for the ~10,000 game loads
+Part C's full plan will make):
+1. **Point `TMPDIR` at a disk-backed directory** (e.g. `export
+   TMPDIR=/home/ibo/tmp_downward`, on this machine's 951GB-free ext4 root,
+   not the 5.8GB tmpfs `/tmp`) before running anything real-ALFWorld. Moves
+   the ceiling from ~178 to ~29,000 game loads — doesn't fix the leak, just
+   gives it a much bigger tank. Used for every real run in this session.
+2. **`run_chunked.py`** (new): a subprocess-per-chunk supervisor built on
+   `checkpointed_runner.py`'s resumability — a chunk boundary and a
+   mid-chunk crash are handled identically (both just resume from the log's
+   current length), so restarting a fresh subprocess every `--chunk-size`
+   (default 100, comfortably under the ~178-load tmpfs ceiling as a second
+   line of defense even without the TMPDIR fix) episodes/pairs is free
+   correctness-wise. Verified end to end with a real subprocess-spawning
+   integration test (mock backend, zero cost).
+
+## Checkpointing and chunked runs (2026-09-19)
+
+`checkpointed_runner.py` (new) makes both phases resumable:
+- `run_logging_phase_checkpointed`: appends one JSON line per completed
+  episode, flushing immediately; resume point = the log's current line
+  count. Each episode's randomization is now seeded as a pure function of
+  its `task_id` (not one shared RNG stream advancing across the whole run)
+  so a crash+resume run reproduces byte-identical episodes to an
+  uninterrupted one, verified by a direct test.
+- `run_ground_truth_phase_checkpointed`: same idea per memory, with a
+  small JSON state file tracking `(pairs_found, next_seed_to_probe)`.
+- Both accept `max_new` to cap one call's work, which is what
+  `run_chunked.py`'s subprocess supervisor uses to bound each chunk.
+
+The other two things that need to survive a restart, alongside the above:
+- **Cost cap**: `CostTracker` now takes an optional `state_path` and
+  persists (atomic write) after every call/cache-hit, reloading on
+  construction. Without this, a restarted process would start counting
+  spend from $0 and could let real cumulative spend across a crash exceed
+  `hard_cap_usd` without any single call looking, in isolation, like it
+  crosses the line. Verified with a test that simulates exactly that
+  restart.
+- **Cache**: already file-per-request on disk (`cache.py`) — nothing to
+  change, confirmed nothing in it was ever held only in memory.
+
+## Wall-clock runtime estimate (2026-09-19, pre-Part-C)
+
+`runtime_estimate.py`: local overhead (env construction/stepping, measured
+directly with the mock LLM so it isolates from network latency) is
+~3.67s/episode (long-lived env) + ~0.52s/episode extra for the
+chunked/resumable design's fresh-env-per-episode pattern ≈ 4.19s/episode,
+totaling ~11.7 hours across the full 10030-episode plan. LLM call latency
+(NOT measured before Part C — a stated assumption of 1.5s/call, worst-case
+50 calls/episode) would add ~209 hours — **LLM latency dominates total wall
+time by roughly two orders of magnitude**. Serial execution of the full
+plan at these assumptions: ~220 hours (~9 days). Not attempted to fix in
+this session (would mean parallelizing across several worker processes
+sharing one cost-tracker/cache) — flagged as worth doing before the real
+production run, now that Part C's actual measured latency (below) is
+available to refine this estimate.
+
+## Part C: model selection test results (2026-09-19) — REAL SPEND, $0.063 total
+
+`model_selection_test.py`: 5 real ALFWorld episodes per candidate model,
+all 3 models facing the SAME 5 games (a fresh long-lived env per model
+restarts real ALFWorld's sequential game order from the start, so this
+falls out for free rather than needing special handling), one shared
+disk-persisted `CostTracker` hard-capped at $10 total across all 3 models
+combined. Model ids/pricing fetched from `https://openrouter.ai/api/v1/models`
+on 2026-09-19 (re-check before reuse) — note `inclusionai/ling-3.0-flash-vl`
+has a `:free` variant too; used the PAID one as specified.
+
+| model | result | success rate | avg in/out tokens/call | calls/episode | parse failures | spend (5 ep) | full-plan (10030 ep) projection |
+|---|---|---|---|---|---|---|---|
+| `openai/gpt-5.6-luna` | OK | 60% (3/5) | 1594.2 / 33.3 | 25.6 | 5 | $0.0459 | **$92.13** |
+| `inclusionai/ling-3.0-flash-vl` | OK (after 1 retry) | 60% (3/5) | 1718.9 / 74.2 | 29.0 | 40 | $0.0046 (+$0.0122 on the failed attempt) | **$33.88** |
+| `google/gemini-3.8-flash` | **FAILED, 0 episodes** | — | — | — | — | $0.0000 | — |
+
+Notes:
+- **gemini-3.8-flash failed immediately**: `400 Reasoning is mandatory for
+  this endpoint and cannot be disabled` — a real, clean incompatibility
+  with this pilot's `reasoning_enabled: false` design (see llm_client.py's
+  docstring; this is the exact failure mode it was written to surface, not
+  swallow). Not retried with reasoning enabled — that's a different cost/
+  latency profile and a real design decision, not something to silently
+  change and re-run.
+- **ling-3.0-flash-vl failed once, transiently**: a `429` from the
+  upstream provider (DeepInfra, via OpenRouter's shared pool) after 2
+  episodes — `model_selection_test.py`'s per-model exception handling
+  caught it, reported it, and moved on to the next candidate rather than
+  crashing the whole test. Retried once and it succeeded; the LLM cache
+  made the retry cheap (gpt-5.6-luna's already-completed calls replayed
+  from cache at $0.0000, ling-3.0-flash-vl resumed real calls only from
+  episode 2 onward).
+- **Both working models actually solved 3/5 real ALFWorld tasks** at
+  temperature=0 with only 30 generic short "lesson" memories (not tuned to
+  these specific games) — a first real (if tiny-sample) signal that the
+  agent loop and memory format work, not just that the plumbing runs.
+- **avg_calls_per_episode came in well under the 50-call worst case**
+  (25.6, 29.0) BECAUSE some episodes succeeded and ended early — real
+  full-plan projections ($92.13, $33.88) are correspondingly lower than the
+  mock-LLM word-count-based projection at the same cap ($97.19 for the
+  comparable model class).
+- **ling-3.0-flash-vl's parse-failure rate (40/145 ≈ 28%) is much higher
+  than gpt-5.6-luna's (5/128 ≈ 4%)** — a real, decision-relevant quality
+  difference between the two working candidates, worth weighing against
+  ling's much lower cost ($33.88 vs. $92.13 for the full plan).
+- Total real spend across the whole test (both attempts): **$0.0628** —
+  the $10 stop-if-exceeded cap was never close to being tested by real
+  usage; what it DID genuinely exercise was the per-model exception
+  handling for two different real failure modes.
+
+## Before Part C's full production run
+
+1. Pick a model from the above (or add more candidates) — cost, success
+   rate, and format-error rate all differ meaningfully between the two
+   that work.
+2. Set `llm.model_id` in `config.yaml` to the chosen exact pinned id.
+3. Confirm `cost_control.hard_cap_usd` (currently 90.0) is still what you
+   want to risk once a model is picked.
+4. Run `determinism_check.check_determinism` against the real client
+   before trusting any ground-truth pair's determinism (not done yet --
+   the model-selection test above didn't need it).
+5. Decide on parallelization (see "Wall-clock runtime estimate" above) --
+   serial execution at Part C's measured latency would take multiple days.
+6. Run via `run_chunked.py`, not a single long-running process, given the
+   resource-leak finding above -- point `TMPDIR` at disk-backed storage too.

@@ -1,9 +1,9 @@
 {
   "n_episodes_measured": 2,
-  "n_calls_measured": 60,
-  "avg_input_tokens_per_call": 1054.6666666666667,
-  "avg_output_tokens_per_call": 14.0,
-  "avg_calls_per_episode": 30.0,
+  "n_calls_measured": 100,
+  "avg_input_tokens_per_call": 1235.53,
+  "avg_output_tokens_per_call": 14.13,
+  "avg_calls_per_episode": 50.0,
   "success_rate_measured": 0.0,
   "episode_plan": {
     "memory_store_construction": 50,
@@ -11,9 +11,9 @@
     "ground_truth_reruns": 4980
   },
   "total_plan_episodes": 10030,
-  "projected_total_calls": 300900.0,
-  "projected_total_input_tokens": 317349200.0,
-  "projected_total_output_tokens": 4212600.0,
+  "projected_total_calls": 501500.0,
+  "projected_total_input_tokens": 619618295.0,
+  "projected_total_output_tokens": 7086195.0,
   "pricing_per_million_tokens_usd": {
     "deepseek-v4.1-flash": {
       "input": 0.15,
@@ -29,8 +29,8 @@
     }
   },
   "projected_cost_usd_by_model": {
-    "deepseek-v4.1-flash": 50.13,
-    "ling-3.0-flash-vl": 19.8,
-    "mercury-2.5": 13.33
+    "deepseek-v4.1-flash": 97.19,
+    "ling-3.0-flash-vl": 38.45,
+    "mercury-2.5": 25.85
   }
 }

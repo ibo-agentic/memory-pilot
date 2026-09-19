@@ -50,6 +50,29 @@ def test_cost_tracker_cache_hits_are_free():
     assert tracker.n_cache_hits == 2
 
 
+def test_cost_tracker_state_survives_a_simulated_restart(tmp_path: pathlib.Path):
+    state_path = tmp_path / "cost_state.json"
+
+    tracker1 = CostTracker(hard_cap_usd=10.0, price_per_million_input=1.0, price_per_million_output=1.0, state_path=state_path)
+    tracker1.record_call(input_tokens=1_000_000, output_tokens=0)  # $1.00
+    assert tracker1.total_spend_usd == pytest.approx(1.0)
+
+    # Simulate a crash + restart: a brand-new CostTracker pointed at the same
+    # state_path must pick up where the old one left off, not reset to $0.
+    tracker2 = CostTracker(hard_cap_usd=10.0, price_per_million_input=1.0, price_per_million_output=1.0, state_path=state_path)
+    assert tracker2.total_spend_usd == pytest.approx(1.0)
+    assert tracker2.n_calls == 1
+
+    tracker2.record_call(input_tokens=1_000_000, output_tokens=0)  # +$1.00 = $2.00 cumulative
+    assert tracker2.total_spend_usd == pytest.approx(2.0)
+
+    # The cap must reflect spend from BEFORE this restart too, not just this process's calls.
+    tracker3 = CostTracker(hard_cap_usd=2.5, price_per_million_input=1.0, price_per_million_output=1.0, state_path=state_path)
+    assert tracker3.total_spend_usd == pytest.approx(2.0)
+    with pytest.raises(CostCapExceeded):
+        tracker3.check_before_call(estimated_input_tokens=1_000_000, estimated_output_tokens=0)  # would hit $3.00 > $2.50 cap
+
+
 class _StubClient:
     """Returns fixed, possibly-differing responses per call -- used to test
     check_determinism's logic directly rather than relying on a mock LLM's

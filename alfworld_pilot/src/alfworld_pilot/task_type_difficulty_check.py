@@ -97,6 +97,11 @@ def run_expert_difficulty_proxy(
             "mean_steps_to_solve": sum(steps_list) / n if n else None,
             "median_steps_to_solve": steps_sorted[n // 2] if n else None,
             "pct_solvable_within_our_step_cap": 100 * fit_in_cap,
+            # raw per-game steps-to-solve (recorded as EXPERT_MAX_STEPS for unsolved games,
+            # which is >= any realistic candidate cap, so "steps <= cap" is still correct for
+            # them) -- lets step_cap_check.py evaluate solvability at several candidate caps
+            # from ONE expert run instead of re-running the expert once per candidate cap.
+            "steps_list": steps_list,
         }
     return results
 

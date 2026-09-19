@@ -4,7 +4,15 @@ env:
   # ALFWorld is installed (WSL2 Ubuntu; see README.md). "mock" is used by
   # the unit test suite only -- real pilot runs use "real".
   backend: real   # mock | real
-  max_steps: 30   # deliberately below ALFWorld's usual 50-step research cap, to control cost
+  # Raised 30 -> 50 (2026-09-19, see step_cap_check.py / results/step_cap_check.json):
+  # at 30 steps, an OPTIMAL scripted policy only solves pick_two_obj_and_place 18% of
+  # the time (vs. 78-92% for every other task type) -- that's not a difficulty gap, it's
+  # a near-guaranteed structural failure for one task type regardless of memories. Raising
+  # to 40 barely helps (22%); 50 (ALFWorld's own standard research cap) brings EVERY task
+  # type to ~100% optimal-policy solvability while still leaving a real difficulty gap for
+  # a fallible real agent (more steps = more chances to err), which is the confound this
+  # pilot's OPE method is built to correct for -- not "impossible by construction".
+  max_steps: 50
   # config passed through to alfworld's own get_environment(...) when backend=real;
   # unused by the mock backend. Resolved relative to this file's directory (see config.py).
   real_alfworld_config_path: configs/base_config.yaml
@@ -33,13 +41,18 @@ llm:
   max_output_tokens: 100     # a ReAct Thought+Action is short
 
 cost_control:
-  # Raised 2026-09-19 from 10.0 for the rescaled plan below: real-env-measured
-  # projection for the full 10030-episode plan is $13-50 depending on model
-  # (see results/measure_mode_real.json) -- 75.0 covers the priciest
-  # candidate model with margin for real tokenizers counting more tokens
-  # than this projection's word-count proxy, while staying under the
-  # user-stated $100 budget.
-  hard_cap_usd: 75.0   # run stops itself once cumulative spend reaches this
+  # Raised again 2026-09-19 after env.max_steps went 30 -> 50 (see above):
+  # the full 10030-episode plan now projects to $25.85-$97.19 depending on
+  # model (see results/measure_mode_real.json) -- deepseek-v4.1-flash's
+  # $97.19 leaves almost no margin under the user-stated $100 budget, and
+  # real tokenizers typically count MORE tokens than this projection's
+  # word-count proxy, so that model's full-plan cost could plausibly
+  # exceed $100 in practice. 90.0 gives a real stopping point before the
+  # full $100 regardless of which model Part C picks; if deepseek is
+  # chosen for the full run, its cost-effectiveness vs. the other two
+  # candidates ($38.45 / $25.85, comfortably affordable) is worth weighing
+  # explicitly, not just capped after the fact.
+  hard_cap_usd: 90.0   # run stops itself once cumulative spend reaches this
   # measure_mode runs a small number of episodes, records actual
   # input/output tokens per call, and projects total cost for the full
   # plan (see ../results/stage2_budget_estimate.json for that plan). Kept
