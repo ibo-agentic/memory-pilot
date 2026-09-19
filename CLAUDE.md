@@ -1054,3 +1054,36 @@ say anything about it specifically.
    premise is already "does OPE see through a task-type confound" (a
    bigger deliberate confound is a harder test, not an invalid one). Keeps
    `env.max_steps=50`, so the structural-failure fix stays intact.
+
+## Part C, round 5 (2026-09-20): small pilot run, REAL SPEND $2.00, ~$1.59 of $3.84 balance left
+
+`small_pilot.py`: 180 real ALFWorld episodes via `WeightedRealTaskSource`,
+checkpointed, stopped at its own $2.00 soft budget (shared cost-tracker
+state; cumulative $2.1908 / $3.00 hard cap). Full details in
+`alfworld_pilot/README.md`.
+
+**The ceiling fix worked**: overall success 66% (target was 50-70%), all 6
+task types represented (vs. 2/6 in the earlier naive-indexed sanity
+check), skewed toward harder types as designed (`pick_two_obj_and_place`
+51 episodes, down to `pick_cool_then_place_in_recep` 15).
+
+**All four estimators ran cleanly** on the resulting log against all 30
+memories (no NaNs). Pairwise Spearman: memory_worth vs ips = **-0.164**
+(negative), memory_worth vs snips/doubly_robust ~0.29 (weak positive),
+**snips vs doubly_robust = 0.922** (very strong agreement). This is the
+qualitative pattern the whole pilot exists to detect -- MW diverging from
+the propensity-corrected estimators, which cluster together -- showing up
+in a REAL log for the first time. **Caveat, explicit and important**:
+Stage 1's `small_data_results.py` found Spearman correlations stay too
+noisy to be conclusive below ~1000-2000 episodes even in the best-case
+simulated setting (bias is near-zero much earlier, but rank correlation
+swings widely seed-to-seed). At n=180, this result is **suggestive and
+consistent with the hypothesis, not a statistically decisive confirmation
+of it** -- and with no real-ALFWorld ground truth yet (that needs the
+ground-truth phase), there's no way yet to say which estimator's ranking
+is actually closer to correct, only that they disagree in the predicted
+direction. Full per-memory estimates: `results/small_pilot.json`.
+
+**Remaining real budget**: ~$1.59 of the original $3.84. The full
+10030-episode plan (~$63-92 projected) remains unaffordable as scoped --
+a from-real-numbers re-plan is the next step.

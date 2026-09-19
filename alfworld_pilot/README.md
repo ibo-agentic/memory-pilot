@@ -1,19 +1,21 @@
 # Stage 2 — ALFWorld pilot
 
-## Status (2026-09-19, later still): budget cut to $3.84 remaining — model picked, memory sanity check done, full run NOT started
+## Status (2026-09-20): small pilot done, ceiling effect fixed, ~$1.59 of $3.84 real balance left
 
-User's real remaining OpenRouter balance is $3.84. `llm.model_id` is now
-pinned to `openai/gpt-5.6-luna` (picked over `inclusionai/ling-3.0-flash-vl`
-specifically because of its 28% parse-failure rate — see "Part C: model
-selection test results" below — and over `google/gemini-3.8-flash`, which
-fails outright). `cost_control.hard_cap_usd` lowered 90 -> **3.00** (real
-buffer below the $3.84 actual balance). Total real spend across the whole
-project so far: **model-selection test $0.0628 (separate cost-tracker state
-file) + memory sanity check $0.1875 (shared production cost-tracker state,
-below) = $0.2503**. The full 10030-episode production run has NOT started.
-See "Memory sanity check results" below for the latest finding (memories do
-help, real spend $0.19), and "Step cap raised to 50" / "Real resource leak
-found + mitigated" / "Checkpointing and chunked runs" for the infrastructure
+`llm.model_id` pinned to `openai/gpt-5.6-luna`. `cost_control.hard_cap_usd`
+is **3.00** (real buffer below the original $3.84 balance). Total real
+spend across the whole project: model-selection test $0.0628 (separate
+cost-tracker state file) + shared production cost-tracker state $2.1908
+(memory sanity check $0.1875 + small pilot $2.0033) = **$2.2536** —
+roughly **$1.59 of the original $3.84 balance remains**. The full
+10030-episode production run has NOT started and, at real-measured cost
+($63-92 projected), is not affordable at this remaining budget as
+originally scoped. See "Small pilot" below for the latest result (66%
+success, 4 estimators run on 180 real episodes, a real-data signal
+consistent with the pilot's hypothesis but not yet statistically
+decisive), "Ceiling-effect diagnosis and fix" for why/how the task
+sampling changed, and "Step cap raised to 50" / "Real resource leak found
++ mitigated" / "Checkpointing and chunked runs" for the infrastructure
 that preceded it.
 
 ## Installing real ALFWorld (under WSL2 Ubuntu, Python 3.11)
@@ -543,16 +545,76 @@ say anything about it specifically.)
 | B. Lower `env.max_steps` (35 or 40) | Direct cap reduction | **Quantified, and bad**: `step_cap_check.py` re-run with cap=35 added: `pick_two_obj_and_place` solvability is 10% (cap=30) -> 12.5% (cap=35) -> 17.5% (cap=40) -> 100% (cap=50) by an OPTIMAL policy — every other task type stays 72-95% across 30-40. Lowering the cap re-breaks exactly ONE task type back to near-total structural failure while barely touching the others — reintroducing the precise confound Part C's step-cap fix (30->50) existed to remove. | **Rejected.** |
 | C. Weight task-type sampling toward harder types | New `weighted_task_source.WeightedRealTaskSource`: draws task type per `task_id` with probability proportional to that type's mean steps-to-solve (13.1-43.6, from `task_type_difficulty_check.py`'s real n=30/type measurement), then a game of that type — both draws pure functions of `task_id`, composing with existing checkpointing unchanged. | Moves the logged population away from ALFWorld's natural task-type proportions — a real trade-off for a deployment benchmark, much less so for a methods pilot whose whole premise is already "does OPE see through a task-type-correlated confound" (a bigger, deliberate confound is a HARDER test of that, not an invalid one). Keeps `env.max_steps=50`, so the structural-failure fix stays intact. | **Recommended — used for the small pilot below.** |
 
-## Small pilot (2026-09-19) — REAL SPEND
+## Small pilot (2026-09-19) — REAL SPEND, $2.00
+
+`small_pilot.py`: logged real ALFWorld episodes via `WeightedRealTaskSource`
+(recommended option C above), checkpointed, stopping at its $2.00 soft
+budget (shared cost-tracker state, hard cap unchanged at $3.00). **180
+episodes**, spend **$2.0033** this step (cumulative $2.1908 / $3.00).
+
+**The fix worked**: overall success rate **66%** — squarely in the target
+50-70% range, not pinned near ceiling. Task-type distribution actually
+achieved: `pick_two_obj_and_place` 51, `pick_heat_then_place_in_recep` 33,
+`pick_clean_then_place_in_recep` 32, `look_at_obj_in_light` 28,
+`pick_and_place_simple` 21, `pick_cool_then_place_in_recep` 15 — all 6
+types represented (vs. 2/6 in the naive-indexed sanity check), skewed
+toward harder types as designed.
+
+Ran all four estimators (`memory_ope.estimators`) on the resulting log
+against all 30 memories — every memory got a defined estimate from every
+estimator, no NaNs:
+
+| pair | Spearman |
+|---|---|
+| memory_worth vs ips | **-0.164** |
+| memory_worth vs snips | 0.291 |
+| memory_worth vs doubly_robust | 0.290 |
+| ips vs snips | 0.341 |
+| ips vs doubly_robust | 0.257 |
+| **snips vs doubly_robust** | **0.922** |
+
+**What this does and doesn't support**: Memory Worth's ranking is
+*negatively* correlated with plain IPS's and only weakly positively
+correlated with SNIPS/DR — while SNIPS and DR agree with each other very
+strongly (0.922). That's the qualitative pattern this whole pilot exists
+to detect (MW behaves differently — and, per Stage 1's simulator work,
+often *worse* — under a task-difficulty-like confound, while the
+variance-reduced propensity-corrected estimators cluster together) showing
+up in a REAL log for the first time. **But**: Stage 1's `small_data_
+results.py` found that even in the BEST-CASE simulated setting, Spearman
+correlations are too noisy to be conclusive below roughly 1000-2000
+episodes — bias is already near-zero by n=250, but rank correlations
+swing widely seed-to-seed until much larger n. At n=180 real episodes,
+**this result is suggestive and consistent with the pilot's hypothesis,
+not a statistically decisive confirmation of it** — a different 180-episode
+sample could plausibly show a different correlation pattern. No ground
+truth exists yet for real ALFWorld's per-memory values (that needs the
+ground-truth phase), so there's also no way yet to say which estimator's
+ranking is actually more CORRECT here, only that they disagree in the
+direction the pilot's hypothesis predicts.
+
+Top-5 / bottom-5 memories by doubly_robust (illustrative, not a reliable
+ranking at this n): estimates spread from -0.32 to +0.18 (a plausible
+causal-contrast scale, distinct from Memory Worth's ~0.4-0.9 raw-rate
+scale, consistent with every prior Stage 1 finding about the two living on
+different scales). Full per-memory numbers: `results/small_pilot.json`.
+
+## Before Part C's full production run
 
 1. ~~Pick a model~~ — done (`openai/gpt-5.6-luna`).
-2. ~~Confirm memories change anything at all~~ — done, they do (above).
-3. Run `determinism_check.check_determinism` against the real client
-   before trusting any ground-truth pair's determinism (not done yet).
-4. Decide on parallelization (see "Wall-clock runtime estimate" above) --
+2. ~~Confirm memories change anything at all~~ — done, they do (memory
+   sanity check).
+3. ~~Fix the ceiling effect~~ — done (weighted task-type sampling; small
+   pilot landed at 66% success).
+4. Run `determinism_check.check_determinism` against the real client
+   before trusting any ground-truth pair's determinism (still not done).
+5. Decide on parallelization (see "Wall-clock runtime estimate" above) --
    serial execution at Part C's measured latency would take multiple days.
-5. Run via `run_chunked.py`, not a single long-running process, given the
+6. Run via `run_chunked.py`, not a single long-running process, given the
    resource-leak finding above -- point `TMPDIR` at disk-backed storage too.
-6. Given the $3.84 real balance, the full 10030-episode plan (~$63-92
-   projected) is NOT affordable as scoped — see the small-pilot and
-   re-planning steps for what fits instead.
+7. Given the $3.84 real starting balance (now ~$1.65 left after the
+   sanity check + small pilot's combined $2.19), the full 10030-episode
+   plan (~$63-92 projected) remains NOT affordable as scoped — see a
+   from-real-numbers re-plan (episode count vs. cost trade-offs at this
+   budget) as the next planning step, not assumed still-current numbers
+   from before real spend started.
