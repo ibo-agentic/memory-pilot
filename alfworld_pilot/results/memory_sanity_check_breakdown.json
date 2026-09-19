@@ -1,0 +1,19 @@
+{
+  "by_task_type": {
+    "pick_and_place_simple": {
+      "n_pairs": 13,
+      "with_memories_successes": 13,
+      "baseline_successes": 11,
+      "with_memories_rate": 1.0,
+      "baseline_rate": 0.8461538461538461
+    },
+    "pick_two_obj_and_place": {
+      "n_pairs": 2,
+      "with_memories_successes": 1,
+      "baseline_successes": 1,
+      "with_memories_rate": 0.5,
+      "baseline_rate": 0.5
+    }
+  },
+  "n_task_types_covered": 2
+}

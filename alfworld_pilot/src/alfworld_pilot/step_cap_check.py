@@ -21,7 +21,7 @@ from .env_factory import load_real_alfworld_config
 from .env_interface import TASK_TYPES
 from .task_type_difficulty_check import check_task_type_coverage, run_expert_difficulty_proxy
 
-CANDIDATE_CAPS = [30, 40, 50]
+CANDIDATE_CAPS = [30, 35, 40, 50]
 N_SAMPLES_PER_TYPE = 40
 # A cap is "acceptable" if every task type clears this floor -- below it, a
 # task type's failures are dominated by "ran out of steps" rather than by

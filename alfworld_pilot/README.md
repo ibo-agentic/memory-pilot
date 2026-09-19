@@ -504,7 +504,46 @@ Real spend: **$0.1875** for this step (target was ~$0.30) — cumulative
 shared production spend now $0.1875 / $3.00 hard cap. Not stopping per the
 "if memories don't change success at all" condition, since they clearly do.
 
-## Before Part C's full production run
+## Ceiling-effect diagnosis and fix (2026-09-19) — zero new spend for the diagnosis
+
+93% success is too close to 100% to resolve individual memory effects: the
+ground-truth power analysis can resolve deltas of ~0.10-0.15 at this
+pilot's real budget, and any true per-memory effect gets mechanically
+squeezed toward 0 once the base rate is pinned near the ceiling. Two
+findings, both from data already in hand (no new API spend):
+
+**(1) Per-task-type breakdown of the 15-pair sanity check**
+(`memory_sanity_check_breakdown.py`, recovers `task_type` per pair from
+the deterministic game-index mapping — no LLM calls needed):
+
+| task_type | n pairs | with-memories success | baseline success |
+|---|---|---|---|
+| `pick_and_place_simple` | 13 | 13/13 (100%) | 11/13 (85%) |
+| `pick_two_obj_and_place` | 2 | 1/2 (50%) | 1/2 (50%) |
+| (4 other types) | 0 | — | — |
+
+**Root cause: an accidental sampling bias, not general task ease.** The
+sanity check picked games via `task_id % len(game_files)` over
+`list_real_game_files`'s raw filesystem-walk order — and the first 15
+indices in that order happen to land 13/15 on `pick_and_place_simple` (the
+EASIEST type by every difficulty measure so far) and only 2/15 on
+`pick_two_obj_and_place` (the hardest), with zero samples from the other 4
+types entirely. The pooled 93%/80% figures are really "93%/80% on an
+84%-easy-type sample," not a representative measurement. (All 2 discordant
+with/baseline pairs from the earlier report were also both
+`pick_and_place_simple` — the "memories help" signal so far comes entirely
+from the easy type; `pick_two_obj_and_place` had too few samples, 2, to
+say anything about it specifically.)
+
+**(2) Three options to reach 50-70% overall success:**
+
+| option | mechanism | cost | verdict |
+|---|---|---|---|
+| A. Unseen/harder ALFWorld split | `real_split: eval_out_of_distribution` | Zero code change, but **uncertain benefit for THIS agent**: ALFWorld's seen/unseen split distinction is about which object/scene combinations an RL-trained policy saw during training. A zero-shot LLM ReAct agent never trains on any split — no clear reason it would find "unseen" scenes harder. No data to predict an effect size. | Not recommended as the primary fix; possibly worth layering on later. |
+| B. Lower `env.max_steps` (35 or 40) | Direct cap reduction | **Quantified, and bad**: `step_cap_check.py` re-run with cap=35 added: `pick_two_obj_and_place` solvability is 10% (cap=30) -> 12.5% (cap=35) -> 17.5% (cap=40) -> 100% (cap=50) by an OPTIMAL policy — every other task type stays 72-95% across 30-40. Lowering the cap re-breaks exactly ONE task type back to near-total structural failure while barely touching the others — reintroducing the precise confound Part C's step-cap fix (30->50) existed to remove. | **Rejected.** |
+| C. Weight task-type sampling toward harder types | New `weighted_task_source.WeightedRealTaskSource`: draws task type per `task_id` with probability proportional to that type's mean steps-to-solve (13.1-43.6, from `task_type_difficulty_check.py`'s real n=30/type measurement), then a game of that type — both draws pure functions of `task_id`, composing with existing checkpointing unchanged. | Moves the logged population away from ALFWorld's natural task-type proportions — a real trade-off for a deployment benchmark, much less so for a methods pilot whose whole premise is already "does OPE see through a task-type-correlated confound" (a bigger, deliberate confound is a HARDER test of that, not an invalid one). Keeps `env.max_steps=50`, so the structural-failure fix stays intact. | **Recommended — used for the small pilot below.** |
+
+## Small pilot (2026-09-19) — REAL SPEND
 
 1. ~~Pick a model~~ — done (`openai/gpt-5.6-luna`).
 2. ~~Confirm memories change anything at all~~ — done, they do (above).

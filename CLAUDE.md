@@ -1013,3 +1013,44 @@ inclusion vs. every candidate forced to 0). Results:
 ($63-92) is no longer affordable against a $3.84 balance -- re-planning
 against the real remaining budget is the next step, not running the full
 plan as previously scoped.
+
+## Part C, round 4 (2026-09-19, same day): ceiling-effect diagnosis and fix, zero new spend
+
+93% success (memory sanity check) is too close to ceiling to resolve
+per-memory effects of 0.10-0.15 (what ground truth can detect at this
+budget). Diagnosed and fixed using data already in hand -- no new API
+spend for this round. Full details in `alfworld_pilot/README.md`.
+
+**Per-task-type breakdown** (`memory_sanity_check_breakdown.py`, task_type
+recovered from the deterministic game-index mapping, zero LLM calls):
+13/15 sanity-check pairs were `pick_and_place_simple` (the easiest type),
+2/15 `pick_two_obj_and_place` (the hardest), 0/15 from the other 4 types.
+Root cause: `task_id % len(game_files)` over `list_real_game_files`'s raw
+filesystem-walk order happens to concentrate early indices on one type --
+an accident of directory traversal, not a deliberate sample. The 93%/80%
+figures are "93%/80% on an 84%-easy-type sample," and the 2 discordant
+with/baseline pairs (the whole "memories help" signal so far) were both
+the easy type -- `pick_two_obj_and_place` had only 2 samples, too few to
+say anything about it specifically.
+
+**Three options considered for reaching 50-70% success:**
+1. Unseen/harder ALFWorld split -- uncertain benefit for a zero-shot LLM
+   agent (the seen/unseen distinction is about RL-training exposure, which
+   doesn't apply here); not recommended as the primary fix.
+2. Lower `env.max_steps` (35/40) -- quantified and rejected:
+   `step_cap_check.py` rerun with cap=35 added shows `pick_two_obj_and_place`
+   solvability at 10% (cap=30) / 12.5% (35) / 17.5% (40) / 100% (50) by an
+   OPTIMAL policy, while every other type stays 72-95% across 30-40 --
+   this reintroduces the exact single-task-type structural failure the
+   30->50 step-cap fix was built to remove.
+3. **Weight task-type sampling toward harder types (chosen)**: new
+   `weighted_task_source.WeightedRealTaskSource` draws each episode's task
+   type with probability proportional to that type's mean steps-to-solve
+   (13.1-43.6, from the real n=30/type measurement), then a game of that
+   type -- both pure functions of `task_id`, composing with existing
+   checkpointing unchanged. Trade-off: moves the logged population away
+   from ALFWorld's natural task-type proportions, which matters for a
+   deployment benchmark but not much for a methods pilot whose whole
+   premise is already "does OPE see through a task-type confound" (a
+   bigger deliberate confound is a harder test, not an invalid one). Keeps
+   `env.max_steps=50`, so the structural-failure fix stays intact.
