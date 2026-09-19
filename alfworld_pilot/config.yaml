@@ -29,30 +29,31 @@ retrieval:
   propensity_max: 0.7      # per signal_boost_check's recommendation (was 0.9 in Stage 1 default)
 
 llm:
-  # OpenAI-compatible client pointed at OpenRouter. Model id is an EXACT
-  # pinned string, never a "latest" alias -- set this after Part C's model
-  # selection test confirms real ids/prices. Left null so nothing can
-  # accidentally call an API with an unintended default.
-  model_id: null
+  # Chosen 2026-09-19 after Part C's model-selection test (results/
+  # model_selection_test.json): openai/gpt-5.6-luna over inclusionai/
+  # ling-3.0-flash-vl (cheaper but 28% parse-failure rate vs. gpt-5.6-luna's
+  # ~4% -- disqualifying since failures may scale with prompt size, and
+  # therefore with how many memories are included, which would confound
+  # the very thing this pilot measures) and over google/gemini-3.8-flash
+  # (fails outright: mandatory reasoning, incompatible with reasoning_enabled: false below).
+  model_id: openai/gpt-5.6-luna
   base_url: "https://openrouter.ai/api/v1"
   api_key_env_var: OPENROUTER_API_KEY
   reasoning_enabled: false   # sent as {"reasoning": {"enabled": false}}; some models reject this (mandatory reasoning) -- see llm_client.py
   temperature: 0.0           # 0 for determinism; ground-truth paired runs also try a fixed `seed` param when the provider supports it
   max_output_tokens: 100     # a ReAct Thought+Action is short
+  # Fetched from https://openrouter.ai/api/v1/models on 2026-09-19 -- re-check before reuse.
+  pricing_per_million_tokens:
+    input: 0.20
+    output: 1.20
 
 cost_control:
-  # Raised again 2026-09-19 after env.max_steps went 30 -> 50 (see above):
-  # the full 10030-episode plan now projects to $25.85-$97.19 depending on
-  # model (see results/measure_mode_real.json) -- deepseek-v4.1-flash's
-  # $97.19 leaves almost no margin under the user-stated $100 budget, and
-  # real tokenizers typically count MORE tokens than this projection's
-  # word-count proxy, so that model's full-plan cost could plausibly
-  # exceed $100 in practice. 90.0 gives a real stopping point before the
-  # full $100 regardless of which model Part C picks; if deepseek is
-  # chosen for the full run, its cost-effectiveness vs. the other two
-  # candidates ($38.45 / $25.85, comfortably affordable) is worth weighing
-  # explicitly, not just capped after the fact.
-  hard_cap_usd: 90.0   # run stops itself once cumulative spend reaches this
+  # Reset 2026-09-19: user's real remaining OpenRouter balance is $3.84
+  # (after the $0.063 already spent on the model-selection test, tracked
+  # separately in model_selection_test_cost_state.json, not this cap).
+  # 3.00 leaves a real buffer below the true remaining balance so a run
+  # never hits an actual empty-wallet failure mid-episode.
+  hard_cap_usd: 3.00   # run stops itself once cumulative spend reaches this
   # measure_mode runs a small number of episodes, records actual
   # input/output tokens per call, and projects total cost for the full
   # plan (see ../results/stage2_budget_estimate.json for that plan). Kept

@@ -1,20 +1,20 @@
 # Stage 2 — ALFWorld pilot
 
-## Status (2026-09-19, later): Part C started — real LLM spend has happened (~$0.06 total, model-selection test only)
+## Status (2026-09-19, later still): budget cut to $3.84 remaining — model picked, memory sanity check done, full run NOT started
 
-ALFWorld is installed and `env.backend: real` is config.yaml's default
-(`MockAlfredEnv` is kept for the unit test suite only). The full
-10030-episode production run has NOT happened yet — what's run so far is a
-small (5 episodes x 3 candidate models), cost-capped model-selection test.
-See "Part C: model selection test results" below for what that found, and
-"Step cap raised to 50" / "Real resource leak found + mitigated" /
-"Checkpointing and chunked runs" for the infrastructure work that preceded
-it. `config.yaml`'s `llm.model_id` is still `null` (deliberately — no
-single model is picked yet) — `OpenRouterClient` refuses to construct with
-a null or "latest"-aliased model id, so nothing else can accidentally spend
-money with an unintended default. The venv runs Python 3.11 and paired
-forced-in/forced-out ground truth works against real ALFWorld (both solved
-earlier in the day — see git history for that story).
+User's real remaining OpenRouter balance is $3.84. `llm.model_id` is now
+pinned to `openai/gpt-5.6-luna` (picked over `inclusionai/ling-3.0-flash-vl`
+specifically because of its 28% parse-failure rate — see "Part C: model
+selection test results" below — and over `google/gemini-3.8-flash`, which
+fails outright). `cost_control.hard_cap_usd` lowered 90 -> **3.00** (real
+buffer below the $3.84 actual balance). Total real spend across the whole
+project so far: **model-selection test $0.0628 (separate cost-tracker state
+file) + memory sanity check $0.1875 (shared production cost-tracker state,
+below) = $0.2503**. The full 10030-episode production run has NOT started.
+See "Memory sanity check results" below for the latest finding (memories do
+help, real spend $0.19), and "Step cap raised to 50" / "Real resource leak
+found + mitigated" / "Checkpointing and chunked runs" for the infrastructure
+that preceded it.
 
 ## Installing real ALFWorld (under WSL2 Ubuntu, Python 3.11)
 
@@ -438,18 +438,82 @@ Notes:
   usage; what it DID genuinely exercise was the per-model exception
   handling for two different real failure modes.
 
+## Model picked: openai/gpt-5.6-luna (2026-09-19)
+
+User's real remaining OpenRouter balance dropped to $3.84, forcing a
+decision now rather than running more comparison. Picked
+`openai/gpt-5.6-luna` over `inclusionai/ling-3.0-flash-vl` specifically
+because of the latter's 28% parse-failure rate (vs. gpt-5.6-luna's ~4%):
+**a format-failure rate that might scale with prompt size would scale with
+how many memories got included, which would confound the exact causal
+contrast this pilot measures** — a memory's measured effect could partly
+just be "did the agent's output happen to parse this time", correlated
+with retrieval rather than with the memory's real usefulness. Cost
+($33.88 vs. $92.13 full-plan, per the model-selection test) was the
+opposite direction, but reliability came first — a cheaper but confounded
+signal isn't worth having. `google/gemini-3.8-flash` isn't a candidate at
+all (fails outright, mandatory reasoning). `config.yaml`'s `llm.model_id`,
+`pricing_per_million_tokens`, and `cost_control.hard_cap_usd` (90 -> 3.00)
+all updated to match.
+
+## Memory sanity check results (2026-09-19) — REAL SPEND, $0.19
+
+`memory_sanity_check.py`: 15 PAIRED episodes (30 total) on real ALFWorld,
+`openai/gpt-5.6-luna`. Each pair uses the SAME real ALFWorld game for both
+arms (via `RealAlfredEnv`'s `gamefile_path`) and the SAME rng seed, so
+candidate_ids/similarity/propensities are byte-identical between arms —
+only whether the drawn memories are actually included differs:
+- **with_memories**: normal randomized inclusion (a real logging episode)
+- **baseline**: every candidate forced to `included=0` — no memories at all
+
+| | success rate |
+|---|---|
+| with memories | **93%** (14/15) |
+| baseline (no memories) | **80%** (12/15) |
+
+Of the 15 pairs, 13 were concordant (same outcome both arms); of the 2
+discordant pairs, **both** went with_memories=success / baseline=failure,
+none the other way. That's a small, directionally consistent effect, not a
+statistically decisive one at n=15 (McNemar-style exact test on 2
+discordant pairs, both favoring memories: p=0.25, not significant) — but
+it answers the sanity-check question the way that makes the larger pilot
+worth running: **memories are not doing nothing.**
+
+- **(b) parse failures vs. memory count / prompt length**: correlation(n_
+  included memories, parse_failures) = **0.008** across all 30 episodes —
+  essentially zero. correlation(avg prompt tokens/call, parse_failures) =
+  **0.17** — weak, and likely driven by a few individual GAMES that were
+  hard for the model regardless of arm (e.g. pair 6: 43 parse failures with
+  memories AND 38 without, on the same game) rather than by memory count
+  itself. No evidence so far that format failures scale with how many
+  memories got included.
+- **(c) real tokens/call**: 1035.0 in / 34.9 out, pooled across both arms.
+  Lower than the model-selection test's 1594.2 in for gpt-5.6-luna, because
+  that number was WITH-memories-only episodes on different games; THIS
+  number is diluted by the baseline arm's shorter, memory-free prompts —
+  **not directly comparable to what the real production run's tokens/call
+  will look like**, since production episodes are (almost) all
+  with-memories, not a 50/50 mix. Step 2's larger pilot (no baseline arm)
+  will give a cleaner number.
+- **(d) updated full-plan cost projection**: $62.90 for the full
+  10030-episode plan — again pooled across both arms, so likely an
+  UNDER-estimate of real production cost (baseline episodes are cheaper).
+  Treat step 2's projection as more reliable once available.
+
+Real spend: **$0.1875** for this step (target was ~$0.30) — cumulative
+shared production spend now $0.1875 / $3.00 hard cap. Not stopping per the
+"if memories don't change success at all" condition, since they clearly do.
+
 ## Before Part C's full production run
 
-1. Pick a model from the above (or add more candidates) — cost, success
-   rate, and format-error rate all differ meaningfully between the two
-   that work.
-2. Set `llm.model_id` in `config.yaml` to the chosen exact pinned id.
-3. Confirm `cost_control.hard_cap_usd` (currently 90.0) is still what you
-   want to risk once a model is picked.
-4. Run `determinism_check.check_determinism` against the real client
-   before trusting any ground-truth pair's determinism (not done yet --
-   the model-selection test above didn't need it).
-5. Decide on parallelization (see "Wall-clock runtime estimate" above) --
+1. ~~Pick a model~~ — done (`openai/gpt-5.6-luna`).
+2. ~~Confirm memories change anything at all~~ — done, they do (above).
+3. Run `determinism_check.check_determinism` against the real client
+   before trusting any ground-truth pair's determinism (not done yet).
+4. Decide on parallelization (see "Wall-clock runtime estimate" above) --
    serial execution at Part C's measured latency would take multiple days.
-6. Run via `run_chunked.py`, not a single long-running process, given the
+5. Run via `run_chunked.py`, not a single long-running process, given the
    resource-leak finding above -- point `TMPDIR` at disk-backed storage too.
+6. Given the $3.84 real balance, the full 10030-episode plan (~$63-92
+   projected) is NOT affordable as scoped — see the small-pilot and
+   re-planning steps for what fits instead.

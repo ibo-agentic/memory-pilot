@@ -968,3 +968,48 @@ works as intended.
 `determinism_check` against it, decide on parallelization, and run via
 `run_chunked.py` (not a single long process) with `TMPDIR` on disk-backed
 storage.
+
+## Part C, round 3 (2026-09-19, same day): budget cut to $3.84, model picked, memory sanity check run
+
+User's real remaining OpenRouter balance dropped to $3.84 (from the $0.063
+already spent in round 2). `cost_control.hard_cap_usd` lowered 90 -> 3.00
+(a real buffer below the true remaining balance). Full details in
+`alfworld_pilot/README.md`; summary:
+
+**Model decision: `openai/gpt-5.6-luna`**, not `inclusionai/ling-3.0-flash-
+vl` despite the latter being ~3x cheaper for the full plan ($33.88 vs.
+$92.13) -- ling's 28% parse-failure rate (vs. gpt-5.6-luna's ~4%) is
+disqualifying because a format-failure rate that scales with prompt size
+would scale with how many memories got included, confounding the exact
+causal contrast this pilot measures. `google/gemini-3.8-flash` was never a
+real candidate (fails outright on mandatory reasoning). `config.yaml`
+updated: `llm.model_id`, a new `llm.pricing_per_million_tokens` field, and
+the lowered hard cap.
+
+**Memory sanity check, REAL SPEND $0.1875** (`memory_sanity_check.py`, 15
+paired episodes = 30 total, real ALFWorld, gpt-5.6-luna). Paired design:
+same real game AND same rng seed for both arms of a pair (via
+`RealAlfredEnv.gamefile_path`), so candidate_ids/similarity/propensities
+are identical -- only actual inclusion differs (normal randomized
+inclusion vs. every candidate forced to 0). Results:
+- Success rate WITH memories 93% (14/15) vs. BASELINE (no memories) 80%
+  (12/15). Of 15 pairs, 13 concordant; of the 2 discordant, BOTH favored
+  memories, none the other way -- small and not statistically decisive at
+  this n (McNemar exact p=0.25), but directionally consistent: memories
+  are not doing nothing, which is what this check existed to rule out.
+- Parse failures essentially uncorrelated with memory count (r=0.008,
+  n=30) and only weakly correlated with prompt length (r=0.17, likely
+  driven by a few individual games that were hard for the model in BOTH
+  arms, not by memory count itself) -- no evidence format failures scale
+  with how many memories got included.
+- Real tokens/call (1035.0 in / 34.9 out) and the resulting full-plan
+  projection ($62.90) are pooled across the with-memories and
+  zero-memory-baseline arms, so likely underestimate real production cost
+  (production episodes are almost all with-memories) -- flagged as
+  provisional, to be superseded by the next step's cleaner number.
+- Spend: $0.1875 (target ~$0.30), well under the shared $3.00 hard cap.
+
+**Budget reality**: the full 10030-episode plan's real-measured cost
+($63-92) is no longer affordable against a $3.84 balance -- re-planning
+against the real remaining budget is the next step, not running the full
+plan as previously scoped.
