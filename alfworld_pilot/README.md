@@ -1,5 +1,20 @@
 # Stage 2 — ALFWorld pilot
 
+## Status (2026-09-20, later still): effect-size analysis confirms the null is a design problem, not an estimator problem — zero new spend
+
+`effect_size_analysis.py` quantifies what the mini ground truth's null
+result already suggested: individual per-memory effects in the current
+30-memory store are at or below the noise floor of any affordable real
+data collection, by two independent lines of evidence (the population-wide
+noise-vs-signal decomposition and the 4 direct ground-truth measurements
+agree). Resolving the full 30-memory store at the effect size actually
+found (~0.03) would cost **~$970** — not a viable next step at this
+project's budget. See "Effect-size analysis" below for the full
+methodology, the redesign proposals (small deliberately-engineered memory
+store, ranking vs. detection framings), and their cost/power trade-offs
+— none of which have been run; `hard_cap_usd` and all frozen settings are
+unchanged, no API calls were made for this analysis.
+
 ## Status (2026-09-20, later): mini ground truth run complete — result is a genuine null, not decisive for either estimator
 
 User topped up OpenRouter credit to ~$17.80. `cost_control.hard_cap_usd`
@@ -702,6 +717,137 @@ different selection criterion less prone to this inflation, or accepting
 that these 4 memories may simply have small true effects. Full per-memory
 data: `results/mini_ground_truth_analysis.json`, `results/
 mini_ground_truth_selection.json`.
+
+## Effect-size analysis (2026-09-20) — zero new spend, prompted by the null result
+
+Prompted by the mini ground truth's null: are the 30-memory store's
+individual effects simply too small to measure at any realistic budget?
+`effect_size_analysis.py` (`results/effect_size_analysis.json`) answers
+this with two independent lines of evidence, both computed from data
+already in hand.
+
+### 1. How large are real per-memory effects, typically?
+
+**Line of evidence A — noise-vs-signal decomposition (all 30 memories,
+n=180 small-pilot episodes).** Computed the theoretical null-model
+standard error of the IPS estimator per memory (using each memory's real
+candidacy count [40-85 episodes/memory] and real propensities, under the
+null that its true effect is exactly 0), then compared to the ACTUALLY
+OBSERVED spread of IPS point estimates across all 30 memories:
+
+| | value |
+|---|---|
+| Mean null-model SE per memory (if true effect = 0) | 0.2202 |
+| Observed std of IPS estimates across 30 memories | 0.2063 |
+| Observed range | 0.892 (pure-noise-predicted range: ~0.837) |
+
+The observed spread is **no larger than pure sampling noise predicts** —
+if anything, slightly smaller. Method-of-moments (`Var(observed) -
+Var(noise)`) comes out **negative** (-0.0059): noise alone fully explains
+everything we see in the 30-memory pool. This is independent of which
+estimator you use -- it's a statement about how much REAL variation
+across memories the data contains, not an estimator's ability to find it.
+
+**Line of evidence B — the 4 direct ground-truth measurements.** These
+were selected specifically for LOOKING most different (biggest MW-vs-IPS
+disagreement) and still came back with a spread of just 0.053 -- smaller
+than any one of their own 95% CIs. Real measured rho (0.616-0.666, mean
+0.636) is far higher than the 0.154 simulator-derived proxy used to plan
+pair counts -- real paired episodes are much MORE correlated than
+assumed, which is favorable (tighter CIs per pair than planned for), but
+doesn't change the underlying finding: even the best-case-selected
+memories show effects near the noise floor.
+
+**Both lines agree: typical real per-memory effects in this store are
+close to 0, with an upper bound somewhere around 0.03-0.05** (the largest
+individual gap measured, and consistent with the population-wide analysis
+finding no signal above noise).
+
+### 2. Episodes needed to resolve effects of that size — is this design measurable at any realistic budget?
+
+Using the REAL measured rho (0.636) and real Var(Y) (0.224), pairs needed
+per memory for 80% power, two-sided:
+
+| target effect (delta) | pairs/memory needed |
+|---|---|
+| 0.15 (original target) | 57 (fewer than the 133 originally planned -- real rho is more favorable than the simulator proxy) |
+| 0.10 | 128 |
+| 0.05 | 514 |
+| **0.03 (largest gap actually found)** | **1424** |
+| 0.02 | 3205 |
+
+Resolving the **full 30-memory store** at delta=0.03 (the size we
+actually found) would need ~85,463 episodes, costing **~$970** at real
+measured per-task-type rates. **No: the current design (30 generic,
+similar-quality memories, full ranking target) is not measurable at any
+budget this project has had or is likely to have.** The mini ground
+truth's null wasn't bad luck in memory selection -- it's what any 4 (or
+30) memories from this store would show, because there just isn't much
+real between-memory variation to find.
+
+## Redesign proposals (2026-09-20) — NOT run, zero spend
+
+Both proposals keep every frozen setting (model, max_steps, propensity
+range, weighted task sampling) and only change the memory STORE itself
+(smaller, deliberately quality-varied) and, for option (b), the
+evaluation TARGET.
+
+### (a) Small store (5-8 memories) with deliberately helpful/misleading content
+
+Replace the 30 generic "lesson" memories with ~6 deliberately
+engineered ones: 2-3 genuinely correct/helpful, 2-3 actively WRONG
+(e.g. naming the wrong receptacle, an inefficient/incorrect procedure),
+optionally 1-2 irrelevant/off-topic ones (testing whether noise memories
+hurt via distraction). This directly engineers a KNOWN-DIRECTION,
+hopefully-large effect rather than relying on subtle quality differences
+between similar, competently-written lessons.
+
+**Effect size: an ASSUMPTION, not yet measured** -- plausibly 0.15-0.40
+for an actively wrong memory if the agent follows it, but real risk the
+LLM just ignores a nonsensical instruction, realizing a smaller effect
+than hoped. Recommend a cheap validation check (a handful of episodes,
+~$0.10-0.20) before committing to a fully-powered run, to confirm the
+manipulation actually moves success at all -- exactly the "memory sanity
+check" pattern already used once in this project.
+
+Episodes/cost for 6 memories, two-sided ranking target, real rho:
+
+| delta | pairs/memory | total episodes | cost |
+|---|---|---|---|
+| 0.15 | 57.0 | 684 | $7.75 |
+| 0.25 | 20.5 | 246 | $2.79 |
+| 0.35 | 10.5 | 126 | $1.42 |
+
+### (b) Reframe as "detect the harmful ones" (detection accuracy, not rank correlation)
+
+Same engineered memory store as (a), but ask a coarser question: does an
+estimator correctly flag the deliberately-harmful memories as harmful
+(e.g., bottom-K by estimated value, or simply "significantly negative"),
+rather than getting every memory's exact rank right? This needs LESS
+statistical precision two ways at once: a one-sided test (detecting "this
+is negative" needs less power than pinning down a specific two-sided
+magnitude) and a larger assumed true effect (a deliberately broken memory
+can be designed to fail badly, not just "somewhat worse").
+
+| delta | pairs/memory | total episodes | cost |
+|---|---|---|---|
+| 0.35 | 8.2 | 99 | $1.12 |
+| 0.30 | 11.2 | 135 | $1.53 |
+| 0.25 | 16.2 | 194 | $2.20 |
+
+**This is the more budget-efficient, more likely-to-succeed redesign** --
+it targets a coarser, easier-to-resolve question using a deliberately
+larger true effect, rather than fighting the same tiny-natural-effect
+problem that produced this session's null.
+
+### What the current ~$5.20 remaining could do, right now, for 6 memories
+
+Two-sided ranking target: ~38 pairs/memory affordable, MDE≈0.183.
+One-sided detection target: MDE≈0.163. Either is plausible IF the
+engineered memories' true effects land in the 0.2-0.4 range assumed above
+-- genuinely unverified until a cheap validation check is run. **Not
+spent yet, pending the user's decision on which redesign (if either) to
+pursue.**
 
 ## Before Part C's full production run
 

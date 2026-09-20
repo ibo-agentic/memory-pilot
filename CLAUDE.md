@@ -1153,3 +1153,47 @@ model-selection test + $14.7957 shared production tracker: $0.1875 sanity
 check + $2.0033 small pilot + $12.6049 mini ground truth). ~$5.20 of the
 $17.80 balance remains -- the full 10030-episode plan remains unaffordable
 as scoped.
+
+## Part C, round 7 (2026-09-20): effect-size analysis -- confirms the null is a design problem, zero new spend
+
+User's read on the mini ground truth null: individual memories in the
+current 30-memory store likely have near-zero effect, so there's nothing
+to rank -- a design problem, not an estimator problem. `effect_size_
+analysis.py` confirms this with two independent lines of evidence
+(details in `alfworld_pilot/README.md`):
+
+1. **Noise-vs-signal decomposition** (all 30 memories, n=180): the
+   theoretical null-model SE of the IPS estimator per memory (0.2202,
+   using each memory's real candidacy count and propensities) is
+   AT LEAST as large as the actually observed spread of IPS estimates
+   across all 30 memories (std 0.2063) -- method-of-moments implies a
+   NEGATIVE real-effect variance, i.e. noise alone explains everything
+   observed, independent of which estimator is used.
+2. **The 4 direct ground-truth measurements** (selected for looking most
+   different) show a spread of just 0.053, smaller than any one of their
+   own CIs -- a second, independent confirmation.
+
+**Both lines agree: typical real per-memory effects in this store are ~0,
+with an upper bound around 0.03-0.05.** Resolving the full 30-memory
+store at delta=0.03 (the largest gap actually found) would need ~85,463
+episodes (~$970) -- not measurable at any realistic budget. Real measured
+rho (0.636 mean) is much higher than the 0.154 simulator-derived planning
+proxy, which is favorable (fewer pairs needed per unit of resolution than
+originally planned) but doesn't change the underlying finding.
+
+**Redesign proposals (NOT run):**
+- (a) 6 deliberately helpful/misleading memories, ranking target: 57
+  pairs/memory for delta=0.15 (~$7.75), or 10.5 pairs for delta=0.35
+  (~$1.42) if the engineered effect is large.
+- (b) Same store, reframed as DETECTION (is this memory harmful?) rather
+  than ranking -- one-sided test + a deliberately larger assumed effect
+  needs much less power: 8.2 pairs/memory (~$1.12) at delta=0.35.
+  **Recommended over (a)** as more budget-efficient and more likely to
+  succeed, since it doesn't require fighting the same tiny-natural-effect
+  problem that produced this session's null.
+- Neither's effect size is measured yet -- a cheap validation check
+  (~$0.10-0.20, same pattern as the earlier memory sanity check) is
+  recommended before committing to either at full power.
+- At the current ~$5.20 remaining, 6 memories could afford ~38 pairs/memory
+  (MDE ~0.16-0.18) -- plausible if the engineered effects land in the
+  assumed 0.2-0.4 range, unverified until tried.

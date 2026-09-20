@@ -1,0 +1,77 @@
+{
+  "noise_vs_signal": {
+    "overall_success_rate": 0.6611111111111111,
+    "mean_null_model_se": 0.22015887027461314,
+    "observed_ips_std": 0.20631920980416804,
+    "observed_ips_range": 0.8916243408254411,
+    "expected_null_range_approx": 0.8366037070435299,
+    "var_observed": 0.04256761633421631,
+    "var_noise": 0.048469928160593936,
+    "implied_var_true_effects": -0.005902311826377626,
+    "implied_sd_true_effects": 0.0,
+    "conclusion": "noise alone explains the observed spread -- no detectable real signal at n=180"
+  },
+  "ground_truth_cross_check": {
+    "gaps": {
+      "mem_17": 0.0,
+      "mem_29": 0.03007518796992481,
+      "mem_21": 0.03007518796992481,
+      "mem_9": -0.022556390977443552
+    },
+    "spread": 0.05263157894736836,
+    "mean_real_rho": 0.6355000000000001
+  },
+  "real_var_y": 0.22404320987654322,
+  "real_var_d": 0.1633275,
+  "resolution_table_pairs_per_memory": {
+    "0.15": 56.975619223040006,
+    "0.1": 128.19514325183997,
+    "0.05": 512.7805730073599,
+    "0.03": 1424.390480576,
+    "0.02": 3204.878581296
+  },
+  "full_30_memory_store_at_delta_0.03": {
+    "total_episodes": 85463.42883456,
+    "cost_usd": 968.5855267916802
+  },
+  "redesign_a_ranking_target": {
+    "0.15": {
+      "n_pairs": 56.975619223040006,
+      "total_episodes": 683.70743067648,
+      "cost_usd": 7.748684214333441
+    },
+    "0.25": {
+      "n_pairs": 20.5112229202944,
+      "total_episodes": 246.1346750435328,
+      "cost_usd": 2.7895263171600386
+    },
+    "0.35": {
+      "n_pairs": 10.46490965321143,
+      "total_episodes": 125.57891583853717,
+      "cost_usd": 1.4232277128367548
+    }
+  },
+  "redesign_b_detection_target": {
+    "0.35": {
+      "n_pairs": 8.243944976211429,
+      "total_episodes": 98.92733971453714,
+      "cost_usd": 1.1211765167647543
+    },
+    "0.3": {
+      "n_pairs": 11.22092510651,
+      "total_episodes": 134.65110127812,
+      "cost_usd": 1.5260458144853601
+    },
+    "0.25": {
+      "n_pairs": 16.1581321533744,
+      "total_episodes": 193.8975858404928,
+      "cost_usd": 2.197505972858919
+    }
+  },
+  "current_remaining_budget_usd": 5.2,
+  "affordable_now_for_6_memories": {
+    "n_pairs_per_memory": 38.23529411764706,
+    "mde_2sided": 0.18310641862804516,
+    "mde_1sided": 0.16251871093678508
+  }
+}
