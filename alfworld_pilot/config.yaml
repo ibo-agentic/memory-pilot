@@ -48,15 +48,19 @@ llm:
     output: 1.20
 
 cost_control:
-  # Raised again 2026-09-20, per explicit user request, to avoid the mini
-  # ground-truth run (4 memories x 133 pairs, real-measured cost ~$15.00 --
-  # see mini_ground_truth_run.py) stopping just short of completion: 18.00
-  # leaves ~$0.81 margin over that $15.00 estimate on top of the $2.19
-  # already spent ($2.19 + $15.00 = $17.19 vs the $18.00 cap). Still a real
-  # stopping backstop, just a thinner one than earlier steps -- the user
-  # explicitly accepted this trade-off given real per-task-type costs (not
-  # the blended average) push the estimate close to the cap either way.
-  hard_cap_usd: 18.00   # run stops itself once cumulative spend reaches this
+  # Lowered 2026-09-20 for the engineered-memory detection experiment
+  # (redesign option (b), ~$15 budget per the user). IMPORTANT: this value
+  # is read by whichever CostTracker a script constructs, against WHATEVER
+  # state_path it's given -- engineered_effect_validation.py (and its
+  # follow-on detection-experiment script) deliberately use a FRESH,
+  # DEDICATED state file (logs/engineered_experiment_cost_state.json,
+  # starts at $0), not the old shared production tracker (logs/
+  # cost_tracker_state.json, already at $14.80 cumulative from the mini
+  # ground truth run -- reusing THAT file with hard_cap_usd=13.00 would
+  # refuse every call instantly, since it's already "over" that cap).
+  # 13.00 leaves a ~$2 real buffer under the user's stated ~$15 budget for
+  # this new, separately-tracked experiment.
+  hard_cap_usd: 13.00   # run stops itself once cumulative spend (on the RELEVANT state_path) reaches this
   # measure_mode runs a small number of episodes, records actual
   # input/output tokens per call, and projects total cost for the full
   # plan (see ../results/stage2_budget_estimate.json for that plan). Kept

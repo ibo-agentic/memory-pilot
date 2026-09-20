@@ -1,5 +1,26 @@
 # Stage 2 — ALFWorld pilot
 
+## Status (2026-09-21): redesign (b) validation FAILED — engineered effects too small, STOPPING before the detection experiment
+
+Step 1 of the redesign-(b) plan (detect harmful memories rather than rank
+all of them) measured the real effect of one deliberately-helpful and one
+deliberately-harmful engineered memory before committing to the full
+6-memory experiment. **Both came back below the 0.2 threshold**:
+`mem_helpful_heat` +0.10 [-0.096, +0.296], `mem_harmful_heat` +0.00 exactly
+[-0.201, +0.201] — neither CI excludes zero, and the "harmful" memory
+shows literally no measured effect at all. Real spend: $1.1923 (dedicated
+tracker, well under the $13 cap). Episode transcripts show why: the ReAct
+agent sometimes follows the harmful memory's bad advice initially (e.g.
+going to the fridge first) but then self-corrects using real-time
+environment feedback and completes the task via the correct appliance
+anyway, since 50 steps gives ample slack to recover from one wrong early
+move. **Per the user's explicit stopping rule, we are NOT proceeding to
+Step 2** — see "Redesign (b): Step 1 validation results" below for the
+full writeup and what this implies for the design. The noise-vs-signal
+decomposition from the prior session (30-memory store, ~$970/85,463
+episodes to resolve) is preserved as a standalone result in "Noise-vs-
+signal decomposition" below, unaffected by this new finding.
+
 ## Status (2026-09-20, later still): effect-size analysis confirms the null is a design problem, not an estimator problem — zero new spend
 
 `effect_size_analysis.py` quantifies what the mini ground truth's null
@@ -9,7 +30,7 @@ data collection, by two independent lines of evidence (the population-wide
 noise-vs-signal decomposition and the 4 direct ground-truth measurements
 agree). Resolving the full 30-memory store at the effect size actually
 found (~0.03) would cost **~$970** — not a viable next step at this
-project's budget. See "Effect-size analysis" below for the full
+project's budget. See "Noise-vs-signal decomposition" below for the full
 methodology, the redesign proposals (small deliberately-engineered memory
 store, ranking vs. detection framings), and their cost/power trade-offs
 — none of which have been run; `hard_cap_usd` and all frozen settings are
@@ -718,7 +739,21 @@ that these 4 memories may simply have small true effects. Full per-memory
 data: `results/mini_ground_truth_analysis.json`, `results/
 mini_ground_truth_selection.json`.
 
-## Effect-size analysis (2026-09-20) — zero new spend, prompted by the null result
+## Noise-vs-signal decomposition (2026-09-20) — a standalone result, zero new spend
+
+**Citable summary**: in a 30-memory store of generic, competently-written
+"lesson" memories retrieved by a real LLM agent on real ALFWorld tasks,
+individual per-memory causal effects are indistinguishable from pure
+sampling noise at n=180 episodes, and the largest effect found by direct
+ground truth (across 4 memories specifically selected for looking most
+different) was 0.030 — an order of magnitude below what off-policy
+estimators need to resolve reliably at practical sample sizes. Resolving
+the full 30-memory store to the precision needed to detect effects of
+that size would require **~85,463 episodes (~$970)** at real measured
+per-task-type LLM costs — not a viable experiment at any realistic
+research budget. This finding is independent of which OPE estimator is
+used; it is a statement about how little real between-memory variation
+this kind of natural memory store contains, not about estimator quality.
 
 Prompted by the mini ground truth's null: are the 30-memory store's
 individual effects simply too small to measure at any realistic budget?
@@ -848,6 +883,98 @@ engineered memories' true effects land in the 0.2-0.4 range assumed above
 -- genuinely unverified until a cheap validation check is run. **Not
 spent yet, pending the user's decision on which redesign (if either) to
 pursue.**
+
+## Redesign (b): Step 1 validation results (2026-09-21) — REAL SPEND $1.1923 — FAILED, stopping before Step 2
+
+User chose redesign (b) (detection framing) with a $15 budget,
+`hard_cap_usd` lowered to 13.00 **on a dedicated fresh cost-tracker state
+file** (`logs/engineered_experiment_cost_state.json`) -- the old shared
+production tracker was already at $14.80 cumulative, so reusing it with a
+$13 cap would have refused every call instantly. All frozen settings
+(`openai/gpt-5.6-luna`, `max_steps=50`, weighted task sampling,
+propensity [0.3,0.7]) unchanged.
+
+### The 6-memory engineered store (`engineered_memory_store.py`)
+
+2 helpful, 2 harmful, 2 neutral, ~56-92 words each:
+
+| id | task type | role |
+|---|---|---|
+| `mem_helpful_heat` | pick_heat_then_place_in_recep | correct: microwave, heat before placing |
+| `mem_harmful_heat` | pick_heat_then_place_in_recep | wrong: claims the fridge heats objects |
+| `mem_helpful_cool` | pick_cool_then_place_in_recep | correct: fridge, cool before placing |
+| `mem_harmful_cool` | pick_cool_then_place_in_recep | wrong: claims the microwave cools objects |
+| `mem_neutral_1` | pick_and_place_simple | generic "form a mental map" advice, non-actionable |
+| `mem_neutral_2` | look_at_obj_in_light | generic "examine objects closely" advice, non-actionable |
+
+Helpful/harmful pairs share a task type on purpose (matched comparison,
+same population of games). With only 6 memories and M=10 (unchanged),
+every memory is always a retrieval candidate regardless of tag -- so
+ground truth for each memory is restricted to ITS OWN applicable task
+type (reusing `weighted_task_source.WeightedRealTaskSource` with all-but-
+one weight zeroed, rather than a new task-source class), since testing
+heat-guidance on a non-heat task can't show any effect either way.
+
+### A real bug found and fixed mid-run (no wasted spend)
+
+`engineered_effect_validation.py`'s first version called
+`run_ground_truth_phase_checkpointed(..., max_new=CHUNK_SIZE)` **once**
+per memory instead of looping until the target pair count was reached --
+it silently stopped after 5 pairs instead of the intended 20. Caught
+immediately from the printed output (`n_pairs=5` where 20 was expected).
+Fixed by wrapping the call in a `while True` loop (checking `n_new == 0`
+to detect "target reached", matching the pattern already used elsewhere
+in this codebase) and re-running -- checkpointing resumed cleanly from
+pair 5, so the fix cost zero wasted spend, just extra wall-clock time.
+
+### Results at the full n=20 pairs/memory
+
+| memory | gap | 95% CI | verdict |
+|---|---|---|---|
+| `mem_helpful_heat` | +0.100 | [-0.096, +0.296] | includes zero, **below 0.2** |
+| `mem_harmful_heat` | **+0.000** (exactly) | [-0.201, +0.201] | includes zero, **below 0.2** |
+
+**Both fail the user's stated 0.2 threshold.** The deliberately-harmful
+memory shows literally zero measured effect (mean success identical in
+both arms, 0.150), not even a hint of the hoped-for large negative
+effect.
+
+### Why: the agent self-corrects within the step budget
+
+Inspecting real episode transcripts explains the null mechanistically,
+not just statistically. In one forced-in `mem_harmful_heat` episode that
+SUCCEEDED, the agent initially went to the fridge and issued `cool egg 1
+with fridge 1` (following the harmful memory's bad advice), then
+afterward went to the microwave anyway and issued `heat egg 1 with
+microwave 1` -- completing the task correctly despite the bad advice. The
+ReAct agent isn't executing the memory as a fixed plan; it's reasoning
+step by step with real environment feedback (admissible actions,
+observations), and `max_steps=50` gives ample slack to recover from one
+wrong early move. A memory that merely suggests a wrong FIRST step is
+much easier to recover from than the kind of hard failure mode (running
+out of steps entirely, or misidentifying the target object) needed to
+produce a large, reliably measurable effect.
+
+### Verdict: STOPPING before Step 2, per the user's explicit rule
+
+Both effects are below the 0.2 threshold the user set in advance for
+continuing. **Not proceeding to the full 6-memory detection experiment.**
+This isn't a failure of the experimental INFRASTRUCTURE (ground truth,
+checkpointing, cost tracking, and the task-type-restricted task source all
+worked correctly, and the bug that appeared was caught and fixed with zero
+wasted spend) -- it's a second, independent confirmation (after the
+natural 30-memory store's null) that moving an LLM ReAct agent's success
+rate via memory CONTENT alone is harder than assumed, at least for
+mistakes an agent can still recover from within a generous step budget.
+**If this redesign is revisited**, the transcript finding suggests the
+lever that would actually move effect size is not "how wrong is the
+advice" but "how recoverable is following it" -- e.g. advice that causes
+the agent to interact with the wrong OBJECT entirely (not just the wrong
+appliance for a step it can still redo), or that causes premature/false
+task-completion signaling, rather than a wrong-but-recoverable
+intermediate step. Real spend this step: **$1.1923** (dedicated tracker,
+well under the $13 cap) -- roughly **$1.19 of the original ~$15 for this
+experiment used**; the rest is unspent.
 
 ## Before Part C's full production run
 

@@ -1197,3 +1197,53 @@ originally planned) but doesn't change the underlying finding.
 - At the current ~$5.20 remaining, 6 memories could afford ~38 pairs/memory
   (MDE ~0.16-0.18) -- plausible if the engineered effects land in the
   assumed 0.2-0.4 range, unverified until tried.
+
+## Part C, round 8 (2026-09-21): redesign (b) Step 1 validation FAILED, real spend $1.19, stopping before Step 2
+
+User picked redesign (b) (detection framing), $15 budget, `hard_cap_usd`
+lowered to 13.00 on a NEW dedicated cost-tracker file (the old shared
+tracker was already at $14.80 cumulative -- reusing it with a $13 cap
+would refuse every call instantly). Full details in `alfworld_pilot/
+README.md`; summary:
+
+**Built** a 6-memory engineered store (`engineered_memory_store.py`): 2
+helpful (correct microwave/fridge guidance for heat/cool tasks), 2 harmful
+(plausible-sounding but factually wrong -- swaps which appliance heats vs
+cools), 2 neutral (generic, non-actionable). Helpful/harmful pairs share a
+task type for a matched comparison. Ground truth for each memory
+restricted to its own applicable task type (reusing `WeightedRealTaskSource`
+with all-but-one weight zeroed) since testing heat-guidance on a non-heat
+task can't show an effect either way.
+
+**Bug found and fixed mid-run, zero wasted spend**: the validation
+script's first version called the checkpointed ground-truth runner ONCE
+per memory instead of looping until the target pair count, silently
+stopping at 5 pairs instead of 20. Caught from the output, fixed by adding
+the missing loop, resumed cleanly from pair 5 via checkpointing.
+
+**Result at the full n=20 pairs/memory: both memories fail the 0.2
+threshold.** `mem_helpful_heat`: +0.100 [-0.096, +0.296]. `mem_harmful_
+heat`: +0.000 EXACTLY [-0.201, +0.201] -- the deliberately-harmful memory
+shows literally zero measured effect.
+
+**Mechanistic explanation from real transcripts**: in one successful
+forced-in episode, the agent initially followed the harmful memory's bad
+advice (went to the fridge for a heating task) but then self-corrected --
+went to the microwave afterward and completed the task correctly anyway.
+The ReAct agent reasons step-by-step with real environment feedback, not
+by executing memory content as a fixed plan, and `max_steps=50` gives
+enough slack to recover from one wrong early move. A wrong-but-recoverable
+first step doesn't produce the kind of large, hard failure needed for a
+reliably measurable effect.
+
+**Verdict: STOPPING before Step 2**, per the user's explicit rule (stop if
+effects are below ~0.2). Not an infrastructure failure -- ground truth,
+checkpointing, cost tracking, and the task-type restriction all worked
+correctly. A second independent confirmation (after the natural
+30-memory store's null) that moving success via memory CONTENT alone is
+harder than assumed, at least for agent mistakes recoverable within a
+generous step budget. If revisited, the lever that matters is likely
+"how recoverable is following the bad advice," not "how wrong is it" --
+e.g. wrong-OBJECT advice or false task-completion signaling, not a
+wrong-but-redoable intermediate step. Real spend: $1.1923 of the ~$15
+budgeted (dedicated tracker, well under the $13 cap) -- the rest unspent.

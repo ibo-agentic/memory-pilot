@@ -1,0 +1,38 @@
+{
+  "results": {
+    "mem_helpful_heat": {
+      "n_pairs": 20,
+      "mean_y1": 0.25,
+      "mean_y0": 0.15,
+      "gap": 0.1,
+      "var_y1": 0.19736842105263158,
+      "var_y0": 0.13421052631578947,
+      "rho": 0.40422604172722143,
+      "rho_is_degenerate_fallback": false,
+      "se": 0.10000000000000003,
+      "ci_95": [
+        -0.09600000000000006,
+        0.29600000000000004
+      ],
+      "ci_excludes_zero": false
+    },
+    "mem_harmful_heat": {
+      "n_pairs": 20,
+      "mean_y1": 0.15,
+      "mean_y0": 0.15,
+      "gap": 0.0,
+      "var_y1": 0.13421052631578947,
+      "var_y0": 0.13421052631578947,
+      "rho": 0.21568627450980382,
+      "rho_is_degenerate_fallback": false,
+      "se": 0.10259783520851541,
+      "ci_95": [
+        -0.2010917570086902,
+        0.2010917570086902
+      ],
+      "ci_excludes_zero": false
+    }
+  },
+  "this_run_spend_usd": 0.8962814000000003,
+  "cumulative_spend_usd": 1.1922532000000008
+}
