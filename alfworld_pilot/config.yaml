@@ -48,12 +48,15 @@ llm:
     output: 1.20
 
 cost_control:
-  # Reset 2026-09-19: user's real remaining OpenRouter balance is $3.84
-  # (after the $0.063 already spent on the model-selection test, tracked
-  # separately in model_selection_test_cost_state.json, not this cap).
-  # 3.00 leaves a real buffer below the true remaining balance so a run
-  # never hits an actual empty-wallet failure mid-episode.
-  hard_cap_usd: 3.00   # run stops itself once cumulative spend reaches this
+  # Raised again 2026-09-20, per explicit user request, to avoid the mini
+  # ground-truth run (4 memories x 133 pairs, real-measured cost ~$15.00 --
+  # see mini_ground_truth_run.py) stopping just short of completion: 18.00
+  # leaves ~$0.81 margin over that $15.00 estimate on top of the $2.19
+  # already spent ($2.19 + $15.00 = $17.19 vs the $18.00 cap). Still a real
+  # stopping backstop, just a thinner one than earlier steps -- the user
+  # explicitly accepted this trade-off given real per-task-type costs (not
+  # the blended average) push the estimate close to the cap either way.
+  hard_cap_usd: 18.00   # run stops itself once cumulative spend reaches this
   # measure_mode runs a small number of episodes, records actual
   # input/output tokens per call, and projects total cost for the full
   # plan (see ../results/stage2_budget_estimate.json for that plan). Kept

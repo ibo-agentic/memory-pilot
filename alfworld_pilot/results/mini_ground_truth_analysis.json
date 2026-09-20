@@ -1,0 +1,355 @@
+{
+  "memories": [
+    "mem_17",
+    "mem_29",
+    "mem_21",
+    "mem_9"
+  ],
+  "ground_truth": {
+    "mem_17": {
+      "n_pairs": 133,
+      "mean_y1": 0.7142857142857143,
+      "mean_y0": 0.7142857142857143,
+      "gap": 0.0,
+      "var_y1": 0.20562770562770563,
+      "var_y0": 0.2056277056277056,
+      "rho": 0.6315789473684209,
+      "rho_is_degenerate_fallback": false,
+      "se": 0.03375220978732289,
+      "ci_95": [
+        -0.06615433118315286,
+        0.06615433118315286
+      ],
+      "ci_excludes_zero": false
+    },
+    "mem_29": {
+      "n_pairs": 133,
+      "mean_y1": 0.7368421052631579,
+      "mean_y0": 0.706766917293233,
+      "gap": 0.03007518796992481,
+      "var_y1": 0.19537480063795853,
+      "var_y0": 0.2088174982911825,
+      "rho": 0.6277429871301186,
+      "rho_is_degenerate_fallback": false,
+      "se": 0.03365054627389879,
+      "ci_95": [
+        -0.03587988272691682,
+        0.09603025866676644
+      ],
+      "ci_excludes_zero": false
+    },
+    "mem_21": {
+      "n_pairs": 133,
+      "mean_y1": 0.5714285714285714,
+      "mean_y0": 0.5413533834586466,
+      "gap": 0.03007518796992481,
+      "var_y1": 0.24675324675324678,
+      "var_y0": 0.25017088174982904,
+      "rho": 0.6664531761988782,
+      "rho_is_degenerate_fallback": false,
+      "se": 0.03530269722109839,
+      "ci_95": [
+        -0.03911809858342803,
+        0.09926847452327765
+      ],
+      "ci_excludes_zero": false
+    },
+    "mem_9": {
+      "n_pairs": 133,
+      "mean_y1": 0.5639097744360902,
+      "mean_y0": 0.5864661654135338,
+      "gap": -0.022556390977443552,
+      "var_y1": 0.2477785372522215,
+      "var_y0": 0.24436090225563906,
+      "rho": 0.6162185625480329,
+      "rho_is_degenerate_fallback": false,
+      "se": 0.03768501169363315,
+      "ci_95": [
+        -0.09641901389696453,
+        0.051306231942077424
+      ],
+      "ci_excludes_zero": false
+    }
+  },
+  "official_set_b_estimates": {
+    "mem_17": {
+      "memory_worth": {
+        "value": 0.7894736842105263,
+        "rank": 8
+      },
+      "ips": {
+        "value": 0.10829983670728108,
+        "rank": 10
+      },
+      "snips": {
+        "value": 0.14290562954177966,
+        "rank": 7
+      },
+      "doubly_robust": {
+        "value": 0.06398244630443471,
+        "rank": 11
+      }
+    },
+    "mem_29": {
+      "memory_worth": {
+        "value": 0.7619047619047619,
+        "rank": 13
+      },
+      "ips": {
+        "value": 0.15466969092386768,
+        "rank": 7
+      },
+      "snips": {
+        "value": -0.00429099372355124,
+        "rank": 14
+      },
+      "doubly_robust": {
+        "value": 0.03585676021128475,
+        "rank": 14
+      }
+    },
+    "mem_21": {
+      "memory_worth": {
+        "value": 0.5,
+        "rank": 25
+      },
+      "ips": {
+        "value": 0.24711354404878624,
+        "rank": 6
+      },
+      "snips": {
+        "value": -0.026517783380871185,
+        "rank": 16
+      },
+      "doubly_robust": {
+        "value": 0.04369071993776026,
+        "rank": 12
+      }
+    },
+    "mem_9": {
+      "memory_worth": {
+        "value": 0.4,
+        "rank": 29
+      },
+      "ips": {
+        "value": -0.20593128670660177,
+        "rank": 21
+      },
+      "snips": {
+        "value": -0.12615013875127384,
+        "rank": 25
+      },
+      "doubly_robust": {
+        "value": -0.11990246257165328,
+        "rank": 20
+      }
+    }
+  },
+  "pairwise_concordance": {
+    "memory_worth": {
+      "concordant": 3,
+      "total": 5,
+      "detail": [
+        {
+          "pair": [
+            "mem_17",
+            "mem_29"
+          ],
+          "gt_orders_higher": "mem_29",
+          "est_orders_higher": "mem_17",
+          "match": false
+        },
+        {
+          "pair": [
+            "mem_17",
+            "mem_21"
+          ],
+          "gt_orders_higher": "mem_21",
+          "est_orders_higher": "mem_17",
+          "match": false
+        },
+        {
+          "pair": [
+            "mem_17",
+            "mem_9"
+          ],
+          "gt_orders_higher": "mem_17",
+          "est_orders_higher": "mem_17",
+          "match": true
+        },
+        {
+          "pair": [
+            "mem_29",
+            "mem_9"
+          ],
+          "gt_orders_higher": "mem_29",
+          "est_orders_higher": "mem_29",
+          "match": true
+        },
+        {
+          "pair": [
+            "mem_21",
+            "mem_9"
+          ],
+          "gt_orders_higher": "mem_21",
+          "est_orders_higher": "mem_21",
+          "match": true
+        }
+      ]
+    },
+    "ips": {
+      "concordant": 5,
+      "total": 5,
+      "detail": [
+        {
+          "pair": [
+            "mem_17",
+            "mem_29"
+          ],
+          "gt_orders_higher": "mem_29",
+          "est_orders_higher": "mem_29",
+          "match": true
+        },
+        {
+          "pair": [
+            "mem_17",
+            "mem_21"
+          ],
+          "gt_orders_higher": "mem_21",
+          "est_orders_higher": "mem_21",
+          "match": true
+        },
+        {
+          "pair": [
+            "mem_17",
+            "mem_9"
+          ],
+          "gt_orders_higher": "mem_17",
+          "est_orders_higher": "mem_17",
+          "match": true
+        },
+        {
+          "pair": [
+            "mem_29",
+            "mem_9"
+          ],
+          "gt_orders_higher": "mem_29",
+          "est_orders_higher": "mem_29",
+          "match": true
+        },
+        {
+          "pair": [
+            "mem_21",
+            "mem_9"
+          ],
+          "gt_orders_higher": "mem_21",
+          "est_orders_higher": "mem_21",
+          "match": true
+        }
+      ]
+    },
+    "snips": {
+      "concordant": 3,
+      "total": 5,
+      "detail": [
+        {
+          "pair": [
+            "mem_17",
+            "mem_29"
+          ],
+          "gt_orders_higher": "mem_29",
+          "est_orders_higher": "mem_17",
+          "match": false
+        },
+        {
+          "pair": [
+            "mem_17",
+            "mem_21"
+          ],
+          "gt_orders_higher": "mem_21",
+          "est_orders_higher": "mem_17",
+          "match": false
+        },
+        {
+          "pair": [
+            "mem_17",
+            "mem_9"
+          ],
+          "gt_orders_higher": "mem_17",
+          "est_orders_higher": "mem_17",
+          "match": true
+        },
+        {
+          "pair": [
+            "mem_29",
+            "mem_9"
+          ],
+          "gt_orders_higher": "mem_29",
+          "est_orders_higher": "mem_29",
+          "match": true
+        },
+        {
+          "pair": [
+            "mem_21",
+            "mem_9"
+          ],
+          "gt_orders_higher": "mem_21",
+          "est_orders_higher": "mem_21",
+          "match": true
+        }
+      ]
+    },
+    "doubly_robust": {
+      "concordant": 3,
+      "total": 5,
+      "detail": [
+        {
+          "pair": [
+            "mem_17",
+            "mem_29"
+          ],
+          "gt_orders_higher": "mem_29",
+          "est_orders_higher": "mem_17",
+          "match": false
+        },
+        {
+          "pair": [
+            "mem_17",
+            "mem_21"
+          ],
+          "gt_orders_higher": "mem_21",
+          "est_orders_higher": "mem_17",
+          "match": false
+        },
+        {
+          "pair": [
+            "mem_17",
+            "mem_9"
+          ],
+          "gt_orders_higher": "mem_17",
+          "est_orders_higher": "mem_17",
+          "match": true
+        },
+        {
+          "pair": [
+            "mem_29",
+            "mem_9"
+          ],
+          "gt_orders_higher": "mem_29",
+          "est_orders_higher": "mem_29",
+          "match": true
+        },
+        {
+          "pair": [
+            "mem_21",
+            "mem_9"
+          ],
+          "gt_orders_higher": "mem_21",
+          "est_orders_higher": "mem_21",
+          "match": true
+        }
+      ]
+    }
+  },
+  "n_memories_ci_excludes_zero": 0
+}

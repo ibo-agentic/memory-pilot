@@ -1,21 +1,25 @@
 # Stage 2 — ALFWorld pilot
 
-## Status (2026-09-20): small pilot done, ceiling effect fixed, ~$1.59 of $3.84 real balance left
+## Status (2026-09-20, later): mini ground truth run complete — result is a genuine null, not decisive for either estimator
 
-`llm.model_id` pinned to `openai/gpt-5.6-luna`. `cost_control.hard_cap_usd`
-is **3.00** (real buffer below the original $3.84 balance). Total real
-spend across the whole project: model-selection test $0.0628 (separate
-cost-tracker state file) + shared production cost-tracker state $2.1908
-(memory sanity check $0.1875 + small pilot $2.0033) = **$2.2536** —
-roughly **$1.59 of the original $3.84 balance remains**. The full
-10030-episode production run has NOT started and, at real-measured cost
-($63-92 projected), is not affordable at this remaining budget as
-originally scoped. See "Small pilot" below for the latest result (66%
-success, 4 estimators run on 180 real episodes, a real-data signal
-consistent with the pilot's hypothesis but not yet statistically
-decisive), "Ceiling-effect diagnosis and fix" for why/how the task
-sampling changed, and "Step cap raised to 50" / "Real resource leak found
-+ mitigated" / "Checkpointing and chunked runs" for the infrastructure
+User topped up OpenRouter credit to ~$17.80. `cost_control.hard_cap_usd`
+raised to **18.00** (real buffer over the mini ground truth run's ~$15
+estimated cost). **Mini ground truth phase spend: $12.6049** (133
+forced-in/forced-out pairs each for 4 memories, real ALFWorld, `openai/
+gpt-5.6-luna`). **Total real spend across the whole project: $14.8585**
+($0.0628 model-selection test, separate cost-tracker file, + $14.7957 in
+the shared production cost-tracker state: $0.1875 memory sanity check +
+$2.0033 small pilot + $12.6049 mini ground truth). The decisive finding:
+**all 4 ground-truthed memories show a statistically null effect** (95%
+CI includes zero for every one), so this run does NOT decide between
+Memory Worth and the propensity-corrected estimators — see "Mini ground
+truth: results and verdict" below for the full, honest breakdown. The
+full 10030-episode production run remains un-started and unaffordable as
+originally scoped. See "Small pilot" below for the prior result (66%
+success, 4 estimators run on 180 real episodes), "Ceiling-effect diagnosis
+and fix" for why/how the task sampling changed, and "Step cap raised to
+50" / "Real resource leak found + mitigated" / "Checkpointing and chunked
+runs" for the infrastructure
 that preceded it.
 
 ## Installing real ALFWorld (under WSL2 Ubuntu, Python 3.11)
@@ -599,6 +603,106 @@ causal-contrast scale, distinct from Memory Worth's ~0.4-0.9 raw-rate
 scale, consistent with every prior Stage 1 finding about the two living on
 different scales). Full per-memory numbers: `results/small_pilot.json`.
 
+## Mini ground truth: selection (2026-09-20) — zero new spend
+
+`mini_ground_truth_selection.py`: the decisive check of the project --
+when Memory Worth and IPS disagree, which one is actually right? Used the
+same fixed split-by-episode-index design already validated (root
+package's `ground_truth_selection_bias_check.py`, which demonstrated a
+~1.87x selection-bias inflation from picking-and-evaluating on the same
+data): the small pilot's 180 episodes split into set A (first 90,
+selection only) and set B (second 90, "official" estimates only).
+Selected the top-5 memory_worth-vs-ips **rank** disagreement memories from
+set A (percentile rank within each estimator's own distribution, since MW
+lives on a ~0.4-0.9 scale and IPS on a ~-0.5 to 0.4 scale): `mem_17`,
+`mem_29`, `mem_21`, `mem_9`, `mem_10`.
+
+Real per-task-type cost (measured from the small pilot's actual
+`total_input_tokens`/`total_output_tokens`, not projected) turned out to
+matter a lot: 2 of the 5 (`mem_17`, `mem_29`) are tagged
+`pick_two_obj_and_place` (~$0.009/episode in practice); 2 more (`mem_21`,
+`mem_9`) are tagged `pick_heat_then_place_in_recep`, which turned out to
+be the MOST expensive type in practice (~$0.019/episode) despite NOT
+being the hardest by the scripted-expert difficulty measure -- a real
+agent's actual behavior doesn't track the optimal-policy difficulty
+ranking. Full statistical power (133 pairs/memory for MDE=0.15, per the
+existing power analysis, using p=0.66 real measured success rate and
+rho=0.154 simulator-proxy) across all 5 memories would have cost ~$19.36,
+exceeding the ~$13.81 available under the cap at the time. **User's
+decision: drop `mem_10` (weakest of the 5 disagreements) and keep full
+133-pair power on the remaining 4**, rather than dilute power across all
+5 -- raised `hard_cap_usd` to 18.00 to afford it (~$15.00 corrected
+estimate, using real per-memory task-type costs, not the blended
+average).
+
+## Mini ground truth: results and verdict (2026-09-20) — REAL SPEND $12.60
+
+Ran via `run_chunked.py`'s subprocess-per-chunk supervisor (already-built,
+already-tested `checkpointed_runner.run_ground_truth_phase_checkpointed`
++ `RealTaskSource`), one memory at a time in cost order (cheapest first,
+so a cap-triggered stop would leave complete results for some memories
+rather than partial for all): `mem_17`, `mem_29` (133/133 pairs each,
+$2.68 / $2.70), then `mem_21`, `mem_9` (133/133 pairs each, $3.58 / $3.03
+-- both came in BELOW the ~$5.1-5.8 worst-case estimate). Total: **1064
+real ALFWorld episodes, $12.6049**, well under the $18.00 cap.
+
+Ground truth (paired mean(Y_forced_in) - mean(Y_forced_out), 95% CI using
+the REAL correlation rho measured from these paired episodes -- not the
+old task_difficulty-simulator proxy) vs. the "official" set-B estimates:
+
+| memory | ground truth gap [95% CI] | rho | memory_worth (rank) | ips (rank) | snips (rank) | doubly_robust (rank) |
+|---|---|---|---|---|---|---|
+| `mem_17` | +0.0000 [-0.066, +0.066] | 0.632 | 0.789 (#8) | 0.108 (#10) | 0.143 (#7) | 0.064 (#11) |
+| `mem_29` | +0.0301 [-0.036, +0.096] | 0.628 | 0.762 (#13) | 0.155 (#7) | -0.004 (#14) | 0.036 (#14) |
+| `mem_21` | +0.0301 [-0.039, +0.099] | 0.666 | 0.500 (#25) | 0.247 (#6) | -0.027 (#16) | 0.044 (#12) |
+| `mem_9` | -0.0226 [-0.096, +0.051] | 0.616 | 0.400 (#29) | -0.206 (#21) | -0.126 (#25) | -0.120 (#20) |
+
+**All four 95% CIs include zero.** Real measured rho (0.62-0.67) is much
+higher than the simulator-derived planning proxy (0.154) -- makes sense,
+since forcing the SAME memory in/out while holding the game, every other
+memory's inclusion, and the retrieval draw fixed leaves a lot of shared
+context between arms. The four ground-truth point estimates themselves
+span only **0.053** (-0.023 to +0.030) -- smaller than any single
+estimate's own confidence interval, and far below the ~0.15-0.19 MDE this
+design was built to resolve.
+
+Pairwise concordance with ground truth's ordering (6 possible pairs among
+4 memories, 1 exact tie between `mem_29` and `mem_21`'s ground-truth gaps
+excluded, 5 comparable pairs): **ips 5/5**, memory_worth 3/5, snips 3/5,
+doubly_robust 3/5.
+
+### Verdict: too noisy to tell -- and that itself is the finding
+
+**Not "IPS wins."** IPS's perfect pairwise concordance is numerically the
+best of the four, but the ground-truth differences it's being compared
+against are not statistically distinguishable from EACH OTHER OR FROM
+ZERO -- the entire spread of real causal effects among these 4 memories
+(0.053) is smaller than the noise band on any one of them. Ordering four
+values that are indistinguishable-from-flat by a metric that itself might
+share the same selection-driven noise (IPS's own estimates on set A are
+what flagged these memories as "disagreements" in the first place) is not
+strong evidence for that metric being generally more accurate --
+concluding otherwise here would be exactly the kind of overstatement the
+user explicitly asked this report not to make.
+
+**The more informative, honest conclusion**: none of the 4 memories
+flagged as "biggest Memory-Worth-vs-IPS disagreement" in a 90-episode
+half of the small pilot turned out to have a resolvable real causal
+effect. The likely mechanism is the SAME selection-bias-inflation effect
+`ground_truth_selection_bias_check.py` already demonstrated on synthetic
+data (~1.87x): picking "biggest disagreement" from a small, noisy sample
+tends to select memories whose apparent disagreement was substantially
+sampling noise in that sample, not real underlying differences -- which
+is exactly the null pattern found here. This is a real, useful result
+(the selection-bias risk this project flagged in advance actually shows
+up in real data), just not the "which estimator is right" result the
+mini ground truth run set out to get. Resolving that would need either
+much larger per-memory pair counts (unaffordable at this budget), a
+different selection criterion less prone to this inflation, or accepting
+that these 4 memories may simply have small true effects. Full per-memory
+data: `results/mini_ground_truth_analysis.json`, `results/
+mini_ground_truth_selection.json`.
+
 ## Before Part C's full production run
 
 1. ~~Pick a model~~ — done (`openai/gpt-5.6-luna`).
@@ -606,15 +710,28 @@ different scales). Full per-memory numbers: `results/small_pilot.json`.
    sanity check).
 3. ~~Fix the ceiling effect~~ — done (weighted task-type sampling; small
    pilot landed at 66% success).
-4. Run `determinism_check.check_determinism` against the real client
-   before trusting any ground-truth pair's determinism (still not done).
-5. Decide on parallelization (see "Wall-clock runtime estimate" above) --
-   serial execution at Part C's measured latency would take multiple days.
-6. Run via `run_chunked.py`, not a single long-running process, given the
+4. ~~Get a first real ground-truth read on which estimator is right~~ —
+   done, but inconclusive: all 4 ground-truthed memories showed a
+   statistically null effect (see "Mini ground truth: results and
+   verdict"). The likely explanation is selection-bias inflation in how
+   the 4 were chosen (biggest MW-vs-IPS disagreement in a noisy 90-episode
+   half-sample), not that these estimators are indistinguishable in
+   general -- a bigger main-logging phase (more episodes before
+   selecting ground-truth candidates) would give a less noise-prone
+   selection set.
+5. Run `determinism_check.check_determinism` against the real client
+   before trusting any FUTURE ground-truth pair's determinism (still not
+   done -- this round's pairs used the same temperature=0 setup but
+   without a fresh determinism probe first).
+6. Decide on parallelization (see "Wall-clock runtime estimate" above) --
+   serial execution at Part C's measured latency would take multiple
+   days for the full plan (the mini ground truth run alone, 1064
+   episodes, took roughly 10 hours serially).
+7. Run via `run_chunked.py`, not a single long-running process, given the
    resource-leak finding above -- point `TMPDIR` at disk-backed storage too.
-7. Given the $3.84 real starting balance (now ~$1.65 left after the
-   sanity check + small pilot's combined $2.19), the full 10030-episode
-   plan (~$63-92 projected) remains NOT affordable as scoped — see a
-   from-real-numbers re-plan (episode count vs. cost trade-offs at this
-   budget) as the next planning step, not assumed still-current numbers
-   from before real spend started.
+8. Given ~$5.20 of the $17.80 balance remains (after this round's
+   $12.6049 mini-ground-truth spend; $14.86 total real spend across the
+   whole project), the full 10030-episode plan (~$63-92 projected)
+   remains NOT affordable as scoped — a from-real-numbers re-plan
+   (episode count vs. cost trade-offs at this budget) is the next
+   planning step if the project continues.

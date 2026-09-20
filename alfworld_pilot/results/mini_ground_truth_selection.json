@@ -1,0 +1,113 @@
+{
+  "design": "fixed split by episode index (first half=selection set A, second half=evaluation set B)",
+  "n_episodes_total": 180,
+  "n_set_a": 90,
+  "n_set_b": 90,
+  "top_k": 5,
+  "selected_memories": [
+    "mem_17",
+    "mem_29",
+    "mem_21",
+    "mem_9",
+    "mem_10"
+  ],
+  "set_a_disagreement": {
+    "mem_17": 0.8620689655172413,
+    "mem_29": 0.6896551724137931,
+    "mem_21": 0.6551724137931035,
+    "mem_9": 0.6206896551724138,
+    "mem_10": 0.6206896551724138
+  },
+  "official_set_b_estimates": {
+    "mem_17": {
+      "memory_worth": {
+        "value": 0.7894736842105263,
+        "rank": 8
+      },
+      "ips": {
+        "value": 0.10829983670728108,
+        "rank": 10
+      },
+      "snips": {
+        "value": 0.14290562954177966,
+        "rank": 7
+      },
+      "doubly_robust": {
+        "value": 0.06398244630443471,
+        "rank": 11
+      }
+    },
+    "mem_29": {
+      "memory_worth": {
+        "value": 0.7619047619047619,
+        "rank": 13
+      },
+      "ips": {
+        "value": 0.15466969092386768,
+        "rank": 7
+      },
+      "snips": {
+        "value": -0.00429099372355124,
+        "rank": 14
+      },
+      "doubly_robust": {
+        "value": 0.03585676021128475,
+        "rank": 14
+      }
+    },
+    "mem_21": {
+      "memory_worth": {
+        "value": 0.5,
+        "rank": 25
+      },
+      "ips": {
+        "value": 0.24711354404878624,
+        "rank": 6
+      },
+      "snips": {
+        "value": -0.026517783380871185,
+        "rank": 16
+      },
+      "doubly_robust": {
+        "value": 0.04369071993776026,
+        "rank": 12
+      }
+    },
+    "mem_9": {
+      "memory_worth": {
+        "value": 0.4,
+        "rank": 29
+      },
+      "ips": {
+        "value": -0.20593128670660177,
+        "rank": 21
+      },
+      "snips": {
+        "value": -0.12615013875127384,
+        "rank": 25
+      },
+      "doubly_robust": {
+        "value": -0.11990246257165328,
+        "rank": 20
+      }
+    },
+    "mem_10": {
+      "memory_worth": {
+        "value": 0.7,
+        "rank": 17
+      },
+      "ips": {
+        "value": 0.3188070169750421,
+        "rank": 4
+      },
+      "snips": {
+        "value": 0.27745087609025326,
+        "rank": 2
+      },
+      "doubly_robust": {
+        "value": 0.2880799312781643,
+        "rank": 1
+      }
+    }
+  }
+}

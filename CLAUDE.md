@@ -1087,3 +1087,69 @@ direction. Full per-memory estimates: `results/small_pilot.json`.
 **Remaining real budget**: ~$1.59 of the original $3.84. The full
 10030-episode plan (~$63-92 projected) remains unaffordable as scoped --
 a from-real-numbers re-plan is the next step.
+
+## Part C, round 6 (2026-09-20): mini ground truth run — the decisive check, REAL SPEND $12.60, result is a genuine null
+
+User topped up OpenRouter credit to ~$17.80. Full details in
+`alfworld_pilot/README.md`; summary here.
+
+**Selection** (zero new spend): reused the validated split-by-episode-index
+design (`ground_truth_selection_bias_check.py`'s ~1.87x inflation finding)
+on the small pilot's 180 episodes -- set A (first 90) selected the top-5
+memory_worth-vs-ips RANK-disagreement memories (percentile rank within
+each estimator's own distribution): `mem_17`, `mem_29`, `mem_21`, `mem_9`,
+`mem_10`. Set B (second 90) computed the "official" estimates compared
+against ground truth later.
+
+**Real per-task-type cost mattered a lot**: 2 of 5 selected memories
+(`mem_17`, `mem_29`) are tagged `pick_two_obj_and_place` (~$0.009/episode
+in practice); 2 more (`mem_21`, `mem_9`) are tagged `pick_heat_then_place_
+in_recep`, which turned out to be the MOST expensive type in practice
+(~$0.019/episode) despite not being hardest by the scripted-expert
+measure -- real agent behavior doesn't track that ranking. Full power (133
+pairs/memory for MDE=0.15) across all 5 would have cost ~$19.36, over the
+~$13.81 then-available. **User's call: drop `mem_10`, keep full 133-pair
+power on the remaining 4**, raising `hard_cap_usd` to 18.00 (~$15.00
+corrected estimate using real per-memory costs).
+
+**Run**: via `run_chunked.py`'s subprocess-per-chunk supervisor (already
+built/tested), one memory at a time, cheapest first (so a cap-triggered
+stop would leave complete results for some memories, not partial for
+all). All 4 completed 133/133 pairs: `mem_17` $2.68, `mem_29` $2.70,
+`mem_21` $3.58, `mem_9` $3.03 (both cheaper-than-worst-case). Total: 1064
+real episodes, **$12.6049**, well under the $18 cap. Took ~10 hours
+wall-clock, run strictly sequentially (not parallelized, to avoid a real
+race condition in the shared file-based cost-tracker state that
+concurrent processes would hit).
+
+**Result: all 4 memories show a statistically null effect.** Every 95%
+CI (using the REAL measured paired-correlation rho, 0.62-0.67 -- much
+higher than the 0.154 simulator-derived planning proxy) includes zero.
+The four point estimates themselves span only 0.053 (-0.023 to +0.030) --
+smaller than any individual estimate's own CI half-width, and far below
+the ~0.15-0.19 MDE this design targeted.
+
+**Verdict, strict and honest: too noisy to tell, and that itself is the
+finding.** IPS achieved perfect (5/5) pairwise concordance with ground
+truth's ordering of the 4 memories (MW/SNIPS/DR: 3/5 each) -- but this is
+**NOT "IPS wins"**: the ground-truth differences being ordered are
+statistically indistinguishable from each other and from zero, so getting
+their order "right" carries little evidential weight, and IPS's own
+set-A estimates are what flagged these memories as disagreements in the
+first place (a share of the same selection-driven noise). The more
+informative conclusion: these 4 memories, selected as "biggest MW-vs-IPS
+disagreement" from a noisy 90-episode half-sample, likely fell victim to
+the SAME selection-bias-inflation effect `ground_truth_selection_bias_
+check.py` already demonstrated on synthetic data (~1.87x) -- apparent
+disagreement in a small selection sample doesn't reliably indicate a real
+underlying effect. This is a genuine, useful finding (validates a risk
+this project flagged in advance), not a resolution of "which estimator is
+right" -- that would need either a larger main-logging phase before
+selection (less noise-prone), more ground-truth pairs (unaffordable here),
+or accepting these 4 memories may simply have small true effects.
+
+**Total real spend across the whole project: $14.8585** ($0.0628
+model-selection test + $14.7957 shared production tracker: $0.1875 sanity
+check + $2.0033 small pilot + $12.6049 mini ground truth). ~$5.20 of the
+$17.80 balance remains -- the full 10030-episode plan remains unaffordable
+as scoped.
