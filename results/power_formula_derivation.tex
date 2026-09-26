@@ -1,0 +1,187 @@
+% Sample-size / episode-count / cost derivation for resolving a per-memory
+% causal effect via paired forced-in/forced-out episodes.
+%
+% Verified against this project's implementation:
+%   - src/memory_ope/evaluation/power_formula.py (general reusable module)
+%   - tests/test_power_formula.py (reproduces effect_size_analysis.json and
+%     ground_truth_power_analysis.json exactly, and reproduces the 2x
+%     discrepancy discussed in Remark 1 to confirm its source)
+%   - src/memory_ope/evaluation/power_formula_validation.py (empirical
+%     Monte Carlo check; results/power_formula_validation.json)
+%   - src/memory_ope/evaluation/resolution_grid.py (the general grid over
+%     delta, n_memories, rho; results/resolution_grid.json/.png)
+%
+% Paste directly into the paper; \(\S\)-numbers below are relative, not tied
+% to any specific section number in the paper itself.
+
+\subsection{Sample size for a paired forced-in/forced-out ground-truth design}
+\label{sec:power-derivation}
+
+\paragraph{Setup.} For a given memory $m$, the ground-truth procedure runs
+$n$ \emph{paired} episodes: in pair $i$, the memory is forced \textsc{in}
+for one episode (binary outcome $Y_{1,i}$) and forced \textsc{out} for the
+other ($Y_{0,i}$), while the task instance, environment seed, and every
+other memory's inclusion are held identical between the two arms of the
+pair. This is exactly the design implemented by
+\texttt{ground\_truth\_runner.py} (real ALFWorld) and
+\texttt{\_common.paired\_design\_stats} (Stage~1 simulator).
+
+Let $D_i = Y_{1,i} - Y_{0,i}$, so $\mathbb{E}[D_i] = \delta$, the memory's
+true causal effect. We wish to choose $n$ (pairs per memory) large enough
+to reject $H_0\!:\delta=0$ with probability (power) $1-\beta$ at
+significance level $\alpha$, when the true effect is $\delta$.
+
+\paragraph{Assumption 1 (common per-arm success probability).} Both arms'
+marginal success probability is approximated by a single $p$:
+$\Pr(Y_1=1)\approx\Pr(Y_0=1)\approx p$. This is exact when $\delta=0$ and a
+good approximation whenever $|\delta|\ll p(1-p)$, which holds throughout
+this project's real and planned settings ($p\in[0.5,0.85]$,
+$\delta\in[0.01,0.20]$). Under this assumption,
+\[
+  \operatorname{Var}(Y_1) \approx \operatorname{Var}(Y_0) \approx p(1-p).
+\]
+(\emph{Consequence, checked empirically in \S\ref{sec:power-caveats}}: using
+the exact arm-specific probabilities $p_1=p+\delta/2$, $p_0=p-\delta/2$
+instead changes $\operatorname{Var}(D)$ by less than 1\% at every
+$(p,\rho,\delta)$ combination this project uses — negligible relative to
+the other approximations below.)
+
+\paragraph{Assumption 2 (paired correlation $\rho$).} Define the
+paired-outcome correlation
+\[
+  \rho \;=\; \frac{\operatorname{Cov}(Y_1,Y_0)}{\sqrt{\operatorname{Var}(Y_1)\operatorname{Var}(Y_0)}}.
+\]
+$\rho>0$ reflects shared context (task difficulty, which other memories were
+co-included) driving both arms' success the same direction — exactly the
+noise a paired design is built to cancel. $\rho$ is \emph{not} assumed
+a priori in this project: it is estimated either from the Stage~1 simulator
+(\texttt{\_common.paired\_design\_stats}, giving a planning proxy of
+$\bar\rho\approx0.154$) or, once real paired episodes exist, directly and
+empirically from them (\texttt{ground\_truth\_runner.paired\_correlation},
+giving the much higher real ALFWorld value $\bar\rho\approx0.6355$ across the
+four ground-truthed memories reported in this paper).
+
+\paragraph{Variance of the paired difference.} By definition of covariance
+and Assumption~1,
+\[
+  \operatorname{Var}(D)
+  = \operatorname{Var}(Y_1) + \operatorname{Var}(Y_0) - 2\operatorname{Cov}(Y_1,Y_0)
+  = 2p(1-p) - 2\rho\, p(1-p)
+  \;=\; 2p(1-p)(1-\rho) \;=:\; \sigma_D^2.
+\]
+
+\paragraph{Assumption 3 (CLT / normal approximation).} For $n$ pairs, the
+sample mean $\bar D_n = \frac{1}{n}\sum_i D_i$ satisfies, by the central
+limit theorem,
+\[
+  \bar D_n \;\overset{\text{approx.}}{\sim}\; \mathcal N\!\left(\delta,\; \sigma_D^2/n\right).
+\]
+This is an approximation, not an exact statement: $D_i$ is a discrete random
+variable taking values in $\{-1,0,1\}$, not continuous. \S\ref{sec:power-caveats}
+reports how well this approximation holds empirically at the sample sizes
+this project actually uses.
+
+\paragraph{Sample-size formula.} Testing $H_0:\delta=0$ against
+$H_1:\delta\neq0$ (two-sided) or $H_1:\delta>0$ / $\delta<0$ (one-sided —
+used for this project's "detect a harmful memory" framing) at level $\alpha$
+with power $1-\beta$, the standard \emph{one-sample} normal-approximation
+sample-size formula is
+\[
+  \boxed{\,n_{\text{pairs}} \;=\; \frac{\left(z_{\alpha/2} + z_{\beta}\right)^2 \, \sigma_D^2}{\delta^2}\,}
+  \qquad\text{(two-sided)}, \qquad
+  n_{\text{pairs}} = \frac{\left(z_{\alpha} + z_{\beta}\right)^2 \, \sigma_D^2}{\delta^2}
+  \quad\text{(one-sided)},
+\]
+where $z_{\alpha/2}=\Phi^{-1}(1-\alpha/2)$ and $z_\beta=\Phi^{-1}(1-\beta)$
+(e.g.\ $z_{0.025}=1.96$, $z_{0.20}=0.8416$ for the conventional
+$\alpha=0.05$, power$=0.80$ used throughout this project).
+
+\paragraph{Episodes and cost.} Each pair costs two episodes (forced-in +
+forced-out). For a store of $N$ independent memories, each ground-truthed to
+the same $n_{\text{pairs}}$:
+\[
+  \text{total episodes} \;=\; 2 \, N \, n_{\text{pairs}},
+  \qquad
+  \text{cost} \;=\; (\text{total episodes}) \times (\text{cost per episode}).
+\]
+
+\subsection*{Remark 1: a common source of a 2$\times$ error}
+\label{rem:factor-of-two}
+
+A natural but \emph{incorrect} variant of this formula carries an extra
+leading factor of 2:
+\[
+  n_{\text{pairs}}^{\text{(wrong)}} \;=\; \frac{2\left(z_{\alpha/2}+z_\beta\right)^2 \sigma_D^2}{\delta^2}
+  \;=\; 2\, n_{\text{pairs}}.
+\]
+This is the correct formula for a \emph{different} design: an
+\textsc{unpaired}, two-independent-sample comparison of two groups, each of
+size $n$, where a single \emph{per-group} variance $\sigma^2$ (not yet
+combined across groups) appears twice because
+$\operatorname{Var}(\bar X_1 - \bar X_2) = \sigma^2/n + \sigma^2/n =
+2\sigma^2/n$ for two independent samples. In our \emph{paired} design,
+$\sigma_D^2$ is already $\operatorname{Var}(D)$ — it has already combined
+both arms' variance and their correlation via the $2p(1-p)(1-\rho)$ term
+derived above. Applying the two-sample formula's extra factor of 2 on top of
+$\sigma_D^2$ double-counts that combination step and inflates
+$n_{\text{pairs}}$ (hence total episodes and cost) by exactly $2\times$.
+Concretely, at this project's real measured point ($p=0.6611$,
+$\rho=0.6355$, $\delta=0.03$, $N=30$), the correct formula gives
+$n_{\text{pairs}}\approx1424$ (85{,}463 total episodes, \$969); the
+incorrect doubled formula gives $n_{\text{pairs}}\approx2849$ (170{,}927
+episodes) — exactly the discrepancy caught, and resolved in favor of the
+correct (undoubled) formula, while preparing this appendix.
+
+\subsection{Empirical validation and caveats}
+\label{sec:power-caveats}
+
+The formula above was checked two ways, both zero-cost (pure simulation,
+no API spend):
+
+\begin{enumerate}
+\item \textbf{Against this project's own prior implementations.} The
+  general module reproduces \texttt{effect\_size\_analysis.json}'s
+  resolution table (e.g.\ 1424.4 vs.\ the file's 1424.39 pairs/memory at
+  $\delta=0.03$) and \texttt{ground\_truth\_power\_analysis.json}'s
+  trade-off table to within floating-point rounding of their hardcoded
+  $z$-values (1.96, 0.8416) vs.\ this module's full-precision $\Phi^{-1}$.
+\item \textbf{Against Monte Carlo simulation of the actual test.} For seven
+  $(p,\rho,\delta)$ settings spanning $p\in[0.30,0.80]$,
+  $\rho\in[0,0.8]$, $|\delta|\in[0.03,0.30]$ (including this project's real
+  ALFWorld point and a one-sided "detection" setting), $n_{\text{pairs}}$
+  paired binary outcomes were drawn from an \emph{exact} bivariate Bernoulli
+  distribution with the target marginals and correlation (not from this
+  project's task-context-based simulators, which induce $\rho$ only
+  indirectly), and a standard one-sample paired $t$-test was run on each of
+  20{,}000 replications. \textbf{Empirical power landed in
+  $[79.7\%,\,82.3\%]$ across all seven settings} — at or slightly above the
+  nominal 80\% target, never meaningfully below it.
+\end{enumerate}
+
+The small ($\lesssim2.5$ percentage point), consistently
+\emph{safe-direction} (more power than promised, not less) overshoot in
+higher-$\rho$ settings was traced to $D_i$'s genuine discreteness ($D_i\in
+\{-1,0,1\}$, not continuous): an exact noncentral-$t$ power calculation —
+which still assumes normality of the individual $D_i$, only relaxing the
+known-variance assumption of the $z$-test above — matches the nominal 80\%
+almost exactly (79.3--79.8\% across the settings checked this way), meaning
+the sample-size formula's own normal-approximation machinery is sound; the
+residual gap comes specifically from how a $t$-test's sample-variance
+estimator behaves on sparse $\{-1,0,1\}$-valued data (most pairs concordant,
+$D_i=0$, at high $\rho$) rather than continuous Gaussian data.
+
+\paragraph{Every assumption, listed.} For a reviewer or reader checking this
+derivation: (i) a single shared $p$ approximates both arms' success
+probability (Assumption~1); (ii) $\rho$ is treated as constant across the
+effect-size range being planned for, estimated once from data available at
+planning time; (iii) the CLT normal approximation for $\bar D_n$
+(Assumption~3), whose finite-sample accuracy is empirically checked in
+\S\ref{sec:power-caveats} rather than assumed; (iv) independence of pairs
+within a memory and independence across memories (no shared randomness
+between two different memories' ground-truth reruns); (v) a fixed,
+conventional $\alpha=0.05$ and power $=0.80$, not derived from any
+project-specific loss function; (vi) cost is linear in episode count at a
+single blended cost-per-episode figure, itself an average over six
+real-measured, unequally-costly task types (\S\ref{sec:setup}) — resolving
+a store whose task-type mix differs from this project's would need a
+re-weighted cost-per-episode, not this single constant.

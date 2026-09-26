@@ -1,0 +1,6367 @@
+{
+  "assumptions": {
+    "p_real_success_rate": 0.6611111111111111,
+    "cost_per_episode_usd": 0.011333333333333334,
+    "cost_per_episode_by_task_type": {
+      "pick_heat_then_place_in_recep": 0.0192,
+      "pick_cool_then_place_in_recep": 0.0164,
+      "pick_clean_then_place_in_recep": 0.0128,
+      "pick_two_obj_and_place": 0.009,
+      "pick_and_place_simple": 0.0057,
+      "look_at_obj_in_light": 0.0049
+    },
+    "alpha_two_sided": 0.05,
+    "power": 0.8
+  },
+  "grid_axes": {
+    "delta": [
+      0.01,
+      0.02,
+      0.03,
+      0.04,
+      0.05,
+      0.06,
+      0.07,
+      0.08,
+      0.09,
+      0.1,
+      0.11,
+      0.12,
+      0.13,
+      0.14,
+      0.15,
+      0.16,
+      0.17,
+      0.18,
+      0.19,
+      0.2
+    ],
+    "n_memories": [
+      10,
+      20,
+      30,
+      40,
+      50,
+      75,
+      100
+    ],
+    "rho": [
+      0.0,
+      0.2,
+      0.4,
+      0.6,
+      0.8
+    ]
+  },
+  "alfworld_point": {
+    "delta": 0.03,
+    "n_memories": 30,
+    "rho": 0.6355,
+    "p": 0.6611111111111111,
+    "n_pairs_per_memory": 1424.375449791001,
+    "total_episodes": 85462.52698746006,
+    "cost_usd": 968.5753058578808
+  },
+  "table": [
+    {
+      "delta": 0.01,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35169.76419237039,
+      "total_episodes": 703395.2838474079,
+      "cost_usd": 7971.81321693729
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 28135.811353896315,
+      "total_episodes": 562716.2270779263,
+      "cost_usd": 6377.4505735498315
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 21101.85851542223,
+      "total_episodes": 422037.17030844465,
+      "cost_usd": 4783.087930162373
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 14067.905676948158,
+      "total_episodes": 281358.11353896314,
+      "cost_usd": 3188.7252867749157
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 7033.952838474076,
+      "total_episodes": 140679.0567694815,
+      "cost_usd": 1594.3626433874572
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35169.76419237039,
+      "total_episodes": 1406790.5676948158,
+      "cost_usd": 15943.62643387458
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 28135.811353896315,
+      "total_episodes": 1125432.4541558526,
+      "cost_usd": 12754.901147099663
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 21101.85851542223,
+      "total_episodes": 844074.3406168893,
+      "cost_usd": 9566.175860324745
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 14067.905676948158,
+      "total_episodes": 562716.2270779263,
+      "cost_usd": 6377.4505735498315
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 7033.952838474076,
+      "total_episodes": 281358.113538963,
+      "cost_usd": 3188.7252867749144
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35169.76419237039,
+      "total_episodes": 2110185.8515422237,
+      "cost_usd": 23915.43965081187
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 28135.811353896315,
+      "total_episodes": 1688148.6812337788,
+      "cost_usd": 19132.351720649494
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 21101.85851542223,
+      "total_episodes": 1266111.510925334,
+      "cost_usd": 14349.263790487119
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 14067.905676948158,
+      "total_episodes": 844074.3406168894,
+      "cost_usd": 9566.175860324747
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 7033.952838474076,
+      "total_episodes": 422037.1703084446,
+      "cost_usd": 4783.087930162373
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35169.76419237039,
+      "total_episodes": 2813581.1353896316,
+      "cost_usd": 31887.25286774916
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 28135.811353896315,
+      "total_episodes": 2250864.908311705,
+      "cost_usd": 25509.802294199326
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 21101.85851542223,
+      "total_episodes": 1688148.6812337786,
+      "cost_usd": 19132.35172064949
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 14067.905676948158,
+      "total_episodes": 1125432.4541558526,
+      "cost_usd": 12754.901147099663
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 7033.952838474076,
+      "total_episodes": 562716.227077926,
+      "cost_usd": 6377.450573549829
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35169.76419237039,
+      "total_episodes": 3516976.419237039,
+      "cost_usd": 39859.06608468645
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 28135.811353896315,
+      "total_episodes": 2813581.1353896316,
+      "cost_usd": 31887.25286774916
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 21101.85851542223,
+      "total_episodes": 2110185.8515422232,
+      "cost_usd": 23915.439650811866
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 14067.905676948158,
+      "total_episodes": 1406790.5676948158,
+      "cost_usd": 15943.62643387458
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 7033.952838474076,
+      "total_episodes": 703395.2838474076,
+      "cost_usd": 7971.813216937287
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35169.76419237039,
+      "total_episodes": 5275464.628855559,
+      "cost_usd": 59788.59912702967
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 28135.811353896315,
+      "total_episodes": 4220371.703084447,
+      "cost_usd": 47830.87930162374
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 21101.85851542223,
+      "total_episodes": 3165278.777313335,
+      "cost_usd": 35873.1594762178
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 14067.905676948158,
+      "total_episodes": 2110185.8515422237,
+      "cost_usd": 23915.43965081187
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 7033.952838474076,
+      "total_episodes": 1055092.9257711114,
+      "cost_usd": 11957.71982540593
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35169.76419237039,
+      "total_episodes": 7033952.838474078,
+      "cost_usd": 79718.1321693729
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 28135.811353896315,
+      "total_episodes": 5627162.270779263,
+      "cost_usd": 63774.50573549832
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 21101.85851542223,
+      "total_episodes": 4220371.7030844465,
+      "cost_usd": 47830.87930162373
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 14067.905676948158,
+      "total_episodes": 2813581.1353896316,
+      "cost_usd": 31887.25286774916
+    },
+    {
+      "delta": 0.01,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 7033.952838474076,
+      "total_episodes": 1406790.567694815,
+      "cost_usd": 15943.626433874573
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 8792.441048092598,
+      "total_episodes": 175848.82096185198,
+      "cost_usd": 1992.9533042343226
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 7033.952838474079,
+      "total_episodes": 140679.05676948157,
+      "cost_usd": 1594.3626433874579
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 5275.464628855558,
+      "total_episodes": 105509.29257711116,
+      "cost_usd": 1195.7719825405932
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3516.9764192370394,
+      "total_episodes": 70339.52838474078,
+      "cost_usd": 797.1813216937289
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1758.488209618519,
+      "total_episodes": 35169.76419237038,
+      "cost_usd": 398.5906608468643
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 8792.441048092598,
+      "total_episodes": 351697.64192370395,
+      "cost_usd": 3985.906608468645
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 7033.952838474079,
+      "total_episodes": 281358.11353896314,
+      "cost_usd": 3188.7252867749157
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 5275.464628855558,
+      "total_episodes": 211018.58515422232,
+      "cost_usd": 2391.5439650811863
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3516.9764192370394,
+      "total_episodes": 140679.05676948157,
+      "cost_usd": 1594.3626433874579
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1758.488209618519,
+      "total_episodes": 70339.52838474076,
+      "cost_usd": 797.1813216937286
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 8792.441048092598,
+      "total_episodes": 527546.4628855559,
+      "cost_usd": 5978.859912702967
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 7033.952838474079,
+      "total_episodes": 422037.1703084447,
+      "cost_usd": 4783.087930162374
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 5275.464628855558,
+      "total_episodes": 316527.8777313335,
+      "cost_usd": 3587.3159476217797
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3516.9764192370394,
+      "total_episodes": 211018.58515422235,
+      "cost_usd": 2391.543965081187
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1758.488209618519,
+      "total_episodes": 105509.29257711115,
+      "cost_usd": 1195.7719825405932
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 8792.441048092598,
+      "total_episodes": 703395.2838474079,
+      "cost_usd": 7971.81321693729
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 7033.952838474079,
+      "total_episodes": 562716.2270779263,
+      "cost_usd": 6377.4505735498315
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 5275.464628855558,
+      "total_episodes": 422037.17030844465,
+      "cost_usd": 4783.087930162373
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3516.9764192370394,
+      "total_episodes": 281358.11353896314,
+      "cost_usd": 3188.7252867749157
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1758.488209618519,
+      "total_episodes": 140679.0567694815,
+      "cost_usd": 1594.3626433874572
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 8792.441048092598,
+      "total_episodes": 879244.1048092598,
+      "cost_usd": 9964.766521171612
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 7033.952838474079,
+      "total_episodes": 703395.2838474079,
+      "cost_usd": 7971.81321693729
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 5275.464628855558,
+      "total_episodes": 527546.4628855558,
+      "cost_usd": 5978.8599127029665
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3516.9764192370394,
+      "total_episodes": 351697.64192370395,
+      "cost_usd": 3985.906608468645
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1758.488209618519,
+      "total_episodes": 175848.8209618519,
+      "cost_usd": 1992.9533042343216
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 8792.441048092598,
+      "total_episodes": 1318866.1572138898,
+      "cost_usd": 14947.149781757418
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 7033.952838474079,
+      "total_episodes": 1055092.9257711119,
+      "cost_usd": 11957.719825405935
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 5275.464628855558,
+      "total_episodes": 791319.6943283337,
+      "cost_usd": 8968.28986905445
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3516.9764192370394,
+      "total_episodes": 527546.4628855559,
+      "cost_usd": 5978.859912702967
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1758.488209618519,
+      "total_episodes": 263773.23144277785,
+      "cost_usd": 2989.4299563514824
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 8792.441048092598,
+      "total_episodes": 1758488.2096185195,
+      "cost_usd": 19929.533042343224
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 7033.952838474079,
+      "total_episodes": 1406790.5676948158,
+      "cost_usd": 15943.62643387458
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 5275.464628855558,
+      "total_episodes": 1055092.9257711116,
+      "cost_usd": 11957.719825405933
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3516.9764192370394,
+      "total_episodes": 703395.2838474079,
+      "cost_usd": 7971.81321693729
+    },
+    {
+      "delta": 0.02,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1758.488209618519,
+      "total_episodes": 351697.6419237038,
+      "cost_usd": 3985.9066084686433
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3907.751576930044,
+      "total_episodes": 78155.03153860087,
+      "cost_usd": 885.7570241041433
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3126.2012615440353,
+      "total_episodes": 62524.02523088071,
+      "cost_usd": 708.6056192833148
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 2344.650946158026,
+      "total_episodes": 46893.01892316052,
+      "cost_usd": 531.4542144624859
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1563.1006307720177,
+      "total_episodes": 31262.012615440355,
+      "cost_usd": 354.3028096416574
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 781.5503153860086,
+      "total_episodes": 15631.006307720172,
+      "cost_usd": 177.15140482082862
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3907.751576930044,
+      "total_episodes": 156310.06307720175,
+      "cost_usd": 1771.5140482082866
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3126.2012615440353,
+      "total_episodes": 125048.05046176142,
+      "cost_usd": 1417.2112385666296
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 2344.650946158026,
+      "total_episodes": 93786.03784632104,
+      "cost_usd": 1062.9084289249718
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1563.1006307720177,
+      "total_episodes": 62524.02523088071,
+      "cost_usd": 708.6056192833148
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 781.5503153860086,
+      "total_episodes": 31262.012615440344,
+      "cost_usd": 354.30280964165723
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3907.751576930044,
+      "total_episodes": 234465.09461580263,
+      "cost_usd": 2657.27107231243
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3126.2012615440353,
+      "total_episodes": 187572.07569264213,
+      "cost_usd": 2125.8168578499444
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 2344.650946158026,
+      "total_episodes": 140679.05676948154,
+      "cost_usd": 1594.3626433874576
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1563.1006307720177,
+      "total_episodes": 93786.03784632107,
+      "cost_usd": 1062.9084289249722
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 781.5503153860086,
+      "total_episodes": 46893.01892316052,
+      "cost_usd": 531.4542144624859
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3907.751576930044,
+      "total_episodes": 312620.1261544035,
+      "cost_usd": 3543.028096416573
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3126.2012615440353,
+      "total_episodes": 250096.10092352284,
+      "cost_usd": 2834.4224771332592
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 2344.650946158026,
+      "total_episodes": 187572.07569264207,
+      "cost_usd": 2125.8168578499435
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1563.1006307720177,
+      "total_episodes": 125048.05046176142,
+      "cost_usd": 1417.2112385666296
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 781.5503153860086,
+      "total_episodes": 62524.02523088069,
+      "cost_usd": 708.6056192833145
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3907.751576930044,
+      "total_episodes": 390775.1576930044,
+      "cost_usd": 4428.785120520717
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3126.2012615440353,
+      "total_episodes": 312620.12615440355,
+      "cost_usd": 3543.028096416574
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 2344.650946158026,
+      "total_episodes": 234465.09461580258,
+      "cost_usd": 2657.271072312429
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1563.1006307720177,
+      "total_episodes": 156310.06307720178,
+      "cost_usd": 1771.514048208287
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 781.5503153860086,
+      "total_episodes": 78155.03153860086,
+      "cost_usd": 885.7570241041432
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3907.751576930044,
+      "total_episodes": 586162.7365395066,
+      "cost_usd": 6643.177680781075
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3126.2012615440353,
+      "total_episodes": 468930.1892316053,
+      "cost_usd": 5314.542144624861
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 2344.650946158026,
+      "total_episodes": 351697.6419237039,
+      "cost_usd": 3985.906608468644
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1563.1006307720177,
+      "total_episodes": 234465.09461580266,
+      "cost_usd": 2657.2710723124305
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 781.5503153860086,
+      "total_episodes": 117232.54730790129,
+      "cost_usd": 1328.6355361562146
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3907.751576930044,
+      "total_episodes": 781550.3153860088,
+      "cost_usd": 8857.570241041434
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 3126.2012615440353,
+      "total_episodes": 625240.2523088071,
+      "cost_usd": 7086.056192833148
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 2344.650946158026,
+      "total_episodes": 468930.18923160515,
+      "cost_usd": 5314.542144624858
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1563.1006307720177,
+      "total_episodes": 312620.12615440355,
+      "cost_usd": 3543.028096416574
+    },
+    {
+      "delta": 0.03,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 781.5503153860086,
+      "total_episodes": 156310.06307720172,
+      "cost_usd": 1771.5140482082863
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 2198.1102620231495,
+      "total_episodes": 43962.205240462994,
+      "cost_usd": 498.23832605858064
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1758.4882096185197,
+      "total_episodes": 35169.76419237039,
+      "cost_usd": 398.59066084686447
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1318.8661572138894,
+      "total_episodes": 26377.32314427779,
+      "cost_usd": 298.9429956351483
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 879.2441048092599,
+      "total_episodes": 17584.882096185196,
+      "cost_usd": 199.29533042343223
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 439.62205240462976,
+      "total_episodes": 8792.441048092594,
+      "cost_usd": 99.64766521171607
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 2198.1102620231495,
+      "total_episodes": 87924.41048092599,
+      "cost_usd": 996.4766521171613
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1758.4882096185197,
+      "total_episodes": 70339.52838474078,
+      "cost_usd": 797.1813216937289
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1318.8661572138894,
+      "total_episodes": 52754.64628855558,
+      "cost_usd": 597.8859912702966
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 879.2441048092599,
+      "total_episodes": 35169.76419237039,
+      "cost_usd": 398.59066084686447
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 439.62205240462976,
+      "total_episodes": 17584.88209618519,
+      "cost_usd": 199.29533042343215
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 2198.1102620231495,
+      "total_episodes": 131886.61572138898,
+      "cost_usd": 1494.7149781757419
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1758.4882096185197,
+      "total_episodes": 105509.29257711118,
+      "cost_usd": 1195.7719825405934
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1318.8661572138894,
+      "total_episodes": 79131.96943283337,
+      "cost_usd": 896.8289869054449
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 879.2441048092599,
+      "total_episodes": 52754.64628855559,
+      "cost_usd": 597.8859912702967
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 439.62205240462976,
+      "total_episodes": 26377.323144277787,
+      "cost_usd": 298.9429956351483
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 2198.1102620231495,
+      "total_episodes": 175848.82096185198,
+      "cost_usd": 1992.9533042343226
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1758.4882096185197,
+      "total_episodes": 140679.05676948157,
+      "cost_usd": 1594.3626433874579
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1318.8661572138894,
+      "total_episodes": 105509.29257711116,
+      "cost_usd": 1195.7719825405932
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 879.2441048092599,
+      "total_episodes": 70339.52838474078,
+      "cost_usd": 797.1813216937289
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 439.62205240462976,
+      "total_episodes": 35169.76419237038,
+      "cost_usd": 398.5906608468643
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 2198.1102620231495,
+      "total_episodes": 219811.02620231494,
+      "cost_usd": 2491.191630292903
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1758.4882096185197,
+      "total_episodes": 175848.82096185198,
+      "cost_usd": 1992.9533042343226
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1318.8661572138894,
+      "total_episodes": 131886.61572138895,
+      "cost_usd": 1494.7149781757416
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 879.2441048092599,
+      "total_episodes": 87924.41048092599,
+      "cost_usd": 996.4766521171613
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 439.62205240462976,
+      "total_episodes": 43962.20524046297,
+      "cost_usd": 498.2383260585804
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 2198.1102620231495,
+      "total_episodes": 329716.53930347244,
+      "cost_usd": 3736.7874454393545
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1758.4882096185197,
+      "total_episodes": 263773.23144277796,
+      "cost_usd": 2989.4299563514837
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1318.8661572138894,
+      "total_episodes": 197829.92358208343,
+      "cost_usd": 2242.0724672636125
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 879.2441048092599,
+      "total_episodes": 131886.61572138898,
+      "cost_usd": 1494.7149781757419
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 439.62205240462976,
+      "total_episodes": 65943.30786069446,
+      "cost_usd": 747.3574890878706
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 2198.1102620231495,
+      "total_episodes": 439622.0524046299,
+      "cost_usd": 4982.383260585806
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1758.4882096185197,
+      "total_episodes": 351697.64192370395,
+      "cost_usd": 3985.906608468645
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1318.8661572138894,
+      "total_episodes": 263773.2314427779,
+      "cost_usd": 2989.4299563514833
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 879.2441048092599,
+      "total_episodes": 175848.82096185198,
+      "cost_usd": 1992.9533042343226
+    },
+    {
+      "delta": 0.04,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 439.62205240462976,
+      "total_episodes": 87924.41048092594,
+      "cost_usd": 996.4766521171608
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1406.7905676948155,
+      "total_episodes": 28135.81135389631,
+      "cost_usd": 318.8725286774916
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1125.4324541558524,
+      "total_episodes": 22508.64908311705,
+      "cost_usd": 255.09802294199324
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 844.0743406168892,
+      "total_episodes": 16881.486812337786,
+      "cost_usd": 191.32351720649493
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 562.7162270779262,
+      "total_episodes": 11254.324541558524,
+      "cost_usd": 127.54901147099662
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 281.35811353896304,
+      "total_episodes": 5627.162270779261,
+      "cost_usd": 63.7745057354983
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1406.7905676948155,
+      "total_episodes": 56271.62270779262,
+      "cost_usd": 637.7450573549831
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1125.4324541558524,
+      "total_episodes": 45017.2981662341,
+      "cost_usd": 510.19604588398647
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 844.0743406168892,
+      "total_episodes": 33762.97362467557,
+      "cost_usd": 382.64703441298985
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 562.7162270779262,
+      "total_episodes": 22508.64908311705,
+      "cost_usd": 255.09802294199324
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 281.35811353896304,
+      "total_episodes": 11254.324541558522,
+      "cost_usd": 127.5490114709966
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1406.7905676948155,
+      "total_episodes": 84407.43406168894,
+      "cost_usd": 956.6175860324747
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1125.4324541558524,
+      "total_episodes": 67525.94724935114,
+      "cost_usd": 765.2940688259797
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 844.0743406168892,
+      "total_episodes": 50644.46043701335,
+      "cost_usd": 573.9705516194847
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 562.7162270779262,
+      "total_episodes": 33762.97362467557,
+      "cost_usd": 382.64703441298985
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 281.35811353896304,
+      "total_episodes": 16881.486812337782,
+      "cost_usd": 191.32351720649487
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1406.7905676948155,
+      "total_episodes": 112543.24541558525,
+      "cost_usd": 1275.4901147099663
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1125.4324541558524,
+      "total_episodes": 90034.5963324682,
+      "cost_usd": 1020.3920917679729
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 844.0743406168892,
+      "total_episodes": 67525.94724935114,
+      "cost_usd": 765.2940688259797
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 562.7162270779262,
+      "total_episodes": 45017.2981662341,
+      "cost_usd": 510.19604588398647
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 281.35811353896304,
+      "total_episodes": 22508.649083117045,
+      "cost_usd": 255.0980229419932
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1406.7905676948155,
+      "total_episodes": 140679.05676948154,
+      "cost_usd": 1594.3626433874576
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1125.4324541558524,
+      "total_episodes": 112543.24541558523,
+      "cost_usd": 1275.490114709966
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 844.0743406168892,
+      "total_episodes": 84407.43406168892,
+      "cost_usd": 956.6175860324745
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 562.7162270779262,
+      "total_episodes": 56271.622707792616,
+      "cost_usd": 637.745057354983
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 281.35811353896304,
+      "total_episodes": 28135.811353896304,
+      "cost_usd": 318.87252867749146
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1406.7905676948155,
+      "total_episodes": 211018.58515422232,
+      "cost_usd": 2391.5439650811863
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1125.4324541558524,
+      "total_episodes": 168814.86812337785,
+      "cost_usd": 1913.235172064949
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 844.0743406168892,
+      "total_episodes": 126611.15109253339,
+      "cost_usd": 1434.9263790487119
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 562.7162270779262,
+      "total_episodes": 84407.43406168892,
+      "cost_usd": 956.6175860324745
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 281.35811353896304,
+      "total_episodes": 42203.717030844455,
+      "cost_usd": 478.3087930162372
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1406.7905676948155,
+      "total_episodes": 281358.1135389631,
+      "cost_usd": 3188.7252867749153
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 1125.4324541558524,
+      "total_episodes": 225086.49083117046,
+      "cost_usd": 2550.980229419932
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 844.0743406168892,
+      "total_episodes": 168814.86812337785,
+      "cost_usd": 1913.235172064949
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 562.7162270779262,
+      "total_episodes": 112543.24541558523,
+      "cost_usd": 1275.490114709966
+    },
+    {
+      "delta": 0.05,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 281.35811353896304,
+      "total_episodes": 56271.62270779261,
+      "cost_usd": 637.7450573549829
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 976.937894232511,
+      "total_episodes": 19538.75788465022,
+      "cost_usd": 221.43925602603582
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 781.5503153860088,
+      "total_episodes": 15631.006307720178,
+      "cost_usd": 177.1514048208287
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 586.1627365395065,
+      "total_episodes": 11723.25473079013,
+      "cost_usd": 132.86355361562147
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 390.7751576930044,
+      "total_episodes": 7815.503153860089,
+      "cost_usd": 88.57570241041435
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 195.38757884650215,
+      "total_episodes": 3907.751576930043,
+      "cost_usd": 44.287851205207154
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 976.937894232511,
+      "total_episodes": 39077.51576930044,
+      "cost_usd": 442.87851205207164
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 781.5503153860088,
+      "total_episodes": 31262.012615440355,
+      "cost_usd": 354.3028096416574
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 586.1627365395065,
+      "total_episodes": 23446.50946158026,
+      "cost_usd": 265.72710723124294
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 390.7751576930044,
+      "total_episodes": 15631.006307720178,
+      "cost_usd": 177.1514048208287
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 195.38757884650215,
+      "total_episodes": 7815.503153860086,
+      "cost_usd": 88.57570241041431
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 976.937894232511,
+      "total_episodes": 58616.27365395066,
+      "cost_usd": 664.3177680781075
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 781.5503153860088,
+      "total_episodes": 46893.01892316053,
+      "cost_usd": 531.4542144624861
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 586.1627365395065,
+      "total_episodes": 35169.764192370385,
+      "cost_usd": 398.5906608468644
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 390.7751576930044,
+      "total_episodes": 23446.509461580266,
+      "cost_usd": 265.72710723124305
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 195.38757884650215,
+      "total_episodes": 11723.25473079013,
+      "cost_usd": 132.86355361562147
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 976.937894232511,
+      "total_episodes": 78155.03153860087,
+      "cost_usd": 885.7570241041433
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 781.5503153860088,
+      "total_episodes": 62524.02523088071,
+      "cost_usd": 708.6056192833148
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 586.1627365395065,
+      "total_episodes": 46893.01892316052,
+      "cost_usd": 531.4542144624859
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 390.7751576930044,
+      "total_episodes": 31262.012615440355,
+      "cost_usd": 354.3028096416574
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 195.38757884650215,
+      "total_episodes": 15631.006307720172,
+      "cost_usd": 177.15140482082862
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 976.937894232511,
+      "total_episodes": 97693.7894232511,
+      "cost_usd": 1107.1962801301793
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 781.5503153860088,
+      "total_episodes": 78155.03153860089,
+      "cost_usd": 885.7570241041435
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 586.1627365395065,
+      "total_episodes": 58616.273653950644,
+      "cost_usd": 664.3177680781073
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 390.7751576930044,
+      "total_episodes": 39077.515769300444,
+      "cost_usd": 442.87851205207176
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 195.38757884650215,
+      "total_episodes": 19538.757884650215,
+      "cost_usd": 221.4392560260358
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 976.937894232511,
+      "total_episodes": 146540.68413487665,
+      "cost_usd": 1660.7944201952687
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 781.5503153860088,
+      "total_episodes": 117232.54730790133,
+      "cost_usd": 1328.6355361562153
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 586.1627365395065,
+      "total_episodes": 87924.41048092597,
+      "cost_usd": 996.476652117161
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 390.7751576930044,
+      "total_episodes": 58616.273653950666,
+      "cost_usd": 664.3177680781076
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 195.38757884650215,
+      "total_episodes": 29308.136826975322,
+      "cost_usd": 332.15888403905365
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 976.937894232511,
+      "total_episodes": 195387.5788465022,
+      "cost_usd": 2214.3925602603586
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 781.5503153860088,
+      "total_episodes": 156310.06307720178,
+      "cost_usd": 1771.514048208287
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 586.1627365395065,
+      "total_episodes": 117232.54730790129,
+      "cost_usd": 1328.6355361562146
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 390.7751576930044,
+      "total_episodes": 78155.03153860089,
+      "cost_usd": 885.7570241041435
+    },
+    {
+      "delta": 0.06,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 195.38757884650215,
+      "total_episodes": 39077.51576930043,
+      "cost_usd": 442.8785120520716
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 717.750289640212,
+      "total_episodes": 14355.00579280424,
+      "cost_usd": 162.6900656517814
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 574.2002317121696,
+      "total_episodes": 11484.004634243393,
+      "cost_usd": 130.15205252142513
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 430.65017378412716,
+      "total_episodes": 8613.003475682543,
+      "cost_usd": 97.61403939106883
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 287.1001158560848,
+      "total_episodes": 5742.002317121696,
+      "cost_usd": 65.07602626071257
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 143.55005792804235,
+      "total_episodes": 2871.001158560847,
+      "cost_usd": 32.53801313035627
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 717.750289640212,
+      "total_episodes": 28710.01158560848,
+      "cost_usd": 325.3801313035628
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 574.2002317121696,
+      "total_episodes": 22968.009268486785,
+      "cost_usd": 260.30410504285027
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 430.65017378412716,
+      "total_episodes": 17226.006951365085,
+      "cost_usd": 195.22807878213766
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 287.1001158560848,
+      "total_episodes": 11484.004634243393,
+      "cost_usd": 130.15205252142513
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 143.55005792804235,
+      "total_episodes": 5742.002317121694,
+      "cost_usd": 65.07602626071254
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 717.750289640212,
+      "total_episodes": 43065.017378412726,
+      "cost_usd": 488.0701969553443
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 574.2002317121696,
+      "total_episodes": 34452.01390273018,
+      "cost_usd": 390.4561575642754
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 430.65017378412716,
+      "total_episodes": 25839.01042704763,
+      "cost_usd": 292.8421181732065
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 287.1001158560848,
+      "total_episodes": 17226.00695136509,
+      "cost_usd": 195.2280787821377
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 143.55005792804235,
+      "total_episodes": 8613.00347568254,
+      "cost_usd": 97.6140393910688
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 717.750289640212,
+      "total_episodes": 57420.02317121696,
+      "cost_usd": 650.7602626071256
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 574.2002317121696,
+      "total_episodes": 45936.01853697357,
+      "cost_usd": 520.6082100857005
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 430.65017378412716,
+      "total_episodes": 34452.01390273017,
+      "cost_usd": 390.4561575642753
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 287.1001158560848,
+      "total_episodes": 22968.009268486785,
+      "cost_usd": 260.30410504285027
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 143.55005792804235,
+      "total_episodes": 11484.004634243389,
+      "cost_usd": 130.15205252142508
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 717.750289640212,
+      "total_episodes": 71775.0289640212,
+      "cost_usd": 813.450328258907
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 574.2002317121696,
+      "total_episodes": 57420.02317121696,
+      "cost_usd": 650.7602626071256
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 430.65017378412716,
+      "total_episodes": 43065.01737841272,
+      "cost_usd": 488.07019695534416
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 287.1001158560848,
+      "total_episodes": 28710.01158560848,
+      "cost_usd": 325.3801313035628
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 143.55005792804235,
+      "total_episodes": 14355.005792804235,
+      "cost_usd": 162.69006565178134
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 717.750289640212,
+      "total_episodes": 107662.5434460318,
+      "cost_usd": 1220.1754923883605
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 574.2002317121696,
+      "total_episodes": 86130.03475682545,
+      "cost_usd": 976.1403939106885
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 430.65017378412716,
+      "total_episodes": 64597.526067619074,
+      "cost_usd": 732.1052954330162
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 287.1001158560848,
+      "total_episodes": 43065.017378412726,
+      "cost_usd": 488.0701969553443
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 143.55005792804235,
+      "total_episodes": 21532.508689206352,
+      "cost_usd": 244.035098477672
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 717.750289640212,
+      "total_episodes": 143550.0579280424,
+      "cost_usd": 1626.900656517814
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 574.2002317121696,
+      "total_episodes": 114840.04634243393,
+      "cost_usd": 1301.5205252142512
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 430.65017378412716,
+      "total_episodes": 86130.03475682544,
+      "cost_usd": 976.1403939106883
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 287.1001158560848,
+      "total_episodes": 57420.02317121696,
+      "cost_usd": 650.7602626071256
+    },
+    {
+      "delta": 0.07,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 143.55005792804235,
+      "total_episodes": 28710.01158560847,
+      "cost_usd": 325.3801313035627
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 549.5275655057874,
+      "total_episodes": 10990.551310115748,
+      "cost_usd": 124.55958151464516
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 439.6220524046299,
+      "total_episodes": 8792.441048092598,
+      "cost_usd": 99.64766521171612
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 329.71653930347236,
+      "total_episodes": 6594.330786069448,
+      "cost_usd": 74.73574890878707
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 219.81102620231496,
+      "total_episodes": 4396.220524046299,
+      "cost_usd": 49.82383260585806
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 109.90551310115744,
+      "total_episodes": 2198.1102620231486,
+      "cost_usd": 24.91191630292902
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 549.5275655057874,
+      "total_episodes": 21981.102620231497,
+      "cost_usd": 249.11916302929032
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 439.6220524046299,
+      "total_episodes": 17584.882096185196,
+      "cost_usd": 199.29533042343223
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 329.71653930347236,
+      "total_episodes": 13188.661572138895,
+      "cost_usd": 149.47149781757415
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 219.81102620231496,
+      "total_episodes": 8792.441048092598,
+      "cost_usd": 99.64766521171612
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 109.90551310115744,
+      "total_episodes": 4396.220524046297,
+      "cost_usd": 49.82383260585804
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 549.5275655057874,
+      "total_episodes": 32971.653930347245,
+      "cost_usd": 373.67874454393547
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 439.6220524046299,
+      "total_episodes": 26377.323144277794,
+      "cost_usd": 298.94299563514835
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 329.71653930347236,
+      "total_episodes": 19782.992358208343,
+      "cost_usd": 224.20724672636123
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 219.81102620231496,
+      "total_episodes": 13188.661572138897,
+      "cost_usd": 149.47149781757417
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 109.90551310115744,
+      "total_episodes": 6594.330786069447,
+      "cost_usd": 74.73574890878707
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 549.5275655057874,
+      "total_episodes": 43962.205240462994,
+      "cost_usd": 498.23832605858064
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 439.6220524046299,
+      "total_episodes": 35169.76419237039,
+      "cost_usd": 398.59066084686447
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 329.71653930347236,
+      "total_episodes": 26377.32314427779,
+      "cost_usd": 298.9429956351483
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 219.81102620231496,
+      "total_episodes": 17584.882096185196,
+      "cost_usd": 199.29533042343223
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 109.90551310115744,
+      "total_episodes": 8792.441048092594,
+      "cost_usd": 99.64766521171607
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 549.5275655057874,
+      "total_episodes": 54952.756550578735,
+      "cost_usd": 622.7979075732258
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 439.6220524046299,
+      "total_episodes": 43962.205240462994,
+      "cost_usd": 498.23832605858064
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 329.71653930347236,
+      "total_episodes": 32971.65393034724,
+      "cost_usd": 373.6787445439354
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 219.81102620231496,
+      "total_episodes": 21981.102620231497,
+      "cost_usd": 249.11916302929032
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 109.90551310115744,
+      "total_episodes": 10990.551310115743,
+      "cost_usd": 124.5595815146451
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 549.5275655057874,
+      "total_episodes": 82429.13482586811,
+      "cost_usd": 934.1968613598386
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 439.6220524046299,
+      "total_episodes": 65943.30786069449,
+      "cost_usd": 747.3574890878709
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 329.71653930347236,
+      "total_episodes": 49457.48089552086,
+      "cost_usd": 560.5181168159031
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 219.81102620231496,
+      "total_episodes": 32971.653930347245,
+      "cost_usd": 373.67874454393547
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 109.90551310115744,
+      "total_episodes": 16485.826965173615,
+      "cost_usd": 186.83937227196765
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 549.5275655057874,
+      "total_episodes": 109905.51310115747,
+      "cost_usd": 1245.5958151464515
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 439.6220524046299,
+      "total_episodes": 87924.41048092599,
+      "cost_usd": 996.4766521171613
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 329.71653930347236,
+      "total_episodes": 65943.30786069448,
+      "cost_usd": 747.3574890878708
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 219.81102620231496,
+      "total_episodes": 43962.205240462994,
+      "cost_usd": 498.23832605858064
+    },
+    {
+      "delta": 0.08,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 109.90551310115744,
+      "total_episodes": 21981.102620231486,
+      "cost_usd": 249.1191630292902
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 434.19461965889377,
+      "total_episodes": 8683.892393177875,
+      "cost_usd": 98.41744712268259
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 347.355695727115,
+      "total_episodes": 6947.1139145423,
+      "cost_usd": 78.73395769814607
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 260.51677179533624,
+      "total_episodes": 5210.335435906725,
+      "cost_usd": 59.05046827360956
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 173.6778478635575,
+      "total_episodes": 3473.55695727115,
+      "cost_usd": 39.366978849073035
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 86.83892393177874,
+      "total_episodes": 1736.7784786355746,
+      "cost_usd": 19.683489424536514
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 434.19461965889377,
+      "total_episodes": 17367.78478635575,
+      "cost_usd": 196.83489424536518
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 347.355695727115,
+      "total_episodes": 13894.2278290846,
+      "cost_usd": 157.46791539629214
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 260.51677179533624,
+      "total_episodes": 10420.67087181345,
+      "cost_usd": 118.10093654721912
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 173.6778478635575,
+      "total_episodes": 6947.1139145423,
+      "cost_usd": 78.73395769814607
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 86.83892393177874,
+      "total_episodes": 3473.5569572711493,
+      "cost_usd": 39.36697884907303
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 434.19461965889377,
+      "total_episodes": 26051.677179533624,
+      "cost_usd": 295.2523413680478
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 347.355695727115,
+      "total_episodes": 20841.3417436269,
+      "cost_usd": 236.20187309443824
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 260.51677179533624,
+      "total_episodes": 15631.006307720174,
+      "cost_usd": 177.15140482082865
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 173.6778478635575,
+      "total_episodes": 10420.67087181345,
+      "cost_usd": 118.10093654721912
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 86.83892393177874,
+      "total_episodes": 5210.335435906724,
+      "cost_usd": 59.050468273609546
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 434.19461965889377,
+      "total_episodes": 34735.5695727115,
+      "cost_usd": 393.66978849073035
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 347.355695727115,
+      "total_episodes": 27788.4556581692,
+      "cost_usd": 314.9358307925843
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 260.51677179533624,
+      "total_episodes": 20841.3417436269,
+      "cost_usd": 236.20187309443824
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 173.6778478635575,
+      "total_episodes": 13894.2278290846,
+      "cost_usd": 157.46791539629214
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 86.83892393177874,
+      "total_episodes": 6947.1139145422985,
+      "cost_usd": 78.73395769814606
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 434.19461965889377,
+      "total_episodes": 43419.46196588938,
+      "cost_usd": 492.087235613413
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 347.355695727115,
+      "total_episodes": 34735.5695727115,
+      "cost_usd": 393.66978849073035
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 260.51677179533624,
+      "total_episodes": 26051.677179533624,
+      "cost_usd": 295.2523413680478
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 173.6778478635575,
+      "total_episodes": 17367.78478635575,
+      "cost_usd": 196.83489424536518
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 86.83892393177874,
+      "total_episodes": 8683.892393177874,
+      "cost_usd": 98.41744712268257
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 434.19461965889377,
+      "total_episodes": 65129.19294883407,
+      "cost_usd": 738.1308534201195
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 347.355695727115,
+      "total_episodes": 52103.35435906725,
+      "cost_usd": 590.5046827360956
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 260.51677179533624,
+      "total_episodes": 39077.51576930044,
+      "cost_usd": 442.87851205207164
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 173.6778478635575,
+      "total_episodes": 26051.677179533624,
+      "cost_usd": 295.2523413680478
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 86.83892393177874,
+      "total_episodes": 13025.83858976681,
+      "cost_usd": 147.62617068402386
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 434.19461965889377,
+      "total_episodes": 86838.92393177876,
+      "cost_usd": 984.174471226826
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 347.355695727115,
+      "total_episodes": 69471.139145423,
+      "cost_usd": 787.3395769814607
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 260.51677179533624,
+      "total_episodes": 52103.35435906725,
+      "cost_usd": 590.5046827360956
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 173.6778478635575,
+      "total_episodes": 34735.5695727115,
+      "cost_usd": 393.66978849073035
+    },
+    {
+      "delta": 0.09,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 86.83892393177874,
+      "total_episodes": 17367.784786355747,
+      "cost_usd": 196.83489424536515
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 351.6976419237039,
+      "total_episodes": 7033.952838474078,
+      "cost_usd": 79.7181321693729
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 281.3581135389631,
+      "total_episodes": 5627.162270779262,
+      "cost_usd": 63.77450573549831
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 211.0185851542223,
+      "total_episodes": 4220.371703084446,
+      "cost_usd": 47.83087930162373
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 140.67905676948155,
+      "total_episodes": 2813.581135389631,
+      "cost_usd": 31.887252867749154
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 70.33952838474076,
+      "total_episodes": 1406.7905676948153,
+      "cost_usd": 15.943626433874575
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 351.6976419237039,
+      "total_episodes": 14067.905676948156,
+      "cost_usd": 159.4362643387458
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 281.3581135389631,
+      "total_episodes": 11254.324541558524,
+      "cost_usd": 127.54901147099662
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 211.0185851542223,
+      "total_episodes": 8440.743406168893,
+      "cost_usd": 95.66175860324746
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 140.67905676948155,
+      "total_episodes": 5627.162270779262,
+      "cost_usd": 63.77450573549831
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 70.33952838474076,
+      "total_episodes": 2813.5811353896306,
+      "cost_usd": 31.88725286774915
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 351.6976419237039,
+      "total_episodes": 21101.858515422235,
+      "cost_usd": 239.15439650811868
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 281.3581135389631,
+      "total_episodes": 16881.486812337786,
+      "cost_usd": 191.32351720649493
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 211.0185851542223,
+      "total_episodes": 12661.115109253338,
+      "cost_usd": 143.49263790487117
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 140.67905676948155,
+      "total_episodes": 8440.743406168893,
+      "cost_usd": 95.66175860324746
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 70.33952838474076,
+      "total_episodes": 4220.3717030844455,
+      "cost_usd": 47.83087930162372
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 351.6976419237039,
+      "total_episodes": 28135.81135389631,
+      "cost_usd": 318.8725286774916
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 281.3581135389631,
+      "total_episodes": 22508.64908311705,
+      "cost_usd": 255.09802294199324
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 211.0185851542223,
+      "total_episodes": 16881.486812337786,
+      "cost_usd": 191.32351720649493
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 140.67905676948155,
+      "total_episodes": 11254.324541558524,
+      "cost_usd": 127.54901147099662
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 70.33952838474076,
+      "total_episodes": 5627.162270779261,
+      "cost_usd": 63.7745057354983
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 351.6976419237039,
+      "total_episodes": 35169.764192370385,
+      "cost_usd": 398.5906608468644
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 281.3581135389631,
+      "total_episodes": 28135.811353896308,
+      "cost_usd": 318.8725286774915
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 211.0185851542223,
+      "total_episodes": 21101.85851542223,
+      "cost_usd": 239.15439650811862
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 140.67905676948155,
+      "total_episodes": 14067.905676948154,
+      "cost_usd": 159.43626433874576
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 70.33952838474076,
+      "total_episodes": 7033.952838474076,
+      "cost_usd": 79.71813216937286
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 351.6976419237039,
+      "total_episodes": 52754.64628855558,
+      "cost_usd": 597.8859912702966
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 281.3581135389631,
+      "total_episodes": 42203.71703084446,
+      "cost_usd": 478.30879301623725
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 211.0185851542223,
+      "total_episodes": 31652.787773133346,
+      "cost_usd": 358.73159476217796
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 140.67905676948155,
+      "total_episodes": 21101.85851542223,
+      "cost_usd": 239.15439650811862
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 70.33952838474076,
+      "total_episodes": 10550.929257711114,
+      "cost_usd": 119.5771982540593
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 351.6976419237039,
+      "total_episodes": 70339.52838474077,
+      "cost_usd": 797.1813216937288
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 281.3581135389631,
+      "total_episodes": 56271.622707792616,
+      "cost_usd": 637.745057354983
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 211.0185851542223,
+      "total_episodes": 42203.71703084446,
+      "cost_usd": 478.30879301623725
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 140.67905676948155,
+      "total_episodes": 28135.811353896308,
+      "cost_usd": 318.8725286774915
+    },
+    {
+      "delta": 0.1,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 70.33952838474076,
+      "total_episodes": 14067.905676948152,
+      "cost_usd": 159.43626433874573
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 290.6592082014082,
+      "total_episodes": 5813.184164028164,
+      "cost_usd": 65.88275385898586
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 232.5273665611266,
+      "total_episodes": 4650.547331222532,
+      "cost_usd": 52.706203087188705
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 174.3955249208449,
+      "total_episodes": 3487.910498416898,
+      "cost_usd": 39.529652315391516
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 116.2636832805633,
+      "total_episodes": 2325.273665611266,
+      "cost_usd": 26.353101543594352
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 58.13184164028163,
+      "total_episodes": 1162.6368328056326,
+      "cost_usd": 13.17655077179717
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 290.6592082014082,
+      "total_episodes": 11626.368328056327,
+      "cost_usd": 131.76550771797173
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 232.5273665611266,
+      "total_episodes": 9301.094662445064,
+      "cost_usd": 105.41240617437741
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 174.3955249208449,
+      "total_episodes": 6975.820996833796,
+      "cost_usd": 79.05930463078303
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 116.2636832805633,
+      "total_episodes": 4650.547331222532,
+      "cost_usd": 52.706203087188705
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 58.13184164028163,
+      "total_episodes": 2325.273665611265,
+      "cost_usd": 26.35310154359434
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 290.6592082014082,
+      "total_episodes": 17439.55249208449,
+      "cost_usd": 197.64826157695757
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 232.5273665611266,
+      "total_episodes": 13951.641993667596,
+      "cost_usd": 158.1186092615661
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 174.3955249208449,
+      "total_episodes": 10463.731495250695,
+      "cost_usd": 118.58895694617455
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 116.2636832805633,
+      "total_episodes": 6975.820996833798,
+      "cost_usd": 79.05930463078305
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 58.13184164028163,
+      "total_episodes": 3487.9104984168976,
+      "cost_usd": 39.52965231539151
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 290.6592082014082,
+      "total_episodes": 23252.736656112655,
+      "cost_usd": 263.53101543594346
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 232.5273665611266,
+      "total_episodes": 18602.18932489013,
+      "cost_usd": 210.82481234875482
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 174.3955249208449,
+      "total_episodes": 13951.641993667592,
+      "cost_usd": 158.11860926156606
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 116.2636832805633,
+      "total_episodes": 9301.094662445064,
+      "cost_usd": 105.41240617437741
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 58.13184164028163,
+      "total_episodes": 4650.54733122253,
+      "cost_usd": 52.70620308718868
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 290.6592082014082,
+      "total_episodes": 29065.920820140822,
+      "cost_usd": 329.41376929492935
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 232.5273665611266,
+      "total_episodes": 23252.73665611266,
+      "cost_usd": 263.53101543594346
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 174.3955249208449,
+      "total_episodes": 17439.55249208449,
+      "cost_usd": 197.64826157695757
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 116.2636832805633,
+      "total_episodes": 11626.36832805633,
+      "cost_usd": 131.76550771797173
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 58.13184164028163,
+      "total_episodes": 5813.184164028163,
+      "cost_usd": 65.88275385898585
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 290.6592082014082,
+      "total_episodes": 43598.88123021123,
+      "cost_usd": 494.120653942394
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 232.5273665611266,
+      "total_episodes": 34879.10498416899,
+      "cost_usd": 395.29652315391525
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 174.3955249208449,
+      "total_episodes": 26159.328738126736,
+      "cost_usd": 296.47239236543635
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 116.2636832805633,
+      "total_episodes": 17439.552492084495,
+      "cost_usd": 197.64826157695762
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 58.13184164028163,
+      "total_episodes": 8719.776246042244,
+      "cost_usd": 98.82413078847877
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 290.6592082014082,
+      "total_episodes": 58131.841640281644,
+      "cost_usd": 658.8275385898587
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 232.5273665611266,
+      "total_episodes": 46505.47331222532,
+      "cost_usd": 527.0620308718869
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 174.3955249208449,
+      "total_episodes": 34879.10498416898,
+      "cost_usd": 395.29652315391513
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 116.2636832805633,
+      "total_episodes": 23252.73665611266,
+      "cost_usd": 263.53101543594346
+    },
+    {
+      "delta": 0.11,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 58.13184164028163,
+      "total_episodes": 11626.368328056325,
+      "cost_usd": 131.7655077179717
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 244.23447355812775,
+      "total_episodes": 4884.689471162555,
+      "cost_usd": 55.359814006508955
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 195.3875788465022,
+      "total_episodes": 3907.7515769300444,
+      "cost_usd": 44.287851205207176
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 146.5406841348766,
+      "total_episodes": 2930.8136826975324,
+      "cost_usd": 33.21588840390537
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.6937894232511,
+      "total_episodes": 1953.8757884650222,
+      "cost_usd": 22.143925602603588
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 48.84689471162554,
+      "total_episodes": 976.9378942325108,
+      "cost_usd": 11.071962801301789
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 244.23447355812775,
+      "total_episodes": 9769.37894232511,
+      "cost_usd": 110.71962801301791
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 195.3875788465022,
+      "total_episodes": 7815.503153860089,
+      "cost_usd": 88.57570241041435
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 146.5406841348766,
+      "total_episodes": 5861.627365395065,
+      "cost_usd": 66.43177680781073
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.6937894232511,
+      "total_episodes": 3907.7515769300444,
+      "cost_usd": 44.287851205207176
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 48.84689471162554,
+      "total_episodes": 1953.8757884650215,
+      "cost_usd": 22.143925602603577
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 244.23447355812775,
+      "total_episodes": 14654.068413487665,
+      "cost_usd": 166.07944201952688
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 195.3875788465022,
+      "total_episodes": 11723.254730790133,
+      "cost_usd": 132.86355361562153
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 146.5406841348766,
+      "total_episodes": 8792.441048092596,
+      "cost_usd": 99.6476652117161
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.6937894232511,
+      "total_episodes": 5861.627365395067,
+      "cost_usd": 66.43177680781076
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 48.84689471162554,
+      "total_episodes": 2930.8136826975324,
+      "cost_usd": 33.21588840390537
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 244.23447355812775,
+      "total_episodes": 19538.75788465022,
+      "cost_usd": 221.43925602603582
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 195.3875788465022,
+      "total_episodes": 15631.006307720178,
+      "cost_usd": 177.1514048208287
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 146.5406841348766,
+      "total_episodes": 11723.25473079013,
+      "cost_usd": 132.86355361562147
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.6937894232511,
+      "total_episodes": 7815.503153860089,
+      "cost_usd": 88.57570241041435
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 48.84689471162554,
+      "total_episodes": 3907.751576930043,
+      "cost_usd": 44.287851205207154
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 244.23447355812775,
+      "total_episodes": 24423.447355812776,
+      "cost_usd": 276.7990700325448
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 195.3875788465022,
+      "total_episodes": 19538.757884650222,
+      "cost_usd": 221.43925602603588
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 146.5406841348766,
+      "total_episodes": 14654.068413487661,
+      "cost_usd": 166.07944201952682
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.6937894232511,
+      "total_episodes": 9769.378942325111,
+      "cost_usd": 110.71962801301794
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 48.84689471162554,
+      "total_episodes": 4884.689471162554,
+      "cost_usd": 55.35981400650895
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 244.23447355812775,
+      "total_episodes": 36635.17103371916,
+      "cost_usd": 415.19860504881717
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 195.3875788465022,
+      "total_episodes": 29308.136826975333,
+      "cost_usd": 332.1588840390538
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 146.5406841348766,
+      "total_episodes": 21981.102620231493,
+      "cost_usd": 249.11916302929026
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.6937894232511,
+      "total_episodes": 14654.068413487666,
+      "cost_usd": 166.0794420195269
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 48.84689471162554,
+      "total_episodes": 7327.0342067438305,
+      "cost_usd": 83.03972100976341
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 244.23447355812775,
+      "total_episodes": 48846.89471162555,
+      "cost_usd": 553.5981400650896
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 195.3875788465022,
+      "total_episodes": 39077.515769300444,
+      "cost_usd": 442.87851205207176
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 146.5406841348766,
+      "total_episodes": 29308.136826975322,
+      "cost_usd": 332.15888403905365
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.6937894232511,
+      "total_episodes": 19538.757884650222,
+      "cost_usd": 221.43925602603588
+    },
+    {
+      "delta": 0.12,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 48.84689471162554,
+      "total_episodes": 9769.378942325107,
+      "cost_usd": 110.7196280130179
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 208.10511356432184,
+      "total_episodes": 4162.102271286437,
+      "cost_usd": 47.17049240791295
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 166.48409085145747,
+      "total_episodes": 3329.6818170291494,
+      "cost_usd": 37.736393926330365
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 124.86306813859309,
+      "total_episodes": 2497.261362771862,
+      "cost_usd": 28.30229544474777
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 83.24204542572873,
+      "total_episodes": 1664.8409085145747,
+      "cost_usd": 18.868196963165182
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 41.62102271286435,
+      "total_episodes": 832.420454257287,
+      "cost_usd": 9.434098481582588
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 208.10511356432184,
+      "total_episodes": 8324.204542572874,
+      "cost_usd": 94.3409848158259
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 166.48409085145747,
+      "total_episodes": 6659.363634058299,
+      "cost_usd": 75.47278785266073
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 124.86306813859309,
+      "total_episodes": 4994.522725543724,
+      "cost_usd": 56.60459088949554
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 83.24204542572873,
+      "total_episodes": 3329.6818170291494,
+      "cost_usd": 37.736393926330365
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 41.62102271286435,
+      "total_episodes": 1664.840908514574,
+      "cost_usd": 18.868196963165175
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 208.10511356432184,
+      "total_episodes": 12486.30681385931,
+      "cost_usd": 141.51147722373886
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 166.48409085145747,
+      "total_episodes": 9989.045451087448,
+      "cost_usd": 113.20918177899108
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 124.86306813859309,
+      "total_episodes": 7491.784088315586,
+      "cost_usd": 84.90688633424331
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 83.24204542572873,
+      "total_episodes": 4994.522725543724,
+      "cost_usd": 56.60459088949554
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 41.62102271286435,
+      "total_episodes": 2497.261362771861,
+      "cost_usd": 28.30229544474776
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 208.10511356432184,
+      "total_episodes": 16648.409085145748,
+      "cost_usd": 188.6819696316518
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 166.48409085145747,
+      "total_episodes": 13318.727268116598,
+      "cost_usd": 150.94557570532146
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 124.86306813859309,
+      "total_episodes": 9989.045451087448,
+      "cost_usd": 113.20918177899108
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 83.24204542572873,
+      "total_episodes": 6659.363634058299,
+      "cost_usd": 75.47278785266073
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 41.62102271286435,
+      "total_episodes": 3329.681817029148,
+      "cost_usd": 37.73639392633035
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 208.10511356432184,
+      "total_episodes": 20810.511356432184,
+      "cost_usd": 235.85246203956476
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 166.48409085145747,
+      "total_episodes": 16648.409085145748,
+      "cost_usd": 188.6819696316518
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 124.86306813859309,
+      "total_episodes": 12486.30681385931,
+      "cost_usd": 141.51147722373886
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 83.24204542572873,
+      "total_episodes": 8324.204542572874,
+      "cost_usd": 94.3409848158259
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 41.62102271286435,
+      "total_episodes": 4162.102271286435,
+      "cost_usd": 47.17049240791293
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 208.10511356432184,
+      "total_episodes": 31215.767034648277,
+      "cost_usd": 353.7786930593472
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 166.48409085145747,
+      "total_episodes": 24972.61362771862,
+      "cost_usd": 283.02295444747773
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 124.86306813859309,
+      "total_episodes": 18729.460220788966,
+      "cost_usd": 212.26721583560828
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 83.24204542572873,
+      "total_episodes": 12486.30681385931,
+      "cost_usd": 141.51147722373886
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 41.62102271286435,
+      "total_episodes": 6243.153406929653,
+      "cost_usd": 70.7557386118694
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 208.10511356432184,
+      "total_episodes": 41621.02271286437,
+      "cost_usd": 471.7049240791295
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 166.48409085145747,
+      "total_episodes": 33296.818170291495,
+      "cost_usd": 377.3639392633036
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 124.86306813859309,
+      "total_episodes": 24972.61362771862,
+      "cost_usd": 283.02295444747773
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 83.24204542572873,
+      "total_episodes": 16648.409085145748,
+      "cost_usd": 188.6819696316518
+    },
+    {
+      "delta": 0.13,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 41.62102271286435,
+      "total_episodes": 8324.20454257287,
+      "cost_usd": 94.34098481582586
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 179.437572410053,
+      "total_episodes": 3588.75144820106,
+      "cost_usd": 40.67251641294535
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 143.5500579280424,
+      "total_episodes": 2871.001158560848,
+      "cost_usd": 32.53801313035628
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 107.66254344603179,
+      "total_episodes": 2153.2508689206356,
+      "cost_usd": 24.403509847767207
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 71.7750289640212,
+      "total_episodes": 1435.500579280424,
+      "cost_usd": 16.26900656517814
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35.88751448201059,
+      "total_episodes": 717.7502896402118,
+      "cost_usd": 8.134503282589067
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 179.437572410053,
+      "total_episodes": 7177.50289640212,
+      "cost_usd": 81.3450328258907
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 143.5500579280424,
+      "total_episodes": 5742.002317121696,
+      "cost_usd": 65.07602626071257
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 107.66254344603179,
+      "total_episodes": 4306.501737841271,
+      "cost_usd": 48.807019695534414
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 71.7750289640212,
+      "total_episodes": 2871.001158560848,
+      "cost_usd": 32.53801313035628
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35.88751448201059,
+      "total_episodes": 1435.5005792804236,
+      "cost_usd": 16.269006565178135
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 179.437572410053,
+      "total_episodes": 10766.254344603181,
+      "cost_usd": 122.01754923883607
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 143.5500579280424,
+      "total_episodes": 8613.003475682544,
+      "cost_usd": 97.61403939106884
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 107.66254344603179,
+      "total_episodes": 6459.752606761907,
+      "cost_usd": 73.21052954330162
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 71.7750289640212,
+      "total_episodes": 4306.501737841272,
+      "cost_usd": 48.80701969553442
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35.88751448201059,
+      "total_episodes": 2153.250868920635,
+      "cost_usd": 24.4035098477672
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 179.437572410053,
+      "total_episodes": 14355.00579280424,
+      "cost_usd": 162.6900656517814
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 143.5500579280424,
+      "total_episodes": 11484.004634243393,
+      "cost_usd": 130.15205252142513
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 107.66254344603179,
+      "total_episodes": 8613.003475682543,
+      "cost_usd": 97.61403939106883
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 71.7750289640212,
+      "total_episodes": 5742.002317121696,
+      "cost_usd": 65.07602626071257
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35.88751448201059,
+      "total_episodes": 2871.001158560847,
+      "cost_usd": 32.53801313035627
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 179.437572410053,
+      "total_episodes": 17943.7572410053,
+      "cost_usd": 203.36258206472675
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 143.5500579280424,
+      "total_episodes": 14355.00579280424,
+      "cost_usd": 162.6900656517814
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 107.66254344603179,
+      "total_episodes": 10766.25434460318,
+      "cost_usd": 122.01754923883604
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 71.7750289640212,
+      "total_episodes": 7177.50289640212,
+      "cost_usd": 81.3450328258907
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35.88751448201059,
+      "total_episodes": 3588.751448201059,
+      "cost_usd": 40.672516412945335
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 179.437572410053,
+      "total_episodes": 26915.63586150795,
+      "cost_usd": 305.0438730970901
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 143.5500579280424,
+      "total_episodes": 21532.508689206363,
+      "cost_usd": 244.03509847767214
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 107.66254344603179,
+      "total_episodes": 16149.381516904768,
+      "cost_usd": 183.02632385825405
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 71.7750289640212,
+      "total_episodes": 10766.254344603181,
+      "cost_usd": 122.01754923883607
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35.88751448201059,
+      "total_episodes": 5383.127172301588,
+      "cost_usd": 61.008774619418
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 179.437572410053,
+      "total_episodes": 35887.5144820106,
+      "cost_usd": 406.7251641294535
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 143.5500579280424,
+      "total_episodes": 28710.01158560848,
+      "cost_usd": 325.3801313035628
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 107.66254344603179,
+      "total_episodes": 21532.50868920636,
+      "cost_usd": 244.03509847767208
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 71.7750289640212,
+      "total_episodes": 14355.00579280424,
+      "cost_usd": 162.6900656517814
+    },
+    {
+      "delta": 0.14,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35.88751448201059,
+      "total_episodes": 7177.502896402118,
+      "cost_usd": 81.34503282589067
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 156.31006307720176,
+      "total_episodes": 3126.2012615440353,
+      "cost_usd": 35.43028096416574
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 125.0480504617614,
+      "total_episodes": 2500.961009235228,
+      "cost_usd": 28.344224771332588
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 93.78603784632104,
+      "total_episodes": 1875.7207569264208,
+      "cost_usd": 21.258168578499436
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 62.5240252308807,
+      "total_episodes": 1250.480504617614,
+      "cost_usd": 14.172112385666294
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 31.26201261544034,
+      "total_episodes": 625.2402523088068,
+      "cost_usd": 7.086056192833144
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 156.31006307720176,
+      "total_episodes": 6252.402523088071,
+      "cost_usd": 70.86056192833148
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 125.0480504617614,
+      "total_episodes": 5001.922018470456,
+      "cost_usd": 56.688449542665175
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 93.78603784632104,
+      "total_episodes": 3751.4415138528416,
+      "cost_usd": 42.51633715699887
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 62.5240252308807,
+      "total_episodes": 2500.961009235228,
+      "cost_usd": 28.344224771332588
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 31.26201261544034,
+      "total_episodes": 1250.4805046176136,
+      "cost_usd": 14.172112385666289
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 156.31006307720176,
+      "total_episodes": 9378.603784632105,
+      "cost_usd": 106.2908428924972
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 125.0480504617614,
+      "total_episodes": 7502.883027705684,
+      "cost_usd": 85.03267431399776
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 93.78603784632104,
+      "total_episodes": 5627.162270779262,
+      "cost_usd": 63.77450573549831
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 62.5240252308807,
+      "total_episodes": 3751.441513852842,
+      "cost_usd": 42.51633715699888
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 31.26201261544034,
+      "total_episodes": 1875.7207569264206,
+      "cost_usd": 21.258168578499436
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 156.31006307720176,
+      "total_episodes": 12504.805046176141,
+      "cost_usd": 141.72112385666296
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 125.0480504617614,
+      "total_episodes": 10003.844036940913,
+      "cost_usd": 113.37689908533035
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 93.78603784632104,
+      "total_episodes": 7502.883027705683,
+      "cost_usd": 85.03267431399775
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 62.5240252308807,
+      "total_episodes": 5001.922018470456,
+      "cost_usd": 56.688449542665175
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 31.26201261544034,
+      "total_episodes": 2500.9610092352273,
+      "cost_usd": 28.344224771332577
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 156.31006307720176,
+      "total_episodes": 15631.006307720176,
+      "cost_usd": 177.15140482082867
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 125.0480504617614,
+      "total_episodes": 12504.805046176141,
+      "cost_usd": 141.72112385666296
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 93.78603784632104,
+      "total_episodes": 9378.603784632103,
+      "cost_usd": 106.29084289249718
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 62.5240252308807,
+      "total_episodes": 6252.402523088071,
+      "cost_usd": 70.86056192833148
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 31.26201261544034,
+      "total_episodes": 3126.201261544034,
+      "cost_usd": 35.43028096416572
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 156.31006307720176,
+      "total_episodes": 23446.509461580263,
+      "cost_usd": 265.727107231243
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 125.0480504617614,
+      "total_episodes": 18757.20756926421,
+      "cost_usd": 212.5816857849944
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 93.78603784632104,
+      "total_episodes": 14067.905676948156,
+      "cost_usd": 159.4362643387458
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 62.5240252308807,
+      "total_episodes": 9378.603784632105,
+      "cost_usd": 106.2908428924972
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 31.26201261544034,
+      "total_episodes": 4689.301892316051,
+      "cost_usd": 53.14542144624858
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 156.31006307720176,
+      "total_episodes": 31262.01261544035,
+      "cost_usd": 354.30280964165735
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 125.0480504617614,
+      "total_episodes": 25009.610092352283,
+      "cost_usd": 283.4422477133259
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 93.78603784632104,
+      "total_episodes": 18757.207569264207,
+      "cost_usd": 212.58168578499436
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 62.5240252308807,
+      "total_episodes": 12504.805046176141,
+      "cost_usd": 141.72112385666296
+    },
+    {
+      "delta": 0.15,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 31.26201261544034,
+      "total_episodes": 6252.402523088068,
+      "cost_usd": 70.86056192833144
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 137.38189137644684,
+      "total_episodes": 2747.637827528937,
+      "cost_usd": 31.13989537866129
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 109.90551310115748,
+      "total_episodes": 2198.1102620231495,
+      "cost_usd": 24.91191630292903
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 82.42913482586809,
+      "total_episodes": 1648.582696517362,
+      "cost_usd": 18.68393722719677
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 54.95275655057874,
+      "total_episodes": 1099.0551310115748,
+      "cost_usd": 12.455958151464515
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 27.47637827528936,
+      "total_episodes": 549.5275655057872,
+      "cost_usd": 6.227979075732255
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 137.38189137644684,
+      "total_episodes": 5495.275655057874,
+      "cost_usd": 62.27979075732258
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 109.90551310115748,
+      "total_episodes": 4396.220524046299,
+      "cost_usd": 49.82383260585806
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 82.42913482586809,
+      "total_episodes": 3297.165393034724,
+      "cost_usd": 37.36787445439354
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 54.95275655057874,
+      "total_episodes": 2198.1102620231495,
+      "cost_usd": 24.91191630292903
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 27.47637827528936,
+      "total_episodes": 1099.0551310115743,
+      "cost_usd": 12.45595815146451
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 137.38189137644684,
+      "total_episodes": 8242.913482586811,
+      "cost_usd": 93.41968613598387
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 109.90551310115748,
+      "total_episodes": 6594.330786069449,
+      "cost_usd": 74.73574890878709
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 82.42913482586809,
+      "total_episodes": 4945.748089552086,
+      "cost_usd": 56.05181168159031
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 54.95275655057874,
+      "total_episodes": 3297.1653930347243,
+      "cost_usd": 37.367874454393544
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 27.47637827528936,
+      "total_episodes": 1648.5826965173617,
+      "cost_usd": 18.68393722719677
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 137.38189137644684,
+      "total_episodes": 10990.551310115748,
+      "cost_usd": 124.55958151464516
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 109.90551310115748,
+      "total_episodes": 8792.441048092598,
+      "cost_usd": 99.64766521171612
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 82.42913482586809,
+      "total_episodes": 6594.330786069448,
+      "cost_usd": 74.73574890878707
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 54.95275655057874,
+      "total_episodes": 4396.220524046299,
+      "cost_usd": 49.82383260585806
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 27.47637827528936,
+      "total_episodes": 2198.1102620231486,
+      "cost_usd": 24.91191630292902
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 137.38189137644684,
+      "total_episodes": 13738.189137644684,
+      "cost_usd": 155.69947689330644
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 109.90551310115748,
+      "total_episodes": 10990.551310115748,
+      "cost_usd": 124.55958151464516
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 82.42913482586809,
+      "total_episodes": 8242.91348258681,
+      "cost_usd": 93.41968613598385
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 54.95275655057874,
+      "total_episodes": 5495.275655057874,
+      "cost_usd": 62.27979075732258
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 27.47637827528936,
+      "total_episodes": 2747.6378275289358,
+      "cost_usd": 31.139895378661276
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 137.38189137644684,
+      "total_episodes": 20607.283706467028,
+      "cost_usd": 233.54921533995966
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 109.90551310115748,
+      "total_episodes": 16485.826965173623,
+      "cost_usd": 186.83937227196773
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 82.42913482586809,
+      "total_episodes": 12364.370223880214,
+      "cost_usd": 140.12952920397578
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 54.95275655057874,
+      "total_episodes": 8242.913482586811,
+      "cost_usd": 93.41968613598387
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 27.47637827528936,
+      "total_episodes": 4121.456741293404,
+      "cost_usd": 46.70984306799191
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 137.38189137644684,
+      "total_episodes": 27476.378275289368,
+      "cost_usd": 311.3989537866129
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 109.90551310115748,
+      "total_episodes": 21981.102620231497,
+      "cost_usd": 249.11916302929032
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 82.42913482586809,
+      "total_episodes": 16485.82696517362,
+      "cost_usd": 186.8393722719677
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 54.95275655057874,
+      "total_episodes": 10990.551310115748,
+      "cost_usd": 124.55958151464516
+    },
+    {
+      "delta": 0.16,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 27.47637827528936,
+      "total_episodes": 5495.2756550578715,
+      "cost_usd": 62.27979075732255
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 121.69468578674875,
+      "total_episodes": 2433.893715734975,
+      "cost_usd": 27.58412877832972
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.355748629399,
+      "total_episodes": 1947.11497258798,
+      "cost_usd": 22.067303022663776
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 73.01681147204924,
+      "total_episodes": 1460.3362294409849,
+      "cost_usd": 16.55047726699783
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 48.6778743146995,
+      "total_episodes": 973.55748629399,
+      "cost_usd": 11.033651511331888
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 24.338937157349744,
+      "total_episodes": 486.7787431469949,
+      "cost_usd": 5.516825755665942
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 121.69468578674875,
+      "total_episodes": 4867.78743146995,
+      "cost_usd": 55.16825755665944
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.355748629399,
+      "total_episodes": 3894.22994517596,
+      "cost_usd": 44.13460604532755
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 73.01681147204924,
+      "total_episodes": 2920.6724588819698,
+      "cost_usd": 33.10095453399566
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 48.6778743146995,
+      "total_episodes": 1947.11497258798,
+      "cost_usd": 22.067303022663776
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 24.338937157349744,
+      "total_episodes": 973.5574862939898,
+      "cost_usd": 11.033651511331884
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 121.69468578674875,
+      "total_episodes": 7301.681147204925,
+      "cost_usd": 82.75238633498915
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.355748629399,
+      "total_episodes": 5841.34491776394,
+      "cost_usd": 66.20190906799132
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 73.01681147204924,
+      "total_episodes": 4381.008688322954,
+      "cost_usd": 49.651431800993485
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 48.6778743146995,
+      "total_episodes": 2920.67245888197,
+      "cost_usd": 33.10095453399566
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 24.338937157349744,
+      "total_episodes": 1460.3362294409847,
+      "cost_usd": 16.550477266997827
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 121.69468578674875,
+      "total_episodes": 9735.5748629399,
+      "cost_usd": 110.33651511331888
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.355748629399,
+      "total_episodes": 7788.45989035192,
+      "cost_usd": 88.2692120906551
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 73.01681147204924,
+      "total_episodes": 5841.3449177639395,
+      "cost_usd": 66.20190906799132
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 48.6778743146995,
+      "total_episodes": 3894.22994517596,
+      "cost_usd": 44.13460604532755
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 24.338937157349744,
+      "total_episodes": 1947.1149725879795,
+      "cost_usd": 22.06730302266377
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 121.69468578674875,
+      "total_episodes": 12169.468578674874,
+      "cost_usd": 137.92064389164858
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.355748629399,
+      "total_episodes": 9735.5748629399,
+      "cost_usd": 110.33651511331888
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 73.01681147204924,
+      "total_episodes": 7301.681147204924,
+      "cost_usd": 82.75238633498914
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 48.6778743146995,
+      "total_episodes": 4867.78743146995,
+      "cost_usd": 55.16825755665944
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 24.338937157349744,
+      "total_episodes": 2433.893715734974,
+      "cost_usd": 27.58412877832971
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 121.69468578674875,
+      "total_episodes": 18254.20286801231,
+      "cost_usd": 206.88096583747287
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.355748629399,
+      "total_episodes": 14603.36229440985,
+      "cost_usd": 165.5047726699783
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 73.01681147204924,
+      "total_episodes": 10952.521720807386,
+      "cost_usd": 124.12857950248372
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 48.6778743146995,
+      "total_episodes": 7301.681147204925,
+      "cost_usd": 82.75238633498915
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 24.338937157349744,
+      "total_episodes": 3650.8405736024615,
+      "cost_usd": 41.37619316749457
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 121.69468578674875,
+      "total_episodes": 24338.93715734975,
+      "cost_usd": 275.84128778329716
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.355748629399,
+      "total_episodes": 19471.1497258798,
+      "cost_usd": 220.67303022663776
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 73.01681147204924,
+      "total_episodes": 14603.362294409848,
+      "cost_usd": 165.50477266997828
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 48.6778743146995,
+      "total_episodes": 9735.5748629399,
+      "cost_usd": 110.33651511331888
+    },
+    {
+      "delta": 0.17,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 24.338937157349744,
+      "total_episodes": 4867.787431469948,
+      "cost_usd": 55.16825755665942
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 108.54865491472344,
+      "total_episodes": 2170.973098294469,
+      "cost_usd": 24.604361780670647
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 86.83892393177875,
+      "total_episodes": 1736.778478635575,
+      "cost_usd": 19.683489424536518
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 65.12919294883406,
+      "total_episodes": 1302.5838589766813,
+      "cost_usd": 14.76261706840239
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 43.419461965889376,
+      "total_episodes": 868.3892393177875,
+      "cost_usd": 9.841744712268259
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 21.709730982944684,
+      "total_episodes": 434.19461965889366,
+      "cost_usd": 4.9208723561341285
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 108.54865491472344,
+      "total_episodes": 4341.946196588938,
+      "cost_usd": 49.208723561341294
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 86.83892393177875,
+      "total_episodes": 3473.55695727115,
+      "cost_usd": 39.366978849073035
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 65.12919294883406,
+      "total_episodes": 2605.1677179533626,
+      "cost_usd": 29.52523413680478
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 43.419461965889376,
+      "total_episodes": 1736.778478635575,
+      "cost_usd": 19.683489424536518
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 21.709730982944684,
+      "total_episodes": 868.3892393177873,
+      "cost_usd": 9.841744712268257
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 108.54865491472344,
+      "total_episodes": 6512.919294883406,
+      "cost_usd": 73.81308534201195
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 86.83892393177875,
+      "total_episodes": 5210.335435906725,
+      "cost_usd": 59.05046827360956
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 65.12919294883406,
+      "total_episodes": 3907.7515769300435,
+      "cost_usd": 44.28785120520716
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 43.419461965889376,
+      "total_episodes": 2605.1677179533626,
+      "cost_usd": 29.52523413680478
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 21.709730982944684,
+      "total_episodes": 1302.583858976681,
+      "cost_usd": 14.762617068402387
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 108.54865491472344,
+      "total_episodes": 8683.892393177875,
+      "cost_usd": 98.41744712268259
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 86.83892393177875,
+      "total_episodes": 6947.1139145423,
+      "cost_usd": 78.73395769814607
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 65.12919294883406,
+      "total_episodes": 5210.335435906725,
+      "cost_usd": 59.05046827360956
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 43.419461965889376,
+      "total_episodes": 3473.55695727115,
+      "cost_usd": 39.366978849073035
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 21.709730982944684,
+      "total_episodes": 1736.7784786355746,
+      "cost_usd": 19.683489424536514
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 108.54865491472344,
+      "total_episodes": 10854.865491472345,
+      "cost_usd": 123.02180890335325
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 86.83892393177875,
+      "total_episodes": 8683.892393177875,
+      "cost_usd": 98.41744712268259
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 65.12919294883406,
+      "total_episodes": 6512.919294883406,
+      "cost_usd": 73.81308534201195
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 43.419461965889376,
+      "total_episodes": 4341.946196588938,
+      "cost_usd": 49.208723561341294
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 21.709730982944684,
+      "total_episodes": 2170.9730982944684,
+      "cost_usd": 24.604361780670644
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 108.54865491472344,
+      "total_episodes": 16282.298237208517,
+      "cost_usd": 184.53271335502987
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 86.83892393177875,
+      "total_episodes": 13025.838589766812,
+      "cost_usd": 147.6261706840239
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 65.12919294883406,
+      "total_episodes": 9769.37894232511,
+      "cost_usd": 110.71962801301791
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 43.419461965889376,
+      "total_episodes": 6512.919294883406,
+      "cost_usd": 73.81308534201195
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 21.709730982944684,
+      "total_episodes": 3256.4596474417026,
+      "cost_usd": 36.906542671005965
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 108.54865491472344,
+      "total_episodes": 21709.73098294469,
+      "cost_usd": 246.0436178067065
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 86.83892393177875,
+      "total_episodes": 17367.78478635575,
+      "cost_usd": 196.83489424536518
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 65.12919294883406,
+      "total_episodes": 13025.838589766812,
+      "cost_usd": 147.6261706840239
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 43.419461965889376,
+      "total_episodes": 8683.892393177875,
+      "cost_usd": 98.41744712268259
+    },
+    {
+      "delta": 0.18,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 21.709730982944684,
+      "total_episodes": 4341.946196588937,
+      "cost_usd": 49.20872356134129
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.42316950795123,
+      "total_episodes": 1948.4633901590246,
+      "cost_usd": 22.082585088468946
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 77.93853560636099,
+      "total_episodes": 1558.7707121272197,
+      "cost_usd": 17.666068070775157
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 58.45390170477073,
+      "total_episodes": 1169.0780340954145,
+      "cost_usd": 13.249551053081365
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 38.96926780318049,
+      "total_episodes": 779.3853560636098,
+      "cost_usd": 8.833034035387579
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 19.48463390159024,
+      "total_episodes": 389.6926780318048,
+      "cost_usd": 4.4165170176937885
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.42316950795123,
+      "total_episodes": 3896.926780318049,
+      "cost_usd": 44.16517017693789
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 77.93853560636099,
+      "total_episodes": 3117.5414242544393,
+      "cost_usd": 35.332136141550315
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 58.45390170477073,
+      "total_episodes": 2338.156068190829,
+      "cost_usd": 26.49910210616273
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 38.96926780318049,
+      "total_episodes": 1558.7707121272197,
+      "cost_usd": 17.666068070775157
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 19.48463390159024,
+      "total_episodes": 779.3853560636096,
+      "cost_usd": 8.833034035387577
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.42316950795123,
+      "total_episodes": 5845.390170477074,
+      "cost_usd": 66.24775526540685
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 77.93853560636099,
+      "total_episodes": 4676.312136381659,
+      "cost_usd": 52.998204212325476
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 58.45390170477073,
+      "total_episodes": 3507.234102286244,
+      "cost_usd": 39.7486531592441
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 38.96926780318049,
+      "total_episodes": 2338.1560681908295,
+      "cost_usd": 26.499102106162738
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 19.48463390159024,
+      "total_episodes": 1169.0780340954143,
+      "cost_usd": 13.249551053081364
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.42316950795123,
+      "total_episodes": 7793.853560636098,
+      "cost_usd": 88.33034035387578
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 77.93853560636099,
+      "total_episodes": 6235.082848508879,
+      "cost_usd": 70.66427228310063
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 58.45390170477073,
+      "total_episodes": 4676.312136381658,
+      "cost_usd": 52.99820421232546
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 38.96926780318049,
+      "total_episodes": 3117.5414242544393,
+      "cost_usd": 35.332136141550315
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 19.48463390159024,
+      "total_episodes": 1558.7707121272192,
+      "cost_usd": 17.666068070775154
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.42316950795123,
+      "total_episodes": 9742.316950795122,
+      "cost_usd": 110.41292544234473
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 77.93853560636099,
+      "total_episodes": 7793.853560636098,
+      "cost_usd": 88.33034035387578
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 58.45390170477073,
+      "total_episodes": 5845.390170477073,
+      "cost_usd": 66.24775526540684
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 38.96926780318049,
+      "total_episodes": 3896.926780318049,
+      "cost_usd": 44.16517017693789
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 19.48463390159024,
+      "total_episodes": 1948.463390159024,
+      "cost_usd": 22.08258508846894
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.42316950795123,
+      "total_episodes": 14613.475426192685,
+      "cost_usd": 165.6193881635171
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 77.93853560636099,
+      "total_episodes": 11690.780340954148,
+      "cost_usd": 132.4955105308137
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 58.45390170477073,
+      "total_episodes": 8768.085255715609,
+      "cost_usd": 99.37163289811024
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 38.96926780318049,
+      "total_episodes": 5845.390170477074,
+      "cost_usd": 66.24775526540685
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 19.48463390159024,
+      "total_episodes": 2922.6950852385357,
+      "cost_usd": 33.123877632703405
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 97.42316950795123,
+      "total_episodes": 19484.633901590245,
+      "cost_usd": 220.82585088468946
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 77.93853560636099,
+      "total_episodes": 15587.707121272197,
+      "cost_usd": 176.66068070775157
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 58.45390170477073,
+      "total_episodes": 11690.780340954147,
+      "cost_usd": 132.49551053081368
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 38.96926780318049,
+      "total_episodes": 7793.853560636098,
+      "cost_usd": 88.33034035387578
+    },
+    {
+      "delta": 0.19,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 19.48463390159024,
+      "total_episodes": 3896.926780318048,
+      "cost_usd": 44.16517017693788
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 10,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 87.92441048092597,
+      "total_episodes": 1758.4882096185195,
+      "cost_usd": 19.929533042343223
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 10,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 70.33952838474077,
+      "total_episodes": 1406.7905676948155,
+      "cost_usd": 15.943626433874577
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 10,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 52.75464628855558,
+      "total_episodes": 1055.0929257711116,
+      "cost_usd": 11.957719825405933
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 10,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35.16976419237039,
+      "total_episodes": 703.3952838474078,
+      "cost_usd": 7.971813216937289
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 10,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 17.58488209618519,
+      "total_episodes": 351.6976419237038,
+      "cost_usd": 3.985906608468644
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 20,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 87.92441048092597,
+      "total_episodes": 3516.976419237039,
+      "cost_usd": 39.85906608468645
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 20,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 70.33952838474077,
+      "total_episodes": 2813.581135389631,
+      "cost_usd": 31.887252867749154
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 20,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 52.75464628855558,
+      "total_episodes": 2110.185851542223,
+      "cost_usd": 23.915439650811866
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 20,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35.16976419237039,
+      "total_episodes": 1406.7905676948155,
+      "cost_usd": 15.943626433874577
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 20,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 17.58488209618519,
+      "total_episodes": 703.3952838474077,
+      "cost_usd": 7.971813216937288
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 30,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 87.92441048092597,
+      "total_episodes": 5275.464628855559,
+      "cost_usd": 59.78859912702967
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 30,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 70.33952838474077,
+      "total_episodes": 4220.371703084446,
+      "cost_usd": 47.83087930162373
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 30,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 52.75464628855558,
+      "total_episodes": 3165.2787773133346,
+      "cost_usd": 35.87315947621779
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 30,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35.16976419237039,
+      "total_episodes": 2110.185851542223,
+      "cost_usd": 23.915439650811866
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 30,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 17.58488209618519,
+      "total_episodes": 1055.0929257711114,
+      "cost_usd": 11.95771982540593
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 40,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 87.92441048092597,
+      "total_episodes": 7033.952838474078,
+      "cost_usd": 79.7181321693729
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 40,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 70.33952838474077,
+      "total_episodes": 5627.162270779262,
+      "cost_usd": 63.77450573549831
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 40,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 52.75464628855558,
+      "total_episodes": 4220.371703084446,
+      "cost_usd": 47.83087930162373
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 40,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35.16976419237039,
+      "total_episodes": 2813.581135389631,
+      "cost_usd": 31.887252867749154
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 40,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 17.58488209618519,
+      "total_episodes": 1406.7905676948153,
+      "cost_usd": 15.943626433874575
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 50,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 87.92441048092597,
+      "total_episodes": 8792.441048092596,
+      "cost_usd": 99.6476652117161
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 50,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 70.33952838474077,
+      "total_episodes": 7033.952838474077,
+      "cost_usd": 79.71813216937288
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 50,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 52.75464628855558,
+      "total_episodes": 5275.464628855558,
+      "cost_usd": 59.788599127029656
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 50,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35.16976419237039,
+      "total_episodes": 3516.9764192370385,
+      "cost_usd": 39.85906608468644
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 50,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 17.58488209618519,
+      "total_episodes": 1758.488209618519,
+      "cost_usd": 19.929533042343216
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 75,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 87.92441048092597,
+      "total_episodes": 13188.661572138895,
+      "cost_usd": 149.47149781757415
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 75,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 70.33952838474077,
+      "total_episodes": 10550.929257711115,
+      "cost_usd": 119.57719825405931
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 75,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 52.75464628855558,
+      "total_episodes": 7913.196943283337,
+      "cost_usd": 89.68289869054449
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 75,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35.16976419237039,
+      "total_episodes": 5275.464628855558,
+      "cost_usd": 59.788599127029656
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 75,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 17.58488209618519,
+      "total_episodes": 2637.7323144277784,
+      "cost_usd": 29.894299563514824
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 100,
+      "rho": 0.0,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 87.92441048092597,
+      "total_episodes": 17584.882096185192,
+      "cost_usd": 199.2953304234322
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 100,
+      "rho": 0.2,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 70.33952838474077,
+      "total_episodes": 14067.905676948154,
+      "cost_usd": 159.43626433874576
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 100,
+      "rho": 0.4,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 52.75464628855558,
+      "total_episodes": 10550.929257711115,
+      "cost_usd": 119.57719825405931
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 100,
+      "rho": 0.6,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 35.16976419237039,
+      "total_episodes": 7033.952838474077,
+      "cost_usd": 79.71813216937288
+    },
+    {
+      "delta": 0.2,
+      "n_memories": 100,
+      "rho": 0.8,
+      "p": 0.6611111111111111,
+      "n_pairs_per_memory": 17.58488209618519,
+      "total_episodes": 3516.976419237038,
+      "cost_usd": 39.85906608468643
+    }
+  ]
+}

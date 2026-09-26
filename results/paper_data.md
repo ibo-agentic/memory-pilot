@@ -849,6 +849,73 @@ $968.59** (`effect_size_analysis.json`, `full_30_memory_store_at_delta_0.03`).
 5. Assumes the same 30-memory-store composition (generic, similarly-worded "lesson" memories, all constructed the same way, §1.4A) would continue to show the same tiny (~0.03) effect ceiling if scaled up — i.e., extrapolates the *effect size*, not just the noise model, from n=180 to n=85,463. This is the single largest unverified extrapolation in the whole calculation: it is possible (though the redesign-(b) result in §4.6 argues against it) that a much larger sample would surface larger real effects the n=180 sample was simply too small to see.
 6. Does **not** include the ground-truth-selection-bias inflation effect (§4.7, ~1.87×) — if that inflation also affects how "the largest gap found" was identified, the true achievable Δ at any given budget could be somewhat different (direction not obvious) than this calculation assumes.
 
+### 5.4 Generalized formula, cross-checked against a hand-calculation discrepancy, and empirically validated
+
+(Added 2026-09-26, zero API spend — pure arithmetic/simulation.) The single-point
+85,463-episode/$968.59 calculation above was generalized into a reusable module and
+verified end to end: `src/memory_ope/evaluation/power_formula.py` (the formula),
+`tests/test_power_formula.py` (reproduces this repo's two independent existing
+implementations exactly), `src/memory_ope/evaluation/power_formula_validation.py`
+(Monte Carlo check against the real, discrete Bernoulli-difference distribution —
+`results/power_formula_validation.json`), and
+`src/memory_ope/evaluation/resolution_grid.py` (the general grid + figure —
+`results/resolution_grid.json`, `resolution_grid.png`). Full LaTeX-ready derivation:
+`results/power_formula_derivation.tex`.
+
+**The formula** (one-sample paired-difference, standard normal approximation):
+```
+sigma_D^2 = 2 * p * (1-p) * (1 - rho)
+n_pairs   = (z_alpha/2 + z_beta)^2 * sigma_D^2 / delta^2      [two-sided]
+total_episodes = 2 * n_memories * n_pairs
+cost = total_episodes * cost_per_episode
+```
+
+**A discrepancy was found and resolved while cross-checking a hand calculation**
+against `effect_size_analysis.json`: a hand-derivation using
+`n_pairs = 2*(z_alpha/2+z_beta)^2*sigma_D^2/delta^2` (an *extra* leading factor of 2)
+gives ~2,849 pairs/memory and 170,927 total episodes for the 30-memory store at
+Δ=0.03 — exactly 2× this repo's reported 1,424.4 pairs / 85,463 episodes.
+**Verdict: the repo's existing numbers are correct; the hand calculation's extra
+factor of 2 is the error.** That factor belongs to a *different* design — an
+unpaired, two-independent-sample comparison, where `sigma^2` is a per-group
+variance not yet combined across groups, so `Var(Xbar1-Xbar2) = 2*sigma^2/n`
+genuinely needs the 2. In our *paired* design, `sigma_D^2 = 2p(1-p)(1-rho)` has
+**already** combined both arms' variance and their correlation — applying the
+two-sample formula's extra 2 on top of it double-counts that combination and
+inflates the estimate by exactly 2×. This is confirmed by direct code
+re-derivation (`tests/test_power_formula.py::test_doubled_incorrect_formula_reproduces_the_hand_calc_discrepancy`,
+which reproduces both the ~2,849 and ~170,927 figures via an explicitly-labeled
+`_n_pairs_needed_doubled_INCORRECT` function kept only to document this). Separately
+confirmed the 85,463 figure counts **episodes** (= 2 × n_memories × n_pairs), not
+pairs — pairs alone would be 42,731.7 — ruling out a pairs-vs-episodes mislabeling
+as an alternative explanation.
+
+**Empirical Monte Carlo validation** (`power_formula_validation.py`, 20,000
+replications per setting, exact bivariate-Bernoulli construction with the target
+correlation — not this project's task-context-based simulators, which induce ρ only
+indirectly): across 7 settings spanning p∈[0.30,0.80], ρ∈[0,0.8], |Δ|∈[0.03,0.30]
+(including this project's real point and a one-sided "detect a harmful memory"
+setting), **empirical power of a standard paired t-test at the formula's own n_pairs
+landed in [79.7%, 82.3%]** — at or slightly above the nominal 80% target, never
+meaningfully below it. The small, consistently safe-direction overshoot grows with ρ
+(79.9% at ρ=0 → ~82% at ρ=0.8) and was traced to the genuine discreteness of
+`D_i ∈ {-1,0,1}` (most pairs concordant, D_i=0, at high ρ) relative to the
+continuous-normal assumption behind the formula — an exact noncentral-t calculation
+(relaxing only the known-variance assumption, not the normality one) lands at
+79.3–79.8%, confirming the formula's own algebra is sound and the residual gap is a
+finite-sample/discreteness effect, not a derivation error.
+
+**Resolution grid** (`resolution_grid.py`, `results/resolution_grid.json`, 700 rows
+over Δ∈[0.01,0.20]×20, n_memories∈{10,20,30,40,50,75,100}, ρ∈{0,0.2,0.4,0.6,0.8}, at
+the real measured p=0.6611 and real blended cost/episode $0.01133): confirms the
+30-memory/Δ=0.03/ρ=0.6355 point costs $968.58 (matching §5.3 to the cent), and shows
+**target precision (Δ) dominates cost far more than pairing strength (ρ) does** over
+these ranges — cost scales as 1/Δ² (three orders of magnitude across the Δ grid)
+but only linearly in `(1-ρ)` (at most 5× reduction from ρ=0 to ρ=0.8). See
+`results/resolution_grid.png` for the heatmap (cost vs. Δ and ρ at N=30) and the
+cost-vs-store-size curve (at the real Δ=0.03, ρ=0.6355 point), both with this
+project's real point marked.
+
 ---
 
 ## 6. Costs and scale
@@ -1112,6 +1179,9 @@ python -m memory_ope.evaluation.signal_boost_check
 python -m memory_ope.evaluation.ground_truth_selection_bias_check
 python -m memory_ope.evaluation.scale_up_check                        # (root-package script, commit 6ff8d11)
 python -m memory_ope.evaluation.ground_truth_power_analysis_rescale   # (commit 6ff8d11)
+pytest tests/test_power_formula.py -v                                 # verifies power_formula.py against effect_size_analysis.json and ground_truth_power_analysis.json
+python -m memory_ope.evaluation.power_formula_validation               # -> results/power_formula_validation.json (Monte Carlo, ~3s)
+python -m memory_ope.evaluation.resolution_grid                        # -> results/resolution_grid.json, resolution_grid.png (see §5.4)
 ```
 
 **Stage 2, real-agent phases — COST WARNING, all of these spend real OpenRouter
