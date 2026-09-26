@@ -1130,10 +1130,10 @@ document explicitly, not inferred:
 
 ## 8. Reproducibility
 
-**Repository**: `/home/ibo/memory-pilot` (WSL2 Ubuntu). `git remote -v` returns
-nothing configured in this checkout — confirm/attach a remote before "clone and
-reproduce" instructions can work for anyone but the original machine. HEAD at time of
-this compilation: `0bb21e6`.
+**Repository**: `/home/ibo/memory-pilot` (WSL2 Ubuntu), remote `origin` =
+`https://github.com/ibo-agentic/memory-pilot.git`. HEAD as of the §5.4 addition:
+`a22d47c` (HEAD at the time the rest of this document was originally compiled:
+`0bb21e6`).
 
 ### 8.1 Commit-to-result mapping (chronological, oldest first)
 
@@ -1151,7 +1151,8 @@ this compilation: `0bb21e6`.
 | `5cc2991` | 2026-09-19 | `alfworld_pilot/results/small_pilot.json` — **real spend $2.00** |
 | `2a02b3d` | 2026-09-20 | `alfworld_pilot/results/mini_ground_truth_selection.json`, `mini_ground_truth_analysis.json` — **real spend $12.60** |
 | `c3bfed4` | 2026-09-20 | `alfworld_pilot/results/effect_size_analysis.json` (zero new spend) |
-| `0bb21e6` (HEAD) | 2026-09-20 | `alfworld_pilot/results/engineered_effect_validation.json`, `engineered_memory_store.py` — **real spend $1.19** |
+| `0bb21e6` | 2026-09-20 | `alfworld_pilot/results/engineered_effect_validation.json`, `engineered_memory_store.py` — **real spend $1.19** |
+| `a22d47c` (HEAD) | 2026-09-26 | `src/memory_ope/evaluation/power_formula.py`, `power_formula_validation.py`, `resolution_grid.py`, `tests/test_power_formula.py`, `results/power_formula_validation.json`, `resolution_grid.json`, `power_formula_derivation.tex` — §5.4, zero API spend |
 
 (Note: some narrative dates in `CLAUDE.md`/`alfworld_pilot/README.md` say "2026-09-21"
 for the final round; the commit itself is dated 2026-09-20 — likely a same-session
