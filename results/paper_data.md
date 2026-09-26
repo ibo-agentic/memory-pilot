@@ -1183,6 +1183,7 @@ python -m memory_ope.evaluation.ground_truth_power_analysis_rescale   # (commit 
 pytest tests/test_power_formula.py -v                                 # verifies power_formula.py against effect_size_analysis.json and ground_truth_power_analysis.json
 python -m memory_ope.evaluation.power_formula_validation               # -> results/power_formula_validation.json (Monte Carlo, ~3s)
 python -m memory_ope.evaluation.resolution_grid                        # -> results/resolution_grid.json, resolution_grid.png (see §5.4)
+python -m memory_ope.evaluation.feasibility_map                        # -> results/feasibility_map.json, feasibility_map.png (see §9; takes ~4 min, runs a real simulation sweep)
 ```
 
 **Stage 2, real-agent phases — COST WARNING, all of these spend real OpenRouter
@@ -1227,3 +1228,195 @@ already-elevated cumulative spend refusing new calls (§4.6).
 - The specific 3,553-game-file `train` split's exact contents depend on the
   `alfworld-download` artifact version fetched (~2.3GB, not itself version-pinned in
   this repo beyond "alfworld==0.4.2's own download script").
+
+---
+
+## 9. Feasibility map: where per-memory valuation is (and isn't) practical
+
+(Added 2026-09-26, zero API spend — pure simulation + arithmetic.) Generalizes §5.4's
+single-point cost calculation into a map of the whole design space, under three
+realistic real-dollar budget ceilings ($100 / $1,000 / $10,000), and places this
+project's own result alongside real, citable numbers from three other 2026 papers.
+Code: `src/memory_ope/evaluation/feasibility_map.py`. Data: `results/feasibility_map.json`
+(30 route-B combos, each with a full episode-count trace; route-A curves at 40 N-values
+× 3 budgets). Figure: `results/feasibility_map.png`.
+
+### 9.1 Two routes to "resolving" a memory's value — mapped separately
+
+"Per-memory valuation" means two different things in this project, with **very
+different** cost structures, so this map keeps them as two separate routes rather
+than one number:
+
+- **Route A — ground truth** (paired forced-in/forced-out reruns, §5.4's formula):
+  resolves each memory's *individual* causal effect directly and statistically
+  rigorously. Depends on **(N, target effect Δ, paired correlation ρ)** — *not* on M
+  or propensity range, since a forced rerun bypasses ordinary randomized retrieval
+  entirely. This is the route this project actually attempted in real ALFWorld, and
+  the one whose real cost ($16.05 spent, $968.59 needed) is reported throughout §§4–6.
+- **Route B — observational / off-policy** (SNIPS on ordinary randomized logs, the
+  same estimator machinery as Stage 1): estimates a **pool-wide ranking** signal from
+  logs the agent produces anyway. Depends on **(N, M, propensity range, episode
+  count)**. Uses SNIPS rather than doubly_robust purely for compute-budget reasons —
+  timed at ~10× faster than DR at n=100,000 episodes on this machine — and the core
+  paper's own results (§3.6, §4.4) already show SNIPS and doubly_robust track each
+  other closely (Spearman 0.92 between them on the real small-pilot log), so this
+  substitution changes which estimator produced the boundary, not the boundary's
+  qualitative location.
+
+**These are not interchangeable, and the gap between them is itself a finding.**
+Route B answers "is IPS/SNIPS-style ranking, in aggregate across the whole pool,
+doing better than chance?" — a pool-wide, aggregate claim. Route A answers "what is
+memory `m`'s own causal effect, specifically, with a stated confidence interval?" —
+an individual, per-memory claim. This project's own real result (§4.4–§4.5) already
+demonstrated the two can come apart: SNIPS/DR showed a "significant-looking" pattern
+of disagreement with Memory Worth at just n=180 real episodes (cheap, Route-B-like),
+but ground-truthing the flagged memories directly (Route A, real money, $12.60) found
+their true effects were statistically indistinguishable from zero. The feasibility
+numbers below reproduce and quantify exactly that gap.
+
+### 9.2 Route A: the ground-truth feasibility boundary
+
+Using this project's real measured values (p=0.6611, ρ=0.6355, blended real
+cost/episode=$0.01133), the largest store resolvable to a target effect size Δ=0.03
+(the largest real gap this project ever actually measured, §5) at each budget:
+
+| budget | max N resolvable at Δ=0.03 | MDE achievable at N=30 (our real setting) |
+|---|---|---|
+| $100 | **N ≈ 3** | 0.093 (>3× too coarse for our own 0.03 ceiling) |
+| $1,000 | **N ≈ 31** | 0.0295 (matches our own setting almost exactly — see below) |
+| $10,000 | **N ≈ 310** | 0.0093 (3× finer than needed) |
+
+The $1,000 row is not a coincidence: it reproduces §5.3/§5.4's own $968.59 figure for
+resolving our real N=30 store at Δ=0.03 almost exactly (max-N-at-$1,000 = 30.97 ≈ our
+actual N=30) — an internal consistency check that the general formula and the
+single-point calculation agree. **This project's real spend, $16.05, is more than
+50× short of the $1,000 needed to resolve its own 30-memory store at the one real
+effect size (0.03) it ever found** — the reason the real mini-ground-truth run came
+back a null is not that OPE failed, but that the study was funded at roughly 1.6% of
+what its own design required.
+
+Because cost is linear in N at fixed Δ (episodes = 2·N·n_pairs(Δ), and n_pairs
+doesn't depend on N), **the feasibility boundary is a straight line in log-log
+(N, budget) space with slope 1**: a 10× larger budget buys a proportionally 10×
+larger resolvable store at the same target precision, never more. There is no
+economy of scale in the ground-truth route — resolving 300 memories to Δ=0.03 costs
+exactly 10× what resolving 30 does.
+
+### 9.3 Route B: the observational feasibility boundary, and why it's so much cheaper
+
+Swept N ∈ {10, 30, 50, 100, 200} × M ∈ {5, 10, 20} × propensity range ∈ {[0.1,0.9],
+[0.3,0.7]} (28 valid combos; 2 skipped where M>N), 10 seeds each, at episode counts
+{500, 1000, 2000, 5000, 10000, 20000, 50000}, recording the smallest tested episode
+count where SNIPS's 95% pool-wide Spearman CI first excludes zero.
+
+**Every single one of the 28 combos resolved by 5,000 episodes or fewer** — cost
+range **$5.67 to $56.67**, i.e. **comfortably inside the $100 budget tier in every
+configuration tested**, regardless of N (10 to 200), M (5 to 20), or propensity range.
+There is real, visible noise in exactly which combo needs 500 vs. 2000 vs. 5000
+episodes (10 seeds and a 7-point discrete episode grid is coarse — this map is
+illustrative of scale, not a precision instrument), but the qualitative finding is
+robust across all of it: **getting SNIPS's pool-wide ranking signal to clear the
+zero bar is cheap at every scale this project has ever operated at or planned for.**
+
+This is not in tension with §9.2's much larger numbers — it is answering a much
+weaker question. A pool-wide CI excluding zero says the *ranking, in aggregate*,
+beats chance; it says nothing about any *individual* memory's effect size or
+significance, which is exactly what Route A is built to certify and exactly what
+this project's real ground-truth run showed was NOT achievable at the natural
+effect sizes found (§4.5, §5). **Route B tells you cheaply that your estimator is
+probably ranking better than the naive baseline overall; only Route A (or a much
+larger Route-B episode count aimed at individual-memory precision rather than
+pool-wide rank, which this project did not attempt to characterize here) can tell
+you whether any specific memory's number is trustworthy.**
+
+### 9.4 Reference points — sourced, with explicit caveats
+
+Every number below was extracted by fetching the source paper directly (URLs and
+exact quotes in `feasibility_map.py`'s `REFERENCE_POINTS`); nothing is estimated
+where a paper didn't report it, and every "not reported" is stated as such rather
+than guessed.
+
+| point | store size (N) | real $ cost | route on this map | source |
+|---|---|---|---|---|
+| **This project (ALFWorld)** | 30 | $16.05 spent / $968.59 needed | A (ground truth) | This repo, §4–§6 |
+| **Şimşek 2026, task-difficulty setup** | **100** (70 generalist + 30 specialist) | **$0** | not comparable — pure simulation | arXiv:2604.12007, quote: *"70 generalist memories with U\*~Uniform(0,1) and 30 specialist memories with U\*=0.85"*; 10,000 episodes, 20 seeds |
+| **Şimşek 2026, co-retrieval setup** | not stated (paper reports only "one anchor + one hitchhiker," no total pool size) | $0 | not comparable | arXiv:2604.12007, quote: *"One 'anchor' memory (U\*=0.90) and one 'hitchhiker' (U\*=0.05) are always retrieved together except in a controlled fraction of episodes"* |
+| **CMI** (Causal Intervention-Based Memory Selection) | ~5.6/example (491 entries / 87 examples) | not reported | neither — single-shot, no statistical power | arXiv:2605.17641, quotes: *"491 memory entries: 89 useful memories, 348 irrelevant memories, and 54 harmful memories"* across *"87 filtered evaluation examples"*; *"For each candidate memory ... CMI compares model behavior under three controlled conditions"* (no repeated trials) |
+| **MemAudit** (package-oracle eval protocol) | not applicable (its "budget" is a per-memory word limit, not a memory count) | **$0.907** (primary export) | not comparable — different axis | arXiv:2605.02199, quote: *"The primary Natural-200 export used 681 API calls, 1,978,327 tokens, and about $0.907"* |
+
+**Şimşek 2026 (N=100) is marked on Route A's figure as a vertical reference line, not
+a cost point**: the paper never spends a real dollar (pure synthetic DGP, matching
+this project's own Stage 1), so it never faces the budget question this map answers
+at all — it is the one point on this map for which the feasibility question is moot
+by construction.
+
+**CMI is deliberately excluded from both routes' cost curves**: with ~5.6 candidate
+memories per example and exactly one LLM-judged intervention per candidate (3
+conditions: no-memory / with-memory / perturbed-memory), CMI substitutes a single
+causal *judgment* for the repeated real-world *trials* both of this map's routes
+assume are needed for a statistically defensible estimate. It sits at a genuinely
+different, much cheaper point in the design space — buying speed and low cost by
+giving up the statistical guarantee this map's Δ/CI machinery is built around, not
+by being more efficient at the same task.
+
+**MemAudit's "budget" (B, a per-memory word/token limit for memory *writing*) is not
+this map's N (a memory *count* for causal valuation)** — cited only as a real-dollar
+scale reference (~$0.91 for 200 examples of a memory-writing evaluation) showing that
+a differently-scoped memory-research task can be far cheaper than causal-effect
+resolution; not plotted as a point on either route.
+
+**Disambiguation flagged explicitly**: two unrelated 2026 papers are both titled
+"MemAudit" — arXiv:2605.23723 (poisoning/security auditing) and arXiv:2605.02199
+(the evaluation-protocol paper used above). This map uses the latter as the
+topically relevant one (memory *evaluation* under a *budget*); if the security paper
+was actually intended, note that its own reported numbers are attack-success-rate
+reductions (e.g. "70% to 0%"), not a store size or evaluation-scale figure comparable
+to this map's axes.
+
+### 9.5 The boundary, in one paragraph
+
+**Ground-truthing every memory's individual causal effect is expensive and scales
+linearly with store size at fixed precision** — this project's own real attempt
+needed roughly 60× its actual spend to properly resolve just 30 memories to the one
+effect size (0.03) it found, and the map shows that relationship holds generally:
+$100 buys about 3 memories at that precision, $1,000 about 31, $10,000 about 310.
+**Getting a pool-wide, aggregate signal that an off-policy estimator is ranking
+better than chance is, by contrast, cheap almost everywhere tested** — every (N, M,
+propensity) combination this project checked resolved for under $60. The two
+numbers answer different questions, and conflating them is the mistake this
+project's own real trajectory (a cheap-looking Route-B disagreement at n=180 that
+turned into a real, expensive Route-A null at n=1064+) already shows is easy to make.
+
+### 9.6 What has to be true for per-memory valuation to be practical
+
+1. **If "practical" means a pool-wide ranking check**: it already is practical, at
+   every scale and design setting this project tested (N up to 200, M from 5–20,
+   either propensity range) — under $60 in every one of 28 configurations. This is
+   the realistic, affordable configuration: **use Route B, and only claim a pool-wide
+   ranking result, not an individual memory's number.**
+2. **If "practical" means knowing any *specific* memory's causal value with a stated
+   confidence interval** (Route A): it requires either (a) a budget genuinely
+   proportional to store size at your required precision (roughly $33/memory at
+   Δ=0.03 and this project's real ρ=0.6355 — cheaper if your ρ is smaller/less
+   favorable, since cost ∝ (1-ρ); §5.4), or (b) accepting a much coarser Δ — e.g. at
+   $100 for a 30-memory store, the achievable MDE is 0.093, roughly 3× this
+   project's own largest measured effect, meaning **a $100 budget cannot even see
+   the biggest real effect this project ever found, only something considerably
+   larger**.
+3. **Higher paired correlation ρ helps, but only linearly, not enough to close the
+   gap alone**: §5.4's resolution grid showed cost falls at most 5× from ρ=0 to
+   ρ=0.8, versus the 100×+ swings driven by target precision Δ. A team with a much
+   more favorable retrieval/task setup (higher natural ρ) will pay less, but not an
+   order of magnitude less, for the same Δ and N.
+4. **The realistic path this project's own data points toward is Route B for
+   ranking plus Route A spent narrowly**: use the cheap observational signal
+   (§9.3) to identify which memories are worth ground-truthing, then spend the
+   Route-A budget only on those — which is exactly what this project attempted
+   (§4.5's mini ground truth), and exactly where it ran into the *other* real
+   finding this paper reports: that selection step itself is subject to a
+   measured ~1.87× disagreement-inflation effect (§4.7) and, in the one real
+   test of it, selected memories whose true effects turned out to be
+   indistinguishable from noise. **Combining the two routes is the practical
+   answer in principle; this project's own real attempt to do exactly that is
+   the paper's cautionary result about how that combination can still fail in
+   practice.**

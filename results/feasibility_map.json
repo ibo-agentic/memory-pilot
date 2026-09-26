@@ -1,0 +1,997 @@
+{
+  "assumptions": {
+    "p_real": 0.6611111111111111,
+    "rho_real": 0.6355,
+    "cost_per_episode_usd": 0.011333333333333334,
+    "budgets_usd": [
+      100.0,
+      1000.0,
+      10000.0
+    ],
+    "alpha_two_sided": 0.05,
+    "power": 0.8
+  },
+  "route_a_ground_truth_mde_curves": {
+    "budget_100": {
+      "n_memories": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        12,
+        13,
+        14,
+        16,
+        18,
+        20,
+        22,
+        24,
+        27,
+        30,
+        33,
+        37,
+        41,
+        45,
+        50,
+        56,
+        62,
+        69,
+        77,
+        85,
+        95,
+        105,
+        117,
+        130,
+        144,
+        160,
+        177,
+        197,
+        219,
+        243,
+        270,
+        300
+      ],
+      "mde": [
+        0.038116439482024304,
+        0.04175446743217048,
+        0.0450999794046688,
+        0.04821390602366618,
+        0.05113856984523793,
+        0.05390478566485208,
+        0.0590497341322412,
+        0.06146091191030064,
+        0.06378100253682988,
+        0.06818475979365057,
+        0.07232085903549927,
+        0.07623287896404861,
+        0.07995371797897839,
+        0.08350893486434097,
+        0.08857460119836179,
+        0.09336582754263427,
+        0.09792290604344327,
+        0.10368792550255056,
+        0.10914887201456519,
+        0.1143493184460729,
+        0.12053476505916544,
+        0.12756200507365975,
+        0.13422183387570213,
+        0.14159628819731868,
+        0.1495797097380425,
+        0.15715810605684952,
+        0.16614570778972773,
+        0.17467146914857973,
+        0.18438273573090191,
+        0.19435646870752038,
+        0.20455427938095172,
+        0.21561914265940832,
+        0.22678480712131813,
+        0.23925467722951782,
+        0.2522605747929366,
+        0.26572380359508535,
+        0.28009748262790285,
+        0.29524867066120597
+      ]
+    },
+    "budget_1000": {
+      "n_memories": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        12,
+        13,
+        14,
+        16,
+        18,
+        20,
+        22,
+        24,
+        27,
+        30,
+        33,
+        37,
+        41,
+        45,
+        50,
+        56,
+        62,
+        69,
+        77,
+        85,
+        95,
+        105,
+        117,
+        130,
+        144,
+        160,
+        177,
+        197,
+        219,
+        243,
+        270,
+        300
+      ],
+      "mde": [
+        0.012053476505916545,
+        0.013203921957298087,
+        0.014261865734543813,
+        0.01524657579280972,
+        0.016171435699455623,
+        0.017046189948412643,
+        0.018673165508526858,
+        0.019435646870752037,
+        0.020169323946535984,
+        0.02156191426594083,
+        0.02286986368921458,
+        0.02410695301183309,
+        0.025283585621232625,
+        0.026407843914596173,
+        0.028009748262790287,
+        0.0295248670661206,
+        0.03096594181999478,
+        0.032789001044591884,
+        0.03451590396042371,
+        0.036160429517749636,
+        0.0381164394820243,
+        0.04033864789307197,
+        0.04244467067719643,
+        0.044776677892914445,
+        0.04730125745190823,
+        0.0496977567897948,
+        0.05253988600763195,
+        0.0552359684757344,
+        0.058306940612256115,
+        0.061460911910300633,
+        0.06468574279782249,
+        0.06818475979365057,
+        0.07171565292253392,
+        0.07565897208937004,
+        0.0797717980208938,
+        0.08402924478837086,
+        0.08857460119836179,
+        0.09336582754263428
+      ]
+    },
+    "budget_10000": {
+      "n_memories": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        12,
+        13,
+        14,
+        16,
+        18,
+        20,
+        22,
+        24,
+        27,
+        30,
+        33,
+        37,
+        41,
+        45,
+        50,
+        56,
+        62,
+        69,
+        77,
+        85,
+        95,
+        105,
+        117,
+        130,
+        144,
+        160,
+        177,
+        197,
+        219,
+        243,
+        270,
+        300
+      ],
+      "mde": [
+        0.00381164394820243,
+        0.004175446743217048,
+        0.00450999794046688,
+        0.004821390602366618,
+        0.005113856984523793,
+        0.0053904785664852075,
+        0.005904973413224119,
+        0.006146091191030064,
+        0.006378100253682987,
+        0.006818475979365057,
+        0.007232085903549927,
+        0.00762328789640486,
+        0.00799537179789784,
+        0.008350893486434096,
+        0.008857460119836178,
+        0.009336582754263429,
+        0.009792290604344327,
+        0.010368792550255057,
+        0.01091488720145652,
+        0.01143493184460729,
+        0.012053476505916544,
+        0.012756200507365974,
+        0.013422183387570213,
+        0.014159628819731868,
+        0.01495797097380425,
+        0.01571581060568495,
+        0.016614570778972774,
+        0.017467146914857973,
+        0.01843827357309019,
+        0.019435646870752037,
+        0.020455427938095173,
+        0.02156191426594083,
+        0.022678480712131813,
+        0.02392546772295178,
+        0.02522605747929366,
+        0.026572380359508537,
+        0.028009748262790284,
+        0.0295248670661206
+      ]
+    }
+  },
+  "route_b_observational_sweep": [
+    {
+      "n_memories": 10,
+      "M": 5,
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "threshold_episodes": 2000,
+      "cost_at_threshold_usd": 22.666666666666668,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.09696969696969696,
+          "p2_5": -0.3951515151515151,
+          "p97_5": 0.5015151515151515
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.2581818181818182,
+          "p2_5": -0.11242424242424241,
+          "p97_5": 0.6524242424242424
+        },
+        {
+          "n_episodes": 2000,
+          "mean_spearman": 0.532121212121212,
+          "p2_5": 0.10393939393939394,
+          "p97_5": 0.7775757575757575
+        }
+      ]
+    },
+    {
+      "n_memories": 10,
+      "M": 5,
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "threshold_episodes": 2000,
+      "cost_at_threshold_usd": 22.666666666666668,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.27272727272727265,
+          "p2_5": -0.26575757575757575,
+          "p97_5": 0.71
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.31757575757575757,
+          "p2_5": -0.11030303030303029,
+          "p97_5": 0.6227272727272727
+        },
+        {
+          "n_episodes": 2000,
+          "mean_spearman": 0.6545454545454545,
+          "p2_5": 0.2396969696969697,
+          "p97_5": 0.88
+        }
+      ]
+    },
+    {
+      "n_memories": 10,
+      "M": 10,
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "threshold_episodes": 1000,
+      "cost_at_threshold_usd": 11.333333333333334,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.27515151515151515,
+          "p2_5": -0.050303030303030294,
+          "p97_5": 0.7318181818181818
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.5381818181818181,
+          "p2_5": 0.38727272727272727,
+          "p97_5": 0.7048484848484847
+        }
+      ]
+    },
+    {
+      "n_memories": 10,
+      "M": 10,
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "threshold_episodes": 500,
+      "cost_at_threshold_usd": 5.666666666666667,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.4048484848484848,
+          "p2_5": 0.0603030303030303,
+          "p97_5": 0.7854545454545455
+        }
+      ]
+    },
+    {
+      "n_memories": 30,
+      "M": 5,
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "threshold_episodes": 1000,
+      "cost_at_threshold_usd": 11.333333333333334,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.05761957730812013,
+          "p2_5": -0.23557285873192432,
+          "p97_5": 0.24106785317018908
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.17361512791991102,
+          "p2_5": 0.030266963292547272,
+          "p97_5": 0.3461846496106785
+        }
+      ]
+    },
+    {
+      "n_memories": 30,
+      "M": 5,
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "threshold_episodes": 2000,
+      "cost_at_threshold_usd": 22.666666666666668,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.07741935483870968,
+          "p2_5": -0.16555061179087874,
+          "p97_5": 0.4251724137931035
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.11586206896551725,
+          "p2_5": -0.279432703003337,
+          "p97_5": 0.35363737486095664
+        },
+        {
+          "n_episodes": 2000,
+          "mean_spearman": 0.30028921023359284,
+          "p2_5": 0.09263626251390433,
+          "p97_5": 0.5123692992213571
+        }
+      ]
+    },
+    {
+      "n_memories": 30,
+      "M": 10,
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "threshold_episodes": 2000,
+      "cost_at_threshold_usd": 22.666666666666668,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.1936373748609566,
+          "p2_5": -0.15616240266963288,
+          "p97_5": 0.41041156840934373
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.2773303670745272,
+          "p2_5": -0.02636262513904338,
+          "p97_5": 0.5234816462736375
+        },
+        {
+          "n_episodes": 2000,
+          "mean_spearman": 0.37317018909899885,
+          "p2_5": 0.0044160177975528375,
+          "p97_5": 0.5542157953281424
+        }
+      ]
+    },
+    {
+      "n_memories": 30,
+      "M": 10,
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "threshold_episodes": 1000,
+      "cost_at_threshold_usd": 11.333333333333334,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.19328142380422692,
+          "p2_5": -0.0875083426028921,
+          "p97_5": 0.40654060066740827
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.31612903225806455,
+          "p2_5": 0.09055617352614015,
+          "p97_5": 0.569944382647386
+        }
+      ]
+    },
+    {
+      "n_memories": 30,
+      "M": 20,
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "threshold_episodes": 1000,
+      "cost_at_threshold_usd": 11.333333333333334,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.20048943270300335,
+          "p2_5": -0.14915461624026696,
+          "p97_5": 0.42426028921023357
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.3577753058954394,
+          "p2_5": 0.1646384872080089,
+          "p97_5": 0.5554505005561735
+        }
+      ]
+    },
+    {
+      "n_memories": 30,
+      "M": 20,
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "threshold_episodes": 1000,
+      "cost_at_threshold_usd": 11.333333333333334,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.2586874304783092,
+          "p2_5": -0.013103448275862073,
+          "p97_5": 0.5070856507230255
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.3929254727474972,
+          "p2_5": 0.26046718576195776,
+          "p97_5": 0.5315350389321468
+        }
+      ]
+    },
+    {
+      "n_memories": 50,
+      "M": 5,
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "threshold_episodes": 2000,
+      "cost_at_threshold_usd": 22.666666666666668,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.07420888355342135,
+          "p2_5": -0.2525330132052821,
+          "p97_5": 0.29944537815126054
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.04597358943577431,
+          "p2_5": -0.14920288115246097,
+          "p97_5": 0.24087394957983196
+        },
+        {
+          "n_episodes": 2000,
+          "mean_spearman": 0.2707611044417767,
+          "p2_5": 0.10326530612244897,
+          "p97_5": 0.4407803121248499
+        }
+      ]
+    },
+    {
+      "n_memories": 50,
+      "M": 5,
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "threshold_episodes": 2000,
+      "cost_at_threshold_usd": 22.666666666666668,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.10115726290516205,
+          "p2_5": -0.14683553421368548,
+          "p97_5": 0.23846098439375749
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.06060984393757503,
+          "p2_5": -0.06256902761104441,
+          "p97_5": 0.2400264105642257
+        },
+        {
+          "n_episodes": 2000,
+          "mean_spearman": 0.29500120048019207,
+          "p2_5": 0.04098679471788716,
+          "p97_5": 0.49181992797118845
+        }
+      ]
+    },
+    {
+      "n_memories": 50,
+      "M": 10,
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "threshold_episodes": 1000,
+      "cost_at_threshold_usd": 11.333333333333334,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.12706842737094837,
+          "p2_5": -0.15174309723889556,
+          "p97_5": 0.3376470588235294
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.1875534213685474,
+          "p2_5": 0.00717887154861945,
+          "p97_5": 0.45510684273709484
+        }
+      ]
+    },
+    {
+      "n_memories": 50,
+      "M": 10,
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "threshold_episodes": 2000,
+      "cost_at_threshold_usd": 22.666666666666668,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.12379351740696276,
+          "p2_5": -0.13140216086434575,
+          "p97_5": 0.3124489795918367
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.22124369747899159,
+          "p2_5": -0.0027707082833133257,
+          "p97_5": 0.5651500600240098
+        },
+        {
+          "n_episodes": 2000,
+          "mean_spearman": 0.3693925570228091,
+          "p2_5": 0.21584633853541416,
+          "p97_5": 0.5710852340936374
+        }
+      ]
+    },
+    {
+      "n_memories": 50,
+      "M": 20,
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "threshold_episodes": 500,
+      "cost_at_threshold_usd": 5.666666666666667,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.22685234093637457,
+          "p2_5": 0.026717887154861942,
+          "p97_5": 0.4648091236494598
+        }
+      ]
+    },
+    {
+      "n_memories": 50,
+      "M": 20,
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "threshold_episodes": 500,
+      "cost_at_threshold_usd": 5.666666666666667,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.22995438175270105,
+          "p2_5": 0.06564945978391357,
+          "p97_5": 0.42677551020408167
+        }
+      ]
+    },
+    {
+      "n_memories": 100,
+      "M": 5,
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "threshold_episodes": 5000,
+      "cost_at_threshold_usd": 56.66666666666667,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.09382658265826581,
+          "p2_5": -0.023507650765076507,
+          "p97_5": 0.23800000000000002
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.14342754275427544,
+          "p2_5": -0.06205550555055504,
+          "p97_5": 0.27602190219021905
+        },
+        {
+          "n_episodes": 2000,
+          "mean_spearman": 0.16417881788178817,
+          "p2_5": -0.015764476447644764,
+          "p97_5": 0.28717431743174315
+        },
+        {
+          "n_episodes": 5000,
+          "mean_spearman": 0.23955355535553555,
+          "p2_5": 0.10746204620462045,
+          "p97_5": 0.36398709870987095
+        }
+      ]
+    },
+    {
+      "n_memories": 100,
+      "M": 5,
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "threshold_episodes": 2000,
+      "cost_at_threshold_usd": 22.666666666666668,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.11260246024602458,
+          "p2_5": -0.005318331833183318,
+          "p97_5": 0.3139585958595859
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.10417041704170416,
+          "p2_5": -0.11798919891989197,
+          "p97_5": 0.21297149714971497
+        },
+        {
+          "n_episodes": 2000,
+          "mean_spearman": 0.16463006300630062,
+          "p2_5": 0.043159615961596155,
+          "p97_5": 0.3209309930993099
+        }
+      ]
+    },
+    {
+      "n_memories": 100,
+      "M": 10,
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "threshold_episodes": 500,
+      "cost_at_threshold_usd": 5.666666666666667,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.13137473747374734,
+          "p2_5": 0.016220822082208222,
+          "p97_5": 0.2863849384938494
+        }
+      ]
+    },
+    {
+      "n_memories": 100,
+      "M": 10,
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "threshold_episodes": 500,
+      "cost_at_threshold_usd": 5.666666666666667,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.14406480648064807,
+          "p2_5": 0.0608070807080708,
+          "p97_5": 0.3083279327932793
+        }
+      ]
+    },
+    {
+      "n_memories": 100,
+      "M": 20,
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "threshold_episodes": 500,
+      "cost_at_threshold_usd": 5.666666666666667,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.17804980498049802,
+          "p2_5": 0.09772457245724571,
+          "p97_5": 0.23509990999099906
+        }
+      ]
+    },
+    {
+      "n_memories": 100,
+      "M": 20,
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "threshold_episodes": 500,
+      "cost_at_threshold_usd": 5.666666666666667,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.21108910891089105,
+          "p2_5": 0.11977857785778576,
+          "p97_5": 0.297017701770177
+        }
+      ]
+    },
+    {
+      "n_memories": 200,
+      "M": 5,
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "threshold_episodes": 1000,
+      "cost_at_threshold_usd": 11.333333333333334,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.0016778006417797742,
+          "p2_5": -0.08107238554501217,
+          "p97_5": 0.10243539189158476
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.0875153688430485,
+          "p2_5": 0.03784178354458862,
+          "p97_5": 0.17133953049824044
+        }
+      ]
+    },
+    {
+      "n_memories": 200,
+      "M": 5,
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "threshold_episodes": 5000,
+      "cost_at_threshold_usd": 56.66666666666667,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.06746481732840713,
+          "p2_5": -0.014845028020822564,
+          "p97_5": 0.1573734705192822
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.07251946891135923,
+          "p2_5": -0.05345710637789372,
+          "p97_5": 0.20897254931373288
+        },
+        {
+          "n_episodes": 2000,
+          "mean_spearman": 0.10593879846996176,
+          "p2_5": -0.027578076951923804,
+          "p97_5": 0.24602636315907905
+        },
+        {
+          "n_episodes": 5000,
+          "mean_spearman": 0.17424150603765096,
+          "p2_5": 0.09007871446786171,
+          "p97_5": 0.2841167404185105
+        }
+      ]
+    },
+    {
+      "n_memories": 200,
+      "M": 10,
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "threshold_episodes": 1000,
+      "cost_at_threshold_usd": 11.333333333333334,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.05616935781412193,
+          "p2_5": -0.03200086252156304,
+          "p97_5": 0.1998318082952074
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.11985704642616066,
+          "p2_5": 0.031246831170779272,
+          "p97_5": 0.216170366759169
+        }
+      ]
+    },
+    {
+      "n_memories": 200,
+      "M": 10,
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "threshold_episodes": 2000,
+      "cost_at_threshold_usd": 22.666666666666668,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.08529963734885135,
+          "p2_5": -0.046703316723469626,
+          "p97_5": 0.19056622614234162
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.10888547213680341,
+          "p2_5": -0.004494787369684243,
+          "p97_5": 0.18975808145203632
+        },
+        {
+          "n_episodes": 2000,
+          "mean_spearman": 0.14761629040726018,
+          "p2_5": 0.07372039300982525,
+          "p97_5": 0.25081980799519993
+        }
+      ]
+    },
+    {
+      "n_memories": 200,
+      "M": 20,
+      "propensity_min": 0.1,
+      "propensity_max": 0.9,
+      "threshold_episodes": 1000,
+      "cost_at_threshold_usd": 11.333333333333334,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.06916777919447988,
+          "p2_5": -0.022107665191629794,
+          "p97_5": 0.1738749718742969
+        },
+        {
+          "n_episodes": 1000,
+          "mean_spearman": 0.17843021075526894,
+          "p2_5": 0.0733489462236556,
+          "p97_5": 0.296378196954924
+        }
+      ]
+    },
+    {
+      "n_memories": 200,
+      "M": 20,
+      "propensity_min": 0.3,
+      "propensity_max": 0.7,
+      "threshold_episodes": 500,
+      "cost_at_threshold_usd": 5.666666666666667,
+      "resolved_within_tested_range": true,
+      "trace": [
+        {
+          "n_episodes": 500,
+          "mean_spearman": 0.09499812495312382,
+          "p2_5": 0.02331965799144979,
+          "p97_5": 0.21283053326333162
+        }
+      ]
+    }
+  ],
+  "reference_points": {
+    "this_project_alfworld": {
+      "label": "This project (ALFWorld pilot)",
+      "n_memories": 30,
+      "M": 10,
+      "propensity_range": [
+        0.3,
+        0.7
+      ],
+      "route": "ground_truth",
+      "rho": 0.6355,
+      "target_delta": 0.03,
+      "real_spend_usd": 16.0508,
+      "spend_needed_to_resolve_usd": 968.59,
+      "source": "This repo: alfworld_pilot/results/effect_size_analysis.json, results/paper_data.md \u00a76.1",
+      "note": "Real spend so far ($16.05) resolves 0 of 30 memories to the 0.03 effect ceiling with adequate power; ~$969 would be needed. Plotted at its ACTUAL spend to show it lands on the infeasible side of its own budget."
+    },
+    "simsek_2026_task_difficulty": {
+      "label": "\u015eim\u015fek 2026, task-difficulty setup",
+      "n_memories": 100,
+      "M": null,
+      "propensity_range": null,
+      "route": "not_comparable",
+      "real_spend_usd": 0.0,
+      "source": "arXiv:2604.12007 (\"When to Forget: A Memory Governance Primitive\", Baris Simsek), https://arxiv.org/html/2604.12007 -- quote: \"70 generalist memories with U*~Uniform(0,1) and 30 specialist memories with U*=0.85\"; 10,000 episodes, 20 seeds (same page).",
+      "note": "PURE SIMULATION, zero real LLM calls, zero dollar cost -- the paper never leaves the synthetic DGP, so it never faces the budget question this map is about. Plotted as a reference for store size (N=100) only; its 'cost' is definitionally $0 at any N, which is why it is not on route A/B's cost axis in the same sense as the other points."
+    },
+    "simsek_2026_hitchhiker": {
+      "label": "\u015eim\u015fek 2026, co-retrieval setup",
+      "n_memories": null,
+      "M": null,
+      "propensity_range": null,
+      "route": "not_comparable",
+      "real_spend_usd": 0.0,
+      "source": "arXiv:2604.12007, https://arxiv.org/html/2604.12007 -- quote: \"One 'anchor' memory (U*=0.90) and one 'hitchhiker' (U*=0.05) are always retrieved together except in a controlled fraction of episodes\"; independence fractions tested at 0%, 10%, 30%, 100%.",
+      "note": "The paper does NOT state a total memory-pool size for this setup -- this project's own hitchhiker.py ADDS 30 filler memories as its own design choice to build a realistic top-M retrieval pool around the anchor/hitchhiker pair; that 30 is OUR addition, not a number Simsek 2026 reports. Excluded from the N-axis plot for this reason -- flagging rather than estimating."
+    },
+    "cmi_2026": {
+      "label": "CMI (Causal Intervention-Based Memory Selection), Causal-LoCoMo",
+      "n_memories": 5.6,
+      "M": null,
+      "propensity_range": null,
+      "route": "single_shot_no_power",
+      "real_spend_usd": null,
+      "source": "arXiv:2605.17641 (\"Causal Intervention-Based Memory Selection for Long-Horizon LLM Agents\", Saksham Srivastava), https://arxiv.org/html/2605.17641 -- quotes: \"491 memory entries: 89 useful memories, 348 irrelevant memories, and 54 harmful memories\" across \"87 filtered evaluation examples\" (of 100 generated); \"For each candidate memory ... CMI compares model behavior under three controlled conditions\" (no-memory, with-memory, perturbed-memory); response model GPT-4.1, judge model GPT-5, retrieval via text-embedding-3-large. No API cost reported.",
+      "note": "~5.6 candidate memories/example, 87 examples, ONE judged intervention per candidate memory (3 conditions, no repeated trials for statistical power). This is a fundamentally different, much cheaper design point: CMI substitutes a single LLM-as-judge causal check for the repeated real-world trials this project's power formula assumes are needed for a statistically resolvable estimate. Not placed on the (N, budget) feasibility curves for that reason -- it isn't attempting the same statistical guarantee."
+    },
+    "memaudit_2026_eval_protocol": {
+      "label": "MemAudit (package-oracle eval protocol for memory writing)",
+      "n_memories": null,
+      "M": null,
+      "propensity_range": null,
+      "route": "not_comparable",
+      "real_spend_usd": 0.907,
+      "source": "arXiv:2605.02199 (\"MemAudit: An Exact Package-Oracle Evaluation Protocol for Budgeted Long-Term LLM Memory Writing\"), https://arxiv.org/html/2605.02199 -- quote: \"The primary Natural-200 export used 681 API calls, 1,978,327 tokens, and about $0.907\"; budget measured in normalized word-equivalent units, B=2,4,8,16 (fractional 0.01-0.20) and B=30,60,100 for natural packages; models: google/gemini-3.1-flash-lite-preview (temp 0) and anthropic/claude-sonnet-4.5, via OpenRouter.",
+      "note": "This paper's 'budget' (B) is a PER-MEMORY WORD LIMIT for how much a memory-writing system may write, not a memory-COUNT (N) -- a different axis entirely, not this map's N. Cited only as a real-dollar SCALE reference (~$0.91 for 200 examples of a memory-WRITING evaluation) to contrast against this project's ~$970 needed for a 30-memory causal-VALUATION resolution: writing-quality evaluation and causal-effect estimation are differently expensive tasks, not directly comparable point-for-point."
+    }
+  },
+  "memaudit_ambiguity_note": "Two 2026 arXiv papers are both titled 'MemAudit': (1) arXiv:2605.23723, 'Post-hoc Auditing of Poisoned Agent Memory via Causal Attribution and Structural Anomaly Detection' (security/poisoning focus), and (2) arXiv:2605.02199, 'An Exact Package-Oracle Evaluation Protocol for Budgeted Long-Term LLM Memory Writing' (evaluation-protocol focus). This script uses (2), since it is about memory EVALUATION under a budget -- topically closest to this paper. If the intended reference was (1), its abstract reports no store-size/evaluation-scale numbers comparable to this map's axes (it reports attack-success-rate reductions, e.g. '70% to 0%', not a memory count or episode budget)."
+}
