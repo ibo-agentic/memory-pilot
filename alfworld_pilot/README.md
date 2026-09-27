@@ -1,5 +1,150 @@
 # Stage 2 — ALFWorld pilot
 
+## Status (2026-09-27, later): pre-Kaggle capability check — Qwen2.5-7B-Instruct CAN do ALFWorld, but needs weighted task sampling AND zero-shot (not few-shot) prompting
+
+Before spending any Kaggle session on Phase 0, checked the thing that would
+have made the whole replication moot: can the chosen local model actually
+solve ALFWorld tasks at all, or was the earlier smoke test's 0/3 just an
+early sign of a fundamentally incapable setup? New script:
+`capability_check.py`. Zero API spend throughout (local model only). Full
+data: `alfworld_pilot/results_kaggle/capability_check_*.json`.
+
+**Headline: yes, it can — 50-70% success on the two easiest task types,
+comfortably in the target 40-70% band — but two real, decision-changing
+findings came out of the deeper checks, both of which flip a plan detail:**
+
+### 1. Zero-shot beats few-shot once you check for confounds, not just raw success
+
+Ran 20 paired episodes (identical task instances across all four cells) on
+`pick_and_place_simple`, crossing prompting mode x memory condition:
+
+| condition | success | parse-failure rate | corr(n_included, parse_failures) | corr(avg prompt tokens, parse_failures) | fallback harmful % |
+|---|---|---|---|---|---|
+| zero-shot, no memories | 50% (10/20) | 43.2% | n/a (n_included=0) | n/a | 2% (6/277) |
+| few-shot, no memories | 55% (11/20) | 28.4% | n/a | n/a | 3% (5/148) |
+| zero-shot, **with memories** | **70%** (14/20) | 29.8% | **-0.037** | 0.647 | 3% (4/136) |
+| few-shot, **with memories** | **70%** (14/20) | 39.2% | **+0.506** | 0.806 | 6% (11/175) |
+
+Looking only at raw success, few-shot looks like a mild win (matching the
+original ReAct paper's own choice to use few-shot prompting). **It isn't,
+once memories are in the picture**: the exact same check this project ran
+on the paid model (`memory_sanity_check.py`: `corr(n_included,
+parse_failures) = 0.008`, `corr(avg_tokens, parse_failures) = 0.17`) shows
+few-shot introduces a real, moderate **confound** between memory count and
+parse-failure rate (+0.51) that zero-shot does not have (-0.04, statistical
+noise around zero). A configuration where format failures scale with how
+many memories got included would confound the exact causal contrast this
+whole pilot measures — which is precisely why the paid run picked
+`openai/gpt-5.6-luna` over the cheaper `ling-3.0-flash-vl` for the same
+reason. **Decision: zero-shot, not few-shot**, despite few-shot's small
+edge in the memory-free numbers alone.
+
+Both conditions' `corr(avg_tokens, parse_failures)` (0.65-0.81) run well
+above the paid run's 0.17 regardless of prompting mode — a real, structural
+difference: this open 7B model's format compliance degrades with prompt
+length noticeably more than the commercial model's did. This isn't
+disqualifying (zero-shot's `n_included` correlation is still ~0), but it's
+a real risk to keep monitoring once episodes run longer in production
+(longer ReAct histories = longer prompts = more of the same pressure).
+
+**Also confirmed: memories are not doing nothing.** Success jumped from
+50-55% (no memories) to 70% (with the real `kaggle_memory_store`, same task
+instances, both prompting modes) — the same qualitative finding as the paid
+run's own memory sanity check (93% vs. 80%), now reproduced with an open
+model and real embeddings for the first time.
+
+**Fallback-action harm is low everywhere except one task type.** When a
+parse failure occurs, `react_agent.py` falls back to the first admissible
+action; classified each fallback as "harmful" (an arbitrary `put`, or
+closing a receptacle just opened for a pending action) or "neutral"
+(anything else — wastes a step, doesn't destroy progress). Harmful fraction
+stayed at 0-6% in every `pick_and_place_simple` condition and 0-3% across
+5 of the 6 task types below — except `pick_two_obj_and_place` (14%, see
+below), where a wrong fallback has more chances to do real damage on a
+two-part task.
+
+### 2. Per-task-type breakdown: natural task-type mix lands BELOW the target band, not above it
+
+10 episodes/type, zero-shot + real memories (the now-recommended
+configuration):
+
+| task_type | success | parse-failure rate | fallback harmful % | n |
+|---|---|---|---|---|
+| look_at_obj_in_light | **60%** | 52.5% | 0% (0/127) | 10 |
+| pick_and_place_simple | **50%** | 28.9% | 3% (3/88) | 10 |
+| pick_cool_then_place_in_recep | 30% | 32.2% | 3% (4/136) | 10 |
+| pick_clean_then_place_in_recep | 20% | 57.6% | 0% (1/264) | 10 |
+| pick_heat_then_place_in_recep | 20% | 33.3% | 3% (4/143) | 10 |
+| pick_two_obj_and_place | **0%** | 27.8% | **14%** (19/139) | 10 |
+| **overall, unweighted pool** | **30%** (18/60) | — | — | 60 |
+
+(Per-type `corr(n_included, parse_failures)` swings from -0.55 to +0.58
+with no consistent sign across types at n=10 — this project's own Stage 1
+small-data results already established that correlation/rank estimates are
+this noisy below ~1000 samples; **do not treat these per-type correlations
+as reliable**, only the n=20 same-task-instance check above.)
+
+**This is the paid run's own ceiling-effect problem, but inverted.** The
+paid run's natural game-file ordering pinned success near 93%/80% (too
+close to ceiling to resolve per-memory effects) and needed
+`WeightedRealTaskSource` to oversample HARDER types and bring the rate
+down. Here, the natural/unweighted pool sits at 30% — **below** the 40-70%
+target band — because a 7B model genuinely struggles with the
+appliance-interaction types (clean/heat/cool, all 20-32%) and cannot do
+`pick_two_obj_and_place` at all (0/10) at this prompting/memory setting.
+**The same tool, `weighted_task_source.WeightedRealTaskSource`, is the
+fix, just pointed the other way**: oversample the two easy types
+(`pick_and_place_simple`, `look_at_obj_in_light`, currently 50-60%) and
+deprioritize `pick_two_obj_and_place` until independently re-validated,
+rather than the paid run's weighting toward harder types. Exact weights
+should be re-derived from a larger sample before committing to the real
+Kaggle run (n=10/type here is small, especially for the 0% cell — a true
+rate anywhere from 0% to ~28% is statistically plausible at this n).
+
+### Decision, per the user's own 40-70% rule
+
+**Proceed** — Qwen2.5-7B-Instruct clears the bar on the task types that
+matter, and the zero-shot + real-memories configuration shows a usable,
+essentially unconfounded signal. Three concrete changes to the plan before
+Kaggle Phase 0, all cheap (no code, or already-existing code):
+
+1. **Use zero-shot prompting, not few-shot** — drop `react_agent.FEW_SHOT_EXAMPLES`
+   from the production config (it remains in the codebase, available if a
+   future check finds a setting where it doesn't introduce a confound).
+2. **Weight task-type sampling toward the easy types**
+   (`pick_and_place_simple`, `look_at_obj_in_light`), deprioritizing
+   `pick_two_obj_and_place` — reuse `weighted_task_source.py`'s existing
+   mechanism with a new weight table (inverse of the paid run's own
+   difficulty-based weights), re-derived from a larger local sample before
+   the real run.
+3. **Re-run this same capability check at a larger n** (this was
+   deliberately small, 10-20 episodes/cell, to stay fast and local) once
+   the weighting is set, to confirm the pooled rate actually lands in
+   40-70% and that the zero-shot/memory-count non-confound holds up outside
+   `pick_and_place_simple` specifically.
+
+### New files
+
+- `alfworld_pilot/src/alfworld_pilot/capability_check.py` — the check
+  itself: runs N episodes restricted to one (or all) task type via
+  `weighted_task_source.WeightedRealTaskSource` with all-but-one weight
+  zeroed (same reuse pattern as the paid run's
+  `engineered_effect_validation.py`), with or without the real memory
+  store/embedding retrieval, computing success rate, parse-failure rate,
+  the two requested correlations, a failure-mode classifier (format
+  issues / looping / never found the object / picked up but stuck /
+  attempted but incomplete), and the fallback-harm classifier described
+  above.
+- `react_agent.py`: added `FEW_SHOT_EXAMPLES` (two hand-written,
+  game-instance-independent demonstrations — a plain pick-and-place and
+  one with an intermediate appliance step) and an optional `few_shot_text`
+  parameter on `_build_prompt`/`run_episode`, default `None` — every
+  existing caller and test is unaffected.
+- `alfworld_pilot/results_kaggle/capability_check_*.json` — full per-episode
+  data for every condition tested (tracked in git, unlike `logs_kaggle`/
+  `cache_kaggle`, matching how the paid run's own `results/*.json` files
+  are tracked — this is analysis output, not bulk/ephemeral run state).
+
 ## Status (2026-09-27): Kaggle replication (zero-cost, real embeddings + local model) — infrastructure built AND locally verified end to end; real Kaggle hardware (Phase 0) not yet run
 
 New work, separate from (and not touching) the paid run's frozen results

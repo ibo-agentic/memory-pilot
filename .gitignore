@@ -10,7 +10,7 @@ logs/
 logs_kaggle/
 cache/
 cache_kaggle/
-results_kaggle/
 results/*.png
+results_kaggle/*.png
 
 .env
