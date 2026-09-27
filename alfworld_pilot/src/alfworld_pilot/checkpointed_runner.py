@@ -40,8 +40,8 @@ import json
 import pathlib
 import random
 
-from .episode_runner import run_logged_episode
-from .ground_truth_runner import TaskSource, _is_natural_candidate, run_ground_truth_pair
+from .episode_runner import SimilarityFn, run_logged_episode
+from .ground_truth_runner import CandidacySimilarityFn, TaskSource, _is_natural_candidate, run_ground_truth_pair
 
 
 def _seed_for_task(task_id: int) -> int:
@@ -67,12 +67,19 @@ def run_logging_phase_checkpointed(
     n_episodes: int,
     log_path: str | pathlib.Path,
     max_new: int | None = None,
+    similarity_fn: SimilarityFn | None = None,
 ) -> int:
     """Appends one JSON line per completed episode to log_path, flushing
     after each -- safe to interrupt at any point. Resume point is just the
     number of complete lines already in log_path. Returns the number of
     NEWLY completed episodes this call made (0 if already fully done, or
-    capped at max_new if given)."""
+    capped at max_new if given).
+
+    similarity_fn, if given, is passed straight through to run_logged_episode
+    (see episode_runner.SimilarityFn) -- used by the Kaggle replication to
+    swap in real embedding-based retrieval without touching this function's
+    default (mock, unchanged) behavior for the paid run's own historical
+    code path."""
     log_path = pathlib.Path(log_path)
     log_path.parent.mkdir(parents=True, exist_ok=True)
     start = _count_completed_lines(log_path)
@@ -86,7 +93,7 @@ def run_logging_phase_checkpointed(
                 rng = random.Random(_seed_for_task(task_id))
                 ep = run_logged_episode(
                     env, llm_client, memories, m, propensity_min, propensity_max, max_steps,
-                    task_id=task_id, rng=rng,
+                    task_id=task_id, rng=rng, similarity_fn=similarity_fn,
                 )
             finally:
                 env.close()
@@ -127,6 +134,8 @@ def run_ground_truth_phase_checkpointed(
     start_seed: int = 0,
     max_probe_tries: int = 200_000,
     max_new: int | None = None,
+    similarity_fn: SimilarityFn | None = None,
+    candidacy_similarity_fn: CandidacySimilarityFn | None = None,
 ) -> int:
     """Same resumability contract as run_logging_phase_checkpointed, but for
     one memory's forced-in/forced-out pairs: state_path tracks how many
@@ -137,7 +146,11 @@ def run_ground_truth_phase_checkpointed(
     Returns the number of NEWLY completed pairs this call made (capped at
     max_new if given -- an unmet max_probe_tries still raises even under a
     max_new cap, since that means real trouble finding candidates, not just
-    "this chunk is done")."""
+    "this chunk is done").
+
+    similarity_fn / candidacy_similarity_fn: see episode_runner.SimilarityFn
+    and ground_truth_runner.CandidacySimilarityFn -- passed straight through,
+    default None preserves the original mock behavior."""
     log_path = pathlib.Path(log_path)
     state_path = pathlib.Path(state_path)
     log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -148,10 +161,12 @@ def run_ground_truth_phase_checkpointed(
     tries = 0
     with open(log_path, "a", encoding="utf-8") as f:
         while pairs_found < target and tries < max_probe_tries:
-            if _is_natural_candidate(task_source, memories, memory_id, seed, pairs_found, m, propensity_min, propensity_max):
+            if _is_natural_candidate(
+                task_source, memories, memory_id, seed, pairs_found, m, propensity_min, propensity_max, candidacy_similarity_fn
+            ):
                 ep_in, ep_out = run_ground_truth_pair(
                     task_source, llm_client, memories, m, propensity_min, propensity_max, max_steps,
-                    task_seed=seed, pair_index=pairs_found, memory_id=memory_id,
+                    task_seed=seed, pair_index=pairs_found, memory_id=memory_id, similarity_fn=similarity_fn,
                 )
                 f.write(json.dumps(ep_in) + "\n")
                 f.write(json.dumps(ep_out) + "\n")

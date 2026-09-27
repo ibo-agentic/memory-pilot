@@ -1,4 +1,5 @@
 .venv/
+.venv-kaggle/
 __pycache__/
 *.pyc
 .pytest_cache/
@@ -6,7 +7,10 @@ __pycache__/
 build/
 
 logs/
+logs_kaggle/
 cache/
+cache_kaggle/
+results_kaggle/
 results/*.png
 
 .env

@@ -53,10 +53,31 @@ DEFAULT_CHUNK_SIZE = 100  # well under the ~178-construction tmpfs ceiling measu
 DEFAULT_MAX_RESTARTS = 500  # supervisor gives up after this many chunk attempts regardless of progress
 
 
-def _build_memories(cfg: dict) -> list:
+def _build_memories(cfg: dict, args: argparse.Namespace) -> list:
+    if args.memory_store == "kaggle":
+        from .kaggle_memory_store import build_kaggle_store
+
+        return build_kaggle_store()
     return build_mock_store(
         cfg["memory_store"]["n_memories"], cfg["memory_store"]["lesson_min_tokens"], cfg["memory_store"]["lesson_max_tokens"], seed=0
     )
+
+
+def _build_similarity_fns(cfg: dict, args: argparse.Namespace):
+    """Returns (similarity_fn, candidacy_similarity_fn), both None unless
+    --memory-store kaggle is selected, in which case a single SentenceEmbedder
+    backs both (see embedding_retrieval.py) -- kept None by default so every
+    existing (mock-store, paid-run) code path is byte-for-byte unchanged."""
+    if args.memory_store != "kaggle":
+        return None, None
+
+    from .embedding_retrieval import SentenceEmbedder, make_candidacy_similarity_fn, make_similarity_fn
+
+    embed_cfg = cfg["embedding"]
+    embedder = SentenceEmbedder(
+        model_name=embed_cfg["model_name"], revision=embed_cfg.get("revision"), device=embed_cfg.get("device", "cpu")
+    )
+    return make_similarity_fn(embedder), make_candidacy_similarity_fn(embedder)
 
 
 def _build_llm_client_and_tracker(cfg: dict, args: argparse.Namespace):
@@ -67,6 +88,26 @@ def _build_llm_client_and_tracker(cfg: dict, args: argparse.Namespace):
 
     from .cache import LLMCache
     from .cost_tracker import CostTracker
+
+    if args.llm == "local":
+        from .local_model_client import LocalTransformersClient
+
+        llm_cfg = cfg["llm"]
+        cache = LLMCache(cfg["cache"]["dir"])
+        cost_state_path = pathlib.Path(cfg["paths"]["logs_dir"]) / "cost_tracker_state.json"
+        cost_tracker = CostTracker(cfg["cost_control"]["hard_cap_usd"], 0.0, 0.0, state_path=cost_state_path)
+        llm_client = LocalTransformersClient(
+            model_id=llm_cfg["model_id"],
+            revision=llm_cfg["revision"],
+            temperature=llm_cfg["temperature"],
+            max_output_tokens=llm_cfg["max_output_tokens"],
+            cache=cache,
+            cost_tracker=cost_tracker,
+            device=llm_cfg.get("device", "cuda"),
+            quantize_4bit=llm_cfg.get("quantize_4bit", True),
+        )
+        return llm_client, cost_tracker
+
     from .llm_client import OpenRouterClient
 
     if not args.model_id or args.pricing_input is None or args.pricing_output is None:
@@ -96,23 +137,28 @@ def _run_one_chunk(args: argparse.Namespace) -> None:
     disk -- config.yaml, the cache, the cost-tracker state file, and the
     phase's own log/state files), process up to --max-new episodes/pairs,
     then exit. Exiting is what reclaims this chunk's leaked tmpfs memory."""
-    cfg = config_mod.load_config()
+    cfg = config_mod.load_config(args.config)
     config_mod.ensure_dirs(cfg)
     if args.backend:
         cfg["env"]["backend"] = args.backend
     if args.logs_dir:
         cfg["paths"]["logs_dir"] = args.logs_dir
         pathlib.Path(args.logs_dir).mkdir(parents=True, exist_ok=True)
+    if args.cache_dir:
+        cfg["cache"]["dir"] = args.cache_dir
+        pathlib.Path(args.cache_dir).mkdir(parents=True, exist_ok=True)
 
-    memories = _build_memories(cfg)
+    memories = _build_memories(cfg, args)
     task_source = build_task_source(cfg)
     llm_client, _cost_tracker = _build_llm_client_and_tracker(cfg, args)
+    similarity_fn, candidacy_similarity_fn = _build_similarity_fns(cfg, args)
 
     if args.phase == "logging":
         log_path = pathlib.Path(cfg["paths"]["logs_dir"]) / "main_logging.jsonl"
         n_new = run_logging_phase_checkpointed(
             task_source, llm_client, memories, cfg["retrieval"]["M"], cfg["retrieval"]["propensity_min"],
             cfg["retrieval"]["propensity_max"], cfg["env"]["max_steps"], args.n_episodes, log_path, max_new=args.max_new,
+            similarity_fn=similarity_fn,
         )
     else:
         if not args.memory_id:
@@ -123,6 +169,7 @@ def _run_one_chunk(args: argparse.Namespace) -> None:
             task_source, llm_client, memories, cfg["retrieval"]["M"], cfg["retrieval"]["propensity_min"],
             cfg["retrieval"]["propensity_max"], cfg["env"]["max_steps"], memory_id=args.memory_id, n_pairs=args.n_pairs,
             log_path=log_path, state_path=state_path, max_new=args.max_new,
+            similarity_fn=similarity_fn, candidacy_similarity_fn=candidacy_similarity_fn,
         )
     print(f"chunk done: {n_new} new episode(s)/pair(s)")
 
@@ -144,19 +191,23 @@ def _count_done(cfg: dict, args: argparse.Namespace) -> int:
 
 
 def _supervise(args: argparse.Namespace) -> None:
-    cfg = config_mod.load_config()
+    cfg = config_mod.load_config(args.config)
     config_mod.ensure_dirs(cfg)
     target = args.n_episodes if args.phase == "logging" else args.n_pairs
 
     worker_argv = [sys.executable, "-m", "alfworld_pilot.run_chunked", "--worker", args.phase]
     worker_argv += ["--n-episodes", str(args.n_episodes), "--n-pairs", str(args.n_pairs or 0)]
-    worker_argv += ["--max-new", str(args.chunk_size), "--llm", args.llm]
+    worker_argv += ["--max-new", str(args.chunk_size), "--llm", args.llm, "--memory-store", args.memory_store]
     if args.memory_id:
         worker_argv += ["--memory-id", args.memory_id]
     if args.backend:
         worker_argv += ["--backend", args.backend]
     if args.logs_dir:
         worker_argv += ["--logs-dir", args.logs_dir]
+    if args.cache_dir:
+        worker_argv += ["--cache-dir", args.cache_dir]
+    if args.config:
+        worker_argv += ["--config", args.config]
     if args.model_id:
         worker_argv += ["--model-id", args.model_id]
     if args.pricing_input is not None:
@@ -164,10 +215,20 @@ def _supervise(args: argparse.Namespace) -> None:
     if args.pricing_output is not None:
         worker_argv += ["--pricing-output", str(args.pricing_output)]
 
+    # Kaggle's 12-hour session cap: a real wall-clock deadline, not just a
+    # chunk-count budget -- stop launching NEW chunks once the deadline is
+    # reached, leaving whatever is already checkpointed intact and resumable
+    # by the next session's invocation of this same command.
+    deadline = time.monotonic() + args.time_budget_seconds if args.time_budget_seconds else None
+
     for attempt in range(args.max_restarts):
         done = _count_done(cfg, args)
         if done >= target:
             print(f"Done: {done}/{target}")
+            return
+        if deadline is not None and time.monotonic() >= deadline:
+            print(f"[supervisor] time budget ({args.time_budget_seconds}s) reached at {done}/{target} done -- "
+                  f"stopping cleanly, safe to resume with the same command later.")
             return
         print(f"[supervisor] attempt {attempt + 1}: {done}/{target} done, launching a chunk subprocess (up to {args.chunk_size} more)...")
         result = subprocess.run(worker_argv)
@@ -187,12 +248,20 @@ def _build_argparser() -> argparse.ArgumentParser:
     p.add_argument("--chunk-size", type=int, default=DEFAULT_CHUNK_SIZE)
     p.add_argument("--max-new", type=int, default=None, help=argparse.SUPPRESS)  # worker-only
     p.add_argument("--max-restarts", type=int, default=DEFAULT_MAX_RESTARTS)
-    p.add_argument("--llm", choices=["mock", "real"], default="real")
+    p.add_argument("--llm", choices=["mock", "real", "local"], default="real")
+    p.add_argument("--memory-store", choices=["mock", "kaggle"], default="mock",
+                    help="'mock' = the paid run's build_mock_store; 'kaggle' = kaggle_memory_store's hand-written store "
+                         "with real embedding retrieval (requires --config pointing at a config with an 'embedding' section)")
     p.add_argument("--backend", choices=["mock", "real"], default=None, help="override config.yaml's env.backend")
     p.add_argument("--logs-dir", default=None, help="override config.yaml's paths.logs_dir (tests use this to avoid touching real run logs)")
+    p.add_argument("--cache-dir", default=None, help="override config.yaml's cache.dir (e.g. to point at /kaggle/working regardless of where the repo is cloned)")
+    p.add_argument("--config", default=None, help="path to an alternate config file (e.g. kaggle_config.yaml) instead of the default config.yaml")
     p.add_argument("--model-id", default=None)
     p.add_argument("--pricing-input", type=float, default=None)
     p.add_argument("--pricing-output", type=float, default=None)
+    p.add_argument("--time-budget-seconds", type=float, default=None,
+                    help="supervisor stops launching new chunks once this much wall-clock time has elapsed "
+                         "(e.g. for Kaggle's 12-hour session cap); omit for no time limit")
     return p
 
 

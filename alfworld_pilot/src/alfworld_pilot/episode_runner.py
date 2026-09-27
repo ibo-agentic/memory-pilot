@@ -10,11 +10,19 @@ from __future__ import annotations
 
 import random
 from dataclasses import asdict
+from typing import Callable
 
 from . import react_agent
 from .llm_client import LLMClient
 from .memory_store import Memory, similarity_scores
 from .retrieval_shared import retrieve
+
+# (memories, task_type, obs) -> {mem_id: similarity}. Optional injection point
+# for a real embedding-based similarity (see embedding_retrieval.py, used by
+# the Kaggle replication) without changing this function's default behavior
+# for every existing caller/test, which still gets the original mock
+# similarity_scores(memories, task_type, rng) unchanged.
+SimilarityFn = Callable[[list[Memory], str, str], dict[str, float]]
 
 
 def run_logged_episode(
@@ -28,15 +36,23 @@ def run_logged_episode(
     task_id: int,
     rng: random.Random,
     forced_inclusion: dict[str, int] | None = None,
+    similarity_fn: SimilarityFn | None = None,
 ) -> dict:
     """forced_inclusion, if given, overrides the drawn `included` dict for
     the listed memory ids (used by the forced-in/forced-out ground-truth
     mode) while everything else (candidacy, propensities, other memories'
-    natural draws) is untouched."""
+    natural draws) is untouched.
+
+    similarity_fn, if given, replaces the default mock topic-match similarity
+    with a real one (e.g. embedding_retrieval.embedding_similarity_scores,
+    called with the real per-episode goal text `obs` -- free here since
+    env.reset() has already produced it). Omit it to get the original,
+    unchanged mock behavior (every existing test and the paid run's own
+    historical code path do exactly this)."""
     obs, info = env.reset(task_seed=task_id)
     task_type = info["task_type"]
 
-    sims = similarity_scores(memories, task_type, rng)
+    sims = similarity_fn(memories, task_type, obs) if similarity_fn is not None else similarity_scores(memories, task_type, rng)
     candidate_ids, propensities, included = retrieve(sims, m, propensity_min, propensity_max, rng)
 
     if forced_inclusion:

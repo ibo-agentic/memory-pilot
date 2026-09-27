@@ -1,5 +1,49 @@
 # Stage 2 — ALFWorld pilot
 
+## Status (2026-09-27): Kaggle replication (zero-cost, real embeddings + local model) — infrastructure built, Phase 0 not yet run
+
+New work, separate from (and not touching) the paid run's frozen results
+above: a plan (approved 2026-09-26,
+`C:\Users\Ibo\.claude\plans\logical-meandering-feather.md`) to replicate this
+pilot on Kaggle's free GPU tier, fixing its two acknowledged weaknesses at
+zero additional dollar cost — real sentence-embedding retrieval instead of
+the mock topic-match heuristic, and a local open model
+(`Qwen/Qwen2.5-7B-Instruct`) instead of the one commercial model every real
+result so far has used. See "Kaggle replication" below for the full design
+and current status. **Nothing in this section has run on real Kaggle
+hardware yet** — Phase 0 (does ALFWorld even install there?) requires an
+actual Kaggle session, which hasn't happened. What HAS been done, entirely
+on this project's existing local machine (WSL2 Ubuntu, an RTX 4060 with
+8GB VRAM — much smaller than Kaggle's target T4/P100 16GB, so only good for
+wiring smoke tests, not the real scaled run):
+
+- All new code written and merged into `alfworld_pilot/src/alfworld_pilot/`
+  (`local_model_client.py`, `embedding_retrieval.py`, `kaggle_memory_store.py`,
+  `kaggle_session.py`, `kaggle_smoke_test.py`), plus small, backward-compatible
+  additions to `episode_runner.py`, `ground_truth_runner.py`,
+  `checkpointed_runner.py`, and `run_chunked.py` (an optional
+  `similarity_fn`/`candidacy_similarity_fn` injection point, `--llm local`,
+  `--memory-store kaggle`, `--config`, `--cache-dir`, `--time-budget-seconds`)
+  — every existing test still passes unchanged (`pytest alfworld_pilot/tests/`,
+  25/25), confirming the paid run's own code paths are untouched when these
+  new options aren't used.
+- A new `kaggle_config.yaml`, kept fully separate from `config.yaml` so the
+  paid run's exact historical settings stay untouched and citable as-is.
+
+**Real, important discovery made while researching this** (see the plan's
+"Design decisions" section for the full citations): current mainline **vLLM
+has documented compatibility problems with Kaggle's actual free GPUs**
+(Tesla T4, compute capability 7.5, and P100, capability 6.0) —
+`bfloat16`-only-on-8.0+ errors and other T4-specific breakage are open issues
+in vLLM's own tracker, and a community compatibility shim
+(`kaggle-vllm`) exists specifically because this isn't turnkey. The plan
+defaults to plain `transformers.generate()` instead, with vLLM attempted only
+as an opportunistic upgrade in Phase 0 if it happens to work cleanly — this
+is a direct instance of this project's own repeated lesson (verify a
+third-party toolchain claim empirically before committing to it; see the
+Python-3.13/PEP-667/textworld story below) applied to a brand-new tool this
+project hadn't touched before.
+
 ## Status (2026-09-21): redesign (b) validation FAILED — engineered effects too small, STOPPING before the detection experiment
 
 Step 1 of the redesign-(b) plan (detect harmful memories rather than rank
@@ -1008,3 +1052,135 @@ experiment used**; the rest is unspent.
    remains NOT affordable as scoped — a from-real-numbers re-plan
    (episode count vs. cost trade-offs at this budget) is the next
    planning step if the project continues.
+
+## Kaggle replication (2026-09-27): zero-cost, real embeddings + local model
+
+Separate track from everything above — fixes this pilot's two acknowledged
+weaknesses (mock retrieval similarity, single commercial model) without
+spending more real money, by running on Kaggle's free GPU tier instead.
+Plan approved 2026-09-26; infrastructure built and smoke-tested locally
+(WSL2, RTX 4060 8GB — enough to validate the wiring, not the real scaled
+run); **Phase 0 (real ALFWorld + real local model on actual Kaggle
+hardware) has not run yet.**
+
+### Design
+
+- **Local model**: `Qwen/Qwen2.5-7B-Instruct`, revision
+  `a09a35458c702b33eeacc393d103063234e8bc28` (Apache-2.0). Served via plain
+  `transformers.generate()` by default, 4-bit (`bitsandbytes` nf4) quantized
+  for VRAM headroom — **not vLLM**, despite vLLM's usual throughput
+  advantage, because current mainline vLLM has documented compatibility
+  problems with Kaggle's actual GPUs (Tesla T4, compute capability 7.5:
+  `bfloat16`-only-on-8.0+ errors and other open T4-specific issues in
+  vLLM's own tracker; P100 is capability 6.0, older still). Phase 0 tries
+  vLLM first and falls back cleanly if it doesn't work — verify, don't
+  assume, the same discipline this project already applied to
+  Python-3.13/textworld.
+- **Real embedding retrieval**: `BAAI/bge-small-en-v1.5` (33M params,
+  384-dim, MIT), replacing `memory_store.similarity_scores`'s mock
+  0.7/0.3-plus-noise heuristic with real cosine similarity
+  (`embedding_retrieval.py`). One real nuance, not glossed over: main
+  logging episodes use the REAL per-episode goal text (free, since
+  `env.reset()` already produced it); ground-truth candidacy PROBING
+  (`ground_truth_runner._is_natural_candidate`) deliberately keeps using a
+  cheap per-task-type proxy description instead, because that probe must
+  stay free of env construction (most probed seeds are rejected before a
+  natural candidate is found) — see `embedding_retrieval.py`'s module
+  docstring for the full reasoning.
+- **Memory store redesign** (`kaggle_memory_store.py`): 21 hand-written
+  memories across ALL 6 ALFWorld task types (vs. the paid engineered
+  store's 2), in FOUR categories — correct, harmful, **partial** (a new
+  category: correct about part of the task but incomplete, e.g. names the
+  right appliance but omits the required action — deliberately absent from
+  the paid run's stark correct/harmful/neutral split), and irrelevant.
+  Lengths vary naturally (each memory says what it needs to, not padded to
+  a template) — directly targets the paid run's own §5 finding that its
+  natural 30-memory store had almost no real between-memory variation.
+- **Comparability with the paid run**: `env.max_steps=50`,
+  `env.real_split=train`, `retrieval.M=10`,
+  `retrieval.propensity_min/max=[0.3,0.7]`, and all four estimators
+  (`memory_worth`/`ips`/`snips`/`doubly_robust` from `src/memory_ope/`) kept
+  identical — see `kaggle_config.yaml`, deliberately separate from
+  `config.yaml` so the paid run's exact historical settings stay untouched
+  and citable as-is.
+
+### What's new vs. what's reused unchanged
+
+New: `local_model_client.py` (`LocalTransformersClient`, implements the same
+`LLMClient` protocol as `OpenRouterClient` — cache-check, cost-tracker
+pre-check, real call, record, cache-put, identical structure), `embedding_retrieval.py`,
+`kaggle_memory_store.py`, `kaggle_session.py` (cross-Kaggle-session
+checkpoint copy-in/run/copy-out via a versioned Kaggle Dataset — needed
+because `/kaggle/working` is wiped between interactive sessions unless
+explicitly saved, unlike this project's WSL2 environment's persistent home
+directory; the Kaggle-API parts of this file are untestable outside an
+actual Kaggle session), `kaggle_smoke_test.py` (the local, pre-Kaggle
+verification script — see below), and a throwaway `notebooks/
+phase0_environment_probe.ipynb`.
+
+Reused completely unchanged: `cache.py`, `cost_tracker.py` (already
+persists to `state_path` with an atomic write, survives a restart —
+constructed with zero pricing for a local model, so its hard-cap check
+becomes a harmless no-op rather than being removed), `determinism_check.py`
+(generic against the `LLMClient` protocol — this is the check that was
+**never run** against the paid model; running it against the local model is
+one of this replication's two explicit fixes), `env_factory.py`,
+`env_interface.py`, `retrieval_shared.py`, `react_agent.py`, everything
+under `src/memory_ope/`. `episode_runner.py`, `ground_truth_runner.py`, and
+`checkpointed_runner.py` each got one small, backward-compatible addition
+(an optional `similarity_fn`/`candidacy_similarity_fn` parameter, default
+`None` = original mock behavior, unchanged for every existing caller/test);
+`run_chunked.py` got `--llm local`, `--memory-store kaggle`, `--config`,
+`--cache-dir`, and `--time-budget-seconds` (the last one because Kaggle's
+12-hour session cap is a real wall-clock deadline the supervisor loop
+previously had no concept of). **All 25 existing tests in
+`alfworld_pilot/tests/` still pass unchanged after every one of these
+edits.**
+
+### Local smoke test (`kaggle_smoke_test.py`) — before ever touching Kaggle
+
+Run from a dedicated `alfworld_pilot/.venv-kaggle` venv (kept separate from
+the main project `.venv` specifically so heavy GPU deps — `torch`,
+`transformers`, `bitsandbytes`, `sentence-transformers` — never risk
+disturbing the paid run's already-verified, already-cited-in-`paper_data.md`
+exact package versions):
+
+```bash
+cd alfworld_pilot
+.venv-kaggle/bin/python -m alfworld_pilot.kaggle_smoke_test            # embeddings only, no GPU, seconds
+.venv-kaggle/bin/python -m alfworld_pilot.kaggle_smoke_test --full     # + real ALFWorld + real local model + determinism check, needs a GPU
+```
+
+Status as of this writing: dependency install (`torch`, `sentence-transformers`)
+is in progress in `.venv-kaggle` — pip's default resolver thrashed for 25+
+minutes trying to backtrack through dozens of candidate `torch` versions
+before being killed and restarted with an explicit pinned
+`torch==2.5.1 --index-url https://download.pytorch.org/whl/cu124`, which
+resolves directly without the expensive search. **`--full` has not
+completed yet** (this machine's RTX 4060 has only 8GB VRAM, tight for a 7B
+model even at 4-bit with a growing ReAct KV cache — it may need a smaller
+model for a purely-local wiring check, with `Qwen/Qwen2.5-7B-Instruct`
+itself reserved for actual Kaggle hardware's 16GB T4/P100). Update this
+section once the smoke test actually runs.
+
+### Kaggle-specific open questions, not yet resolved
+
+1. Whether internet-ON is actually available for the target Kaggle
+   account/notebook (assumed yes — Kaggle's internet-off restriction is
+   specifically for competition scoring; an ordinary private notebook can
+   enable it). If not, the fallback is pre-packaging `~/.cache/alfworld`
+   (post-`alfworld-download`) and both model snapshots as an offline Kaggle
+   Dataset once, then attaching it as input every session.
+2. Whether `gcc`/a C toolchain is present by default in Kaggle's notebook
+   image, and what Python version it ships — unverified; `notebooks/
+   phase0_environment_probe.ipynb`'s first cells check exactly this before
+   anything else is attempted.
+3. Whether the `kaggle` CLI is pre-authenticated inside a Kaggle-hosted
+   notebook (needed for `kaggle_session.py`'s cross-session dataset
+   versioning) — documented Kaggle behavior, not independently verified
+   here.
+4. The exact `BAAI/bge-small-en-v1.5` revision hash is NOT pinned yet
+   (`kaggle_config.yaml`'s `embedding.revision: null`) — HuggingFace's page
+   didn't expose it to a simple fetch during planning; `SentenceEmbedder`
+   warns loudly if constructed with `revision=None`, and Phase 0 must
+   record and set the exact hash it actually downloads before any real run.

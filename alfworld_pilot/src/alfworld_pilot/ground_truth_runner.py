@@ -26,12 +26,18 @@ doesn't need an if/else per backend.
 from __future__ import annotations
 
 import random
-from typing import Protocol
+from typing import Callable, Protocol
 
 from .env_interface import MockAlfredEnv, RealAlfredEnv, list_real_game_files
-from .episode_runner import run_logged_episode
+from .episode_runner import SimilarityFn, run_logged_episode
 from .memory_store import Memory, similarity_scores
 from .retrieval_shared import retrieve
+
+# (memories, task_type) -> {mem_id: similarity}, for CHEAP candidacy probing
+# (no env construction) -- see embedding_retrieval.make_candidacy_similarity_fn
+# for the real-embedding version used by the Kaggle replication. Omit to get
+# the original, unchanged mock behavior.
+CandidacySimilarityFn = Callable[[list[Memory], str], dict[str, float]]
 
 
 class TaskSource(Protocol):
@@ -98,14 +104,26 @@ def _pair_seed_material(memory_id: str, pair_index: int, task_seed: int) -> int:
 
 
 def _is_natural_candidate(
-    task_source: TaskSource, memories: list[Memory], memory_id: str, task_seed: int, pair_index: int, m: int, p_min: float, p_max: float
+    task_source: TaskSource,
+    memories: list[Memory],
+    memory_id: str,
+    task_seed: int,
+    pair_index: int,
+    m: int,
+    p_min: float,
+    p_max: float,
+    candidacy_similarity_fn: CandidacySimilarityFn | None = None,
 ) -> bool:
     """Probe-only: uses the SAME seed the real run will use for this
     (memory_id, pair_index, task_seed), so it actually predicts real
-    candidacy rather than checking an unrelated random draw."""
+    candidacy rather than checking an unrelated random draw.
+
+    candidacy_similarity_fn, if given, replaces the mock similarity with a
+    real (but still cheap -- task_type only, no env) one; see module-level
+    CandidacySimilarityFn and embedding_retrieval.make_candidacy_similarity_fn."""
     task_type = task_source.task_type(task_seed)
     probe_rng = random.Random(_pair_seed_material(memory_id, pair_index, task_seed))
-    sims = similarity_scores(memories, task_type, probe_rng)
+    sims = candidacy_similarity_fn(memories, task_type) if candidacy_similarity_fn is not None else similarity_scores(memories, task_type, probe_rng)
     candidate_ids, _propensities, _included = retrieve(sims, m, p_min, p_max, probe_rng)
     return memory_id in candidate_ids
 
@@ -121,7 +139,13 @@ def run_ground_truth_pair(
     task_seed: int,
     pair_index: int,
     memory_id: str,
+    similarity_fn: SimilarityFn | None = None,
 ) -> tuple[dict, dict]:
+    """similarity_fn, if given, is passed straight through to both arms'
+    run_logged_episode calls -- these are real episodes with a real env
+    already built, so (unlike candidacy probing) the real per-episode goal
+    text is free here and there's no reason to use the cheaper task-type
+    proxy (see embedding_retrieval.make_similarity_fn)."""
     seed_material = _pair_seed_material(memory_id, pair_index, task_seed)
     rng_in = random.Random(seed_material)
     rng_out = random.Random(seed_material)  # identical seed -> identical "everything else" draws in both arms
@@ -139,7 +163,7 @@ def run_ground_truth_pair(
     try:
         ep_in = run_logged_episode(
             env_in, llm_client, memories, m, propensity_min, propensity_max, max_steps,
-            task_id=task_seed, rng=rng_in, forced_inclusion={memory_id: 1},
+            task_id=task_seed, rng=rng_in, forced_inclusion={memory_id: 1}, similarity_fn=similarity_fn,
         )
     finally:
         env_in.close()
@@ -148,7 +172,7 @@ def run_ground_truth_pair(
     try:
         ep_out = run_logged_episode(
             env_out, llm_client, memories, m, propensity_min, propensity_max, max_steps,
-            task_id=task_seed, rng=rng_out, forced_inclusion={memory_id: 0},
+            task_id=task_seed, rng=rng_out, forced_inclusion={memory_id: 0}, similarity_fn=similarity_fn,
         )
     finally:
         env_out.close()
@@ -172,15 +196,19 @@ def run_ground_truth_experiment(
     n_pairs: int,
     start_seed: int = 0,
     max_probe_tries: int = 10_000,
+    similarity_fn: SimilarityFn | None = None,
+    candidacy_similarity_fn: CandidacySimilarityFn | None = None,
 ) -> list[tuple[dict, dict]]:
     pairs = []
     seed = start_seed
     tries = 0
     while len(pairs) < n_pairs and tries < max_probe_tries:
-        if _is_natural_candidate(task_source, memories, memory_id, seed, len(pairs), m, propensity_min, propensity_max):
+        if _is_natural_candidate(
+            task_source, memories, memory_id, seed, len(pairs), m, propensity_min, propensity_max, candidacy_similarity_fn
+        ):
             ep_in, ep_out = run_ground_truth_pair(
                 task_source, llm_client, memories, m, propensity_min, propensity_max, max_steps,
-                task_seed=seed, pair_index=len(pairs), memory_id=memory_id,
+                task_seed=seed, pair_index=len(pairs), memory_id=memory_id, similarity_fn=similarity_fn,
             )
             pairs.append((ep_in, ep_out))
         seed += 1

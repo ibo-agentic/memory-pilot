@@ -1,0 +1,73 @@
+# Kaggle replication config -- kept SEPARATE from config.yaml (the paid run's
+# frozen, historical settings) so nothing here can ever accidentally change
+# what alfworld_pilot/config.yaml means for citing the paid run's exact setup.
+# See the approved plan (C:\Users\Ibo\.claude\plans\logical-meandering-feather.md)
+# for the full rationale behind every choice below.
+
+env:
+  backend: real
+  max_steps: 50                              # same as the paid run, after its own 30->50 fix
+  real_alfworld_config_path: configs/base_config.yaml   # same file the paid run used
+  real_split: train                          # same split as the paid run
+
+retrieval:
+  M: 10                                      # unchanged from the paid run
+  propensity_min: 0.3                        # unchanged from the paid run
+  propensity_max: 0.7                        # unchanged from the paid run
+
+# The memory store itself is now a fixed, hand-written list
+# (kaggle_memory_store.build_kaggle_store()), not a generated n_memories/
+# lesson_min_tokens/lesson_max_tokens template store -- no store-construction
+# parameters live here by design; see kaggle_memory_store.py.
+
+llm:
+  backend: local_transformers                # vs. openrouter for the paid run
+  model_id: Qwen/Qwen2.5-7B-Instruct
+  # Confirmed exact commit hash of the 'main' branch at plan time (2026-09-26) --
+  # RE-VERIFY before a real run in case the repo has moved on, and always pass
+  # this exact string, never "main"/"latest" (LocalTransformersClient enforces this).
+  revision: a09a35458c702b33eeacc393d103063234e8bc28
+  temperature: 0.0                           # matches the paid run's determinism intent
+  max_output_tokens: 100                     # matches the paid run (a ReAct Thought+Action is short)
+  quantize_4bit: true                        # nf4 via bitsandbytes; see plan for VRAM rationale
+  device: cuda
+
+embedding:
+  model_name: BAAI/bge-small-en-v1.5
+  # NOT pinned yet -- HuggingFace's page didn't expose the exact commit hash to
+  # a simple fetch during planning. Phase 0 MUST record the exact revision it
+  # actually downloads and set it here before any real run (see
+  # embedding_retrieval.SentenceEmbedder's docstring -- it warns loudly if
+  # constructed with revision=None).
+  revision: null
+  device: cpu                                # trivial compute cost; keeps GPU free for the LLM
+
+cost_control:
+  # Real dollar cost is always exactly $0 for a local model -- this field is
+  # vestigial (CostTracker is still constructed and called normally, for
+  # consistent token/call accounting and interface symmetry with the paid
+  # run's OpenRouterClient path), never expected to trip.
+  hard_cap_usd: 999999.0
+
+cache:
+  dir: cache_kaggle                          # separate from the paid run's cache/ dir
+
+paths:
+  logs_dir: logs_kaggle                      # separate from the paid run's logs/
+  results_dir: results_kaggle                # separate from the paid run's results/
+
+# --- Everything below is PROVISIONAL, per the approved plan's Phase 2
+# ("Recalibrate the plan" using Phase 1's real measured throughput) -- these
+# are starting estimates, not commitments, and this file should be updated
+# once real numbers exist, the same way alfworld_pilot/config.yaml's
+# episode_plan was rescaled after the paid run's own measure_mode results.
+
+episode_plan:
+  main_randomized_logging: 500               # PROVISIONAL -- reset by Phase 2
+
+ground_truth:
+  n_memories: 6                              # PROVISIONAL -- a stratified + disagreement-oversampled
+                                              # subset of the 21-memory store, per the paid run's
+                                              # selection methodology (paper_data.md \u00a74.5); exact
+                                              # count and which memories reset by Phase 2/Phase 4.
+  pairs_per_memory: 30                       # PROVISIONAL -- reset by Phase 2 against real GPU-hour cost/episode
