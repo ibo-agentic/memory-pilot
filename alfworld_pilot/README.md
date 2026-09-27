@@ -1,5 +1,70 @@
 # Stage 2 — ALFWorld pilot
 
+## Prompt-length confound check (2026-09-27): the 0.65 correlation is episode length, not memory content — PASS
+
+The zero-shot+memories row above shows `corr(avg_prompt_tokens, parse_failures) = 0.647`
+for `pick_and_place_simple`. Before trusting that as "the prompt is too long," checked
+whether it's actually driven by memory *content* (which would confound the treatment
+this pilot measures) or just by episode length in general (longer episodes accumulate
+more growing ReAct history regardless of memories, and looping/near-step-cap episodes
+naturally rack up more parse failures too). New script: `prompt_length_check.py`.
+
+**Data and log format, read before analyzing**: `results_kaggle/capability_check_pick_and_place_simple_zeroshot_withmem.json`
+(20 episodes). Each saved episode has `task_id, task_type, success, steps_taken,
+hit_step_cap, parse_failures, n_included, avg_input_tokens, fallback_classes,
+failure_mode, actions` — notably **not** saved: per-step input tokens (only the
+episode-level mean), which specific memory ids were included (only the count), or
+which steps were parse failures. The other zero-shot+memories file
+(`capability_check_all_types_zeroshot_withmem.json`) duplicates this same run's
+task_id 0-9 under other task types, so mixing it in would confound memory presence
+with task type — this check uses only the dedicated 20-episode file.
+
+Rather than approximate the missing fields, the script **exactly reconstructs** them
+by deterministic replay, with zero new LLM calls, zero GPU, and zero change to the
+prompt or sampling: retrieval is a pure function of `(memories, real per-episode goal
+text, a task_id-seeded RNG)`, so replaying it recovers which memories were actually
+included; real ALFWorld's `env.step()` is deterministic given the same game and
+action, so replaying the saved action sequence recovers every observation/admissible-
+action list the model actually saw; and the disk-persisted LLM cache (`cache_kaggle/`,
+still intact from the real run) then gives the *actual recorded* response text and
+input-token count for each reconstructed request — no re-tokenization or model load
+needed for that part. All 20 episodes replayed with exact validation: reconstructed
+`n_included`, the full per-step action sequence, and the total `parse_failures` count
+all matched the saved log exactly for every episode.
+
+**Pass rule (decided before looking at results)**: PASS if the step-1-only prompt
+length has `|Spearman r| < 0.15` against episode parse-failure rate, AND the
+`memory_tokens` coefficient in a step-level logistic regression (`parse_fail ~
+memory_tokens + step_index + history_tokens`, one row per step) has a 95% CI that
+includes zero.
+
+| check | result |
+|---|---|
+| 1. step-1 prompt tokens vs. episode parse-failure rate | Spearman r = **-0.015** (p=0.95), n=20 |
+| 2. step-level logistic regression (n=456 steps, 136 parse failures, converged) | `memory_tokens`: coef=-0.00012, CI=[-0.0027, 0.0024], p=0.93 (**includes zero**) — `history_tokens`: coef=+0.0018, CI=[0.0009, 0.0027], p<0.001 (**does not include zero**) — `step_index`: coef=-0.012, CI=[-0.039, 0.016], p=0.41 |
+| 3. episode length vs. parse-failure rate | Spearman r(steps_taken, pf_rate) = **0.473** (p=0.035); mean pf_rate successful (n=14) = 0.165, failed (n=6) = 0.267 |
+| 4. per-memory pf_rate with vs. without | 3 of 21 memories flagged (with-rate > 1.5x without-rate): `irrelevant_3` (0.347 vs 0.145, n=5), `two_correct` (0.313 vs 0.156, n=5), `clean_harmful` (0.261 vs 0.174, n=5) — all at n=5, and 7 memories never appeared in any of the 20 episodes at all (n_with=0) |
+
+**Verdict: PASS.** Step-1 prompt length has essentially zero correlation with
+parse-failure rate (r=-0.015), and the regression's `memory_tokens` coefficient is
+indistinguishable from zero. What *is* a significant predictor is `history_tokens` —
+the growing action/observation log accumulated over a long episode — consistent with
+check 3's finding that longer episodes (more steps, mostly the looping/near-step-cap
+ones) have higher parse-failure rates, and failed episodes have a higher mean
+parse-failure rate than successful ones. **The 0.647 correlation is an episode-length
+artifact (loopy episodes are both long and error-prone), not a memory-content
+confound.** The check 4 flags are noted per the pre-registered instruction to treat
+n=5 as a flag, not a result — they aren't load-bearing for the verdict, and the
+memory-level counts (13/21 memories have `n_with` below 8, 7 have `n_with=0`) are too
+sparse on their own to distinguish a real per-memory effect from noise; they're worth
+re-checking once a larger run gives better per-memory coverage, not conclusive now.
+
+**Practical implication**: the zero-shot+memories parse-failure/prompt-length
+correlation does not invalidate using this configuration to measure memory effects —
+it reflects agent looping behavior on hard episodes, not the memory-inclusion
+treatment itself. No change to the prompt, sampling design, or the zero-shot decision
+above as a result of this check. Full numbers: `results_kaggle/prompt_length_check.json`.
+
 ## Status (2026-09-27, later): pre-Kaggle capability check — Qwen2.5-7B-Instruct CAN do ALFWorld, but needs weighted task sampling AND zero-shot (not few-shot) prompting
 
 Before spending any Kaggle session on Phase 0, checked the thing that would

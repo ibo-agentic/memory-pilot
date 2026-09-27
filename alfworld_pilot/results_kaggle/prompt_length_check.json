@@ -1,0 +1,296 @@
+{
+  "check1_step1_prompt_length": {
+    "n_episodes": 20,
+    "step1_prompt_tokens": [
+      584,
+      667,
+      491,
+      639,
+      692,
+      443,
+      484,
+      631,
+      538,
+      548,
+      553,
+      572,
+      574,
+      673,
+      732,
+      466,
+      722,
+      468,
+      766,
+      847
+    ],
+    "parse_failure_rates": [
+      0.16666666666666666,
+      0.1,
+      0.0,
+      0.64,
+      0.04,
+      0.08,
+      0.68,
+      0.2571428571428571,
+      0.0,
+      0.2,
+      0.3333333333333333,
+      0.0,
+      0.8260869565217391,
+      0.16666666666666666,
+      0.06,
+      0.0,
+      0.0,
+      0.15789473684210525,
+      0.0,
+      0.2
+    ],
+    "spearman_r": -0.014488669905454133,
+    "spearman_p": 0.9516570686774583
+  },
+  "check2_step_level_regression": {
+    "n_rows": 456,
+    "n_parse_failures": 136,
+    "n_episodes": 20,
+    "converged": true,
+    "separation_warning": false,
+    "large_std_errors_flag": false,
+    "coefficients": {
+      "const": {
+        "coef": -1.902931008806538,
+        "std_err": 0.39689205532138444,
+        "p_value": 1.63015390767606e-06,
+        "ci_low": -2.68082514298653,
+        "ci_high": -1.125036874626546
+      },
+      "memory_tokens": {
+        "coef": -0.00012005754565842715,
+        "std_err": 0.001290316242805972,
+        "p_value": 0.9258677678085887,
+        "ci_low": -0.002649030910225172,
+        "ci_high": 0.0024089158189083176
+      },
+      "step_index": {
+        "coef": -0.011599687623159187,
+        "std_err": 0.014007273319870318,
+        "p_value": 0.40760317299442617,
+        "ci_low": -0.039053438851713806,
+        "ci_high": 0.015854063605395437
+      },
+      "history_tokens": {
+        "coef": 0.0018307222473952082,
+        "std_err": 0.0004555472783803099,
+        "p_value": 5.851227490811143e-05,
+        "ci_low": 0.0009378659885145588,
+        "ci_high": 0.0027235785062758575
+      }
+    },
+    "unstable_fit": false
+  },
+  "check3_episode_length": {
+    "spearman_r_steps_vs_pf_rate": 0.4731609207080682,
+    "spearman_p_steps_vs_pf_rate": 0.035109398356244555,
+    "n_successful": 14,
+    "n_failed": 6,
+    "mean_pf_rate_successful": 0.16484222979809773,
+    "mean_pf_rate_failed": 0.26666666666666666
+  },
+  "check4_per_memory": {
+    "pas_correct": {
+      "task_type": "pick_and_place_simple",
+      "category": "correct",
+      "token_length": 78,
+      "n_episodes_with": 14,
+      "n_episodes_without": 6,
+      "mean_pf_rate_with": 0.18074829931972788,
+      "mean_pf_rate_without": 0.22955250444952965
+    },
+    "pas_harmful": {
+      "task_type": "pick_and_place_simple",
+      "category": "harmful",
+      "token_length": 63,
+      "n_episodes_with": 0,
+      "n_episodes_without": 20,
+      "mean_pf_rate_with": null,
+      "mean_pf_rate_without": 0.1953895608586684
+    },
+    "pas_partial": {
+      "task_type": "pick_and_place_simple",
+      "category": "partial",
+      "token_length": 54,
+      "n_episodes_with": 15,
+      "n_episodes_without": 5,
+      "mean_pf_rate_with": 0.18292063492063493,
+      "mean_pf_rate_without": 0.2327963386727689
+    },
+    "light_correct": {
+      "task_type": "look_at_obj_in_light",
+      "category": "correct",
+      "token_length": 75,
+      "n_episodes_with": 11,
+      "n_episodes_without": 9,
+      "mean_pf_rate_with": 0.1757048748353096,
+      "mean_pf_rate_without": 0.21944862155388473
+    },
+    "light_harmful": {
+      "task_type": "look_at_obj_in_light",
+      "category": "harmful",
+      "token_length": 53,
+      "n_episodes_with": 2,
+      "n_episodes_without": 18,
+      "mean_pf_rate_with": 0.18333333333333335,
+      "mean_pf_rate_without": 0.19672914169481676
+    },
+    "light_partial": {
+      "task_type": "look_at_obj_in_light",
+      "category": "partial",
+      "token_length": 32,
+      "n_episodes_with": 10,
+      "n_episodes_without": 10,
+      "mean_pf_rate_with": 0.17173150266971776,
+      "mean_pf_rate_without": 0.21904761904761902
+    },
+    "clean_correct": {
+      "task_type": "pick_clean_then_place_in_recep",
+      "category": "correct",
+      "token_length": 68,
+      "n_episodes_with": 7,
+      "n_episodes_without": 13,
+      "mean_pf_rate_with": 0.1935767991407089,
+      "mean_pf_rate_without": 0.19636566332218505
+    },
+    "clean_harmful": {
+      "task_type": "pick_clean_then_place_in_recep",
+      "category": "harmful",
+      "token_length": 48,
+      "n_episodes_with": 5,
+      "n_episodes_without": 15,
+      "mean_pf_rate_with": 0.26076190476190475,
+      "mean_pf_rate_without": 0.17359877955758965
+    },
+    "clean_partial": {
+      "task_type": "pick_clean_then_place_in_recep",
+      "category": "partial",
+      "token_length": 28,
+      "n_episodes_with": 7,
+      "n_episodes_without": 13,
+      "mean_pf_rate_with": 0.1678625134264232,
+      "mean_pf_rate_without": 0.21021181716833892
+    },
+    "heat_correct": {
+      "task_type": "pick_heat_then_place_in_recep",
+      "category": "correct",
+      "token_length": 57,
+      "n_episodes_with": 1,
+      "n_episodes_without": 19,
+      "mean_pf_rate_with": 0.06,
+      "mean_pf_rate_without": 0.202515327219651
+    },
+    "heat_harmful": {
+      "task_type": "pick_heat_then_place_in_recep",
+      "category": "harmful",
+      "token_length": 37,
+      "n_episodes_with": 0,
+      "n_episodes_without": 20,
+      "mean_pf_rate_with": null,
+      "mean_pf_rate_without": 0.1953895608586684
+    },
+    "heat_partial": {
+      "task_type": "pick_heat_then_place_in_recep",
+      "category": "partial",
+      "token_length": 25,
+      "n_episodes_with": 0,
+      "n_episodes_without": 20,
+      "mean_pf_rate_with": null,
+      "mean_pf_rate_without": 0.1953895608586684
+    },
+    "cool_correct": {
+      "task_type": "pick_cool_then_place_in_recep",
+      "category": "correct",
+      "token_length": 48,
+      "n_episodes_with": 5,
+      "n_episodes_without": 15,
+      "mean_pf_rate_with": 0.13866666666666666,
+      "mean_pf_rate_without": 0.21429719225600233
+    },
+    "cool_harmful": {
+      "task_type": "pick_cool_then_place_in_recep",
+      "category": "harmful",
+      "token_length": 33,
+      "n_episodes_with": 0,
+      "n_episodes_without": 20,
+      "mean_pf_rate_with": null,
+      "mean_pf_rate_without": 0.1953895608586684
+    },
+    "cool_partial": {
+      "task_type": "pick_cool_then_place_in_recep",
+      "category": "partial",
+      "token_length": 29,
+      "n_episodes_with": 0,
+      "n_episodes_without": 20,
+      "mean_pf_rate_with": null,
+      "mean_pf_rate_without": 0.1953895608586684
+    },
+    "two_correct": {
+      "task_type": "pick_two_obj_and_place",
+      "category": "correct",
+      "token_length": 53,
+      "n_episodes_with": 5,
+      "n_episodes_without": 15,
+      "mean_pf_rate_with": 0.3132173913043478,
+      "mean_pf_rate_without": 0.1561136173767753
+    },
+    "two_harmful": {
+      "task_type": "pick_two_obj_and_place",
+      "category": "harmful",
+      "token_length": 36,
+      "n_episodes_with": 0,
+      "n_episodes_without": 20,
+      "mean_pf_rate_with": null,
+      "mean_pf_rate_without": 0.1953895608586684
+    },
+    "two_partial": {
+      "task_type": "pick_two_obj_and_place",
+      "category": "partial",
+      "token_length": 36,
+      "n_episodes_with": 13,
+      "n_episodes_without": 7,
+      "mean_pf_rate_with": 0.2170095808082078,
+      "mean_pf_rate_without": 0.15523809523809526
+    },
+    "irrelevant_1": {
+      "task_type": "pick_and_place_simple",
+      "category": "irrelevant",
+      "token_length": 32,
+      "n_episodes_with": 2,
+      "n_episodes_without": 18,
+      "mean_pf_rate_with": 0.10333333333333333,
+      "mean_pf_rate_without": 0.20561803058370565
+    },
+    "irrelevant_2": {
+      "task_type": "look_at_obj_in_light",
+      "category": "irrelevant",
+      "token_length": 35,
+      "n_episodes_with": 0,
+      "n_episodes_without": 20,
+      "mean_pf_rate_with": null,
+      "mean_pf_rate_without": 0.1953895608586684
+    },
+    "irrelevant_3": {
+      "task_type": "pick_two_obj_and_place",
+      "category": "irrelevant",
+      "token_length": 27,
+      "n_episodes_with": 5,
+      "n_episodes_without": 15,
+      "mean_pf_rate_with": 0.3465507246376812,
+      "mean_pf_rate_without": 0.1450025062656642
+    }
+  },
+  "replay_failures": [],
+  "verdict": "PASS",
+  "flagged_memories": [
+    "irrelevant_3",
+    "two_correct",
+    "clean_harmful"
+  ]
+}
