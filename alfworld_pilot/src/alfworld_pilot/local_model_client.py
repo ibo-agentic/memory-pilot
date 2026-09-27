@@ -124,6 +124,16 @@ class LocalTransformersClient:
         gen_kwargs = dict(max_new_tokens=self.max_output_tokens, do_sample=do_sample, pad_token_id=self.tokenizer.eos_token_id)
         if do_sample:
             gen_kwargs["temperature"] = self.temperature
+        else:
+            # Qwen2.5's shipped generation_config.json sets temperature/top_p/top_k
+            # for its own sample-based default -- harmless when do_sample=False
+            # (HF ignores them) but prints a warning per field every call unless
+            # explicitly cleared here. Confirmed harmless empirically (real
+            # determinism_check on this exact client held: two identical greedy
+            # calls returned identical text) -- this just silences the noise.
+            gen_kwargs["temperature"] = None
+            gen_kwargs["top_p"] = None
+            gen_kwargs["top_k"] = None
 
         with torch.no_grad():
             output_ids = self.model.generate(**inputs, **gen_kwargs)

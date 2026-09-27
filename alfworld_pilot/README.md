@@ -1,6 +1,6 @@
 # Stage 2 — ALFWorld pilot
 
-## Status (2026-09-27): Kaggle replication (zero-cost, real embeddings + local model) — infrastructure built, Phase 0 not yet run
+## Status (2026-09-27): Kaggle replication (zero-cost, real embeddings + local model) — infrastructure built AND locally verified end to end; real Kaggle hardware (Phase 0) not yet run
 
 New work, separate from (and not touching) the paid run's frozen results
 above: a plan (approved 2026-09-26,
@@ -10,12 +10,29 @@ zero additional dollar cost — real sentence-embedding retrieval instead of
 the mock topic-match heuristic, and a local open model
 (`Qwen/Qwen2.5-7B-Instruct`) instead of the one commercial model every real
 result so far has used. See "Kaggle replication" below for the full design
-and current status. **Nothing in this section has run on real Kaggle
-hardware yet** — Phase 0 (does ALFWorld even install there?) requires an
-actual Kaggle session, which hasn't happened. What HAS been done, entirely
-on this project's existing local machine (WSL2 Ubuntu, an RTX 4060 with
-8GB VRAM — much smaller than Kaggle's target T4/P100 16GB, so only good for
-wiring smoke tests, not the real scaled run):
+and current status. **Nothing has run on real Kaggle hardware yet** — Phase 0
+(does ALFWorld even install there?) requires an actual Kaggle session, which
+hasn't happened. But every piece of new code HAS now been run for real,
+successfully, end to end, on this project's existing local machine (WSL2
+Ubuntu, an RTX 4060 with 8GB VRAM — much smaller than Kaggle's target
+T4/P100 16GB, so this is a wiring verification, not a stand-in for the real
+scaled run): real ALFWorld, real `Qwen/Qwen2.5-7B-Instruct` (4-bit, loaded
+in 22s), real `bge-small-en-v1.5` embedding retrieval, and — for the first
+time in this project's history — a **passing** `determinism_check` against a
+real model (`holds=True`). See "Local smoke test" below for the full results.
+
+- All new code written and merged into `alfworld_pilot/src/alfworld_pilot/`
+  (`local_model_client.py`, `embedding_retrieval.py`, `kaggle_memory_store.py`,
+  `kaggle_session.py`, `kaggle_smoke_test.py`), plus small, backward-compatible
+  additions to `episode_runner.py`, `ground_truth_runner.py`,
+  `checkpointed_runner.py`, and `run_chunked.py` (an optional
+  `similarity_fn`/`candidacy_similarity_fn` injection point, `--llm local`,
+  `--memory-store kaggle`, `--config`, `--cache-dir`, `--time-budget-seconds`)
+  — every existing test still passes unchanged (`pytest alfworld_pilot/tests/`,
+  25/25), confirming the paid run's own code paths are untouched when these
+  new options aren't used.
+- A new `kaggle_config.yaml`, kept fully separate from `config.yaml` so the
+  paid run's exact historical settings stay untouched and citable as-is.
 
 - All new code written and merged into `alfworld_pilot/src/alfworld_pilot/`
   (`local_model_client.py`, `embedding_retrieval.py`, `kaggle_memory_store.py`,
@@ -1151,17 +1168,57 @@ cd alfworld_pilot
 .venv-kaggle/bin/python -m alfworld_pilot.kaggle_smoke_test --full     # + real ALFWorld + real local model + determinism check, needs a GPU
 ```
 
-Status as of this writing: dependency install (`torch`, `sentence-transformers`)
-is in progress in `.venv-kaggle` — pip's default resolver thrashed for 25+
-minutes trying to backtrack through dozens of candidate `torch` versions
-before being killed and restarted with an explicit pinned
-`torch==2.5.1 --index-url https://download.pytorch.org/whl/cu124`, which
-resolves directly without the expensive search. **`--full` has not
-completed yet** (this machine's RTX 4060 has only 8GB VRAM, tight for a 7B
-model even at 4-bit with a growing ReAct KV cache — it may need a smaller
-model for a purely-local wiring check, with `Qwen/Qwen2.5-7B-Instruct`
-itself reserved for actual Kaggle hardware's 16GB T4/P100). Update this
-section once the smoke test actually runs.
+**Status: both `kaggle_smoke_test.py` and `--full` have now run successfully
+end to end** on this local machine (WSL2, RTX 4060, 8GB VRAM) — the first
+real execution of every piece of this replication's new code, real ALFWorld
+included, at $0 real cost.
+
+Getting there involved two real, worth-recording snags, neither a code bug:
+
+- **pip's resolver thrashed for 25+ minutes** trying to backtrack through
+  dozens of candidate `torch` versions before being killed and restarted
+  with an explicit pinned `torch==2.5.1 --index-url
+  https://download.pytorch.org/whl/cu124`, which resolves directly.
+- **`Qwen/Qwen2.5-7B-Instruct`'s 15GB download repeatedly failed partway
+  through** with a `ConnectionError` from HuggingFace's newer "xet" CDN
+  backend (`us.aws.cdn.hf.co`) on this network — twice, at different
+  points (after 2/4 and again after 2/4 shards). Setting
+  `HF_HUB_DISABLE_XET=1` (falls back to plain HTTP) let it complete,
+  though even then it hit two more transient timeouts that `huggingface_hub`'s
+  own retry/resume logic recovered from automatically. Total download time
+  this session: ~1h42m. **If reproducing this on a different machine and
+  the download stalls, try `HF_HUB_DISABLE_XET=1` first** — this looks like
+  a network/CDN-side issue, not something specific to this machine.
+
+**Real results** (`kaggle_smoke_test.py --full`, `openai/gpt-5.6-luna`'s local
+replacement `Qwen/Qwen2.5-7B-Instruct`, 4-bit nf4 quantization — comfortably
+fit and loaded in 22s on an 8GB card, real headroom to spare for Kaggle's
+16GB T4/P100):
+
+- **Determinism check: PASSED** (`holds=True`, both calls returned
+  `'Hello'` exactly) — the check this whole replication exists partly to
+  finally run, since the paid run's own README lists it under "still not
+  done" for every real ground-truth phase it ever ran. This is the first
+  time in this project's history this check has been run against any real
+  model and held.
+- **3 real ALFWorld episodes ran end to end**: all hit the 50-step cap
+  without winning (`success=0` for all 3) — expected and unremarkable for a
+  first, completely untuned run (a 7B model with generic "lesson" memories,
+  no prompt iteration) — not evidence anything is broken. Real embedding
+  retrieval picked plausible, topically-relevant candidate sets each time
+  (e.g. episode 2, a `pick_two_obj_and_place` task, included `two_correct`
+  among its retrieved memories).
+- **Real token accounting, $0 cost**: 152 real local LLM calls, 200,887
+  input / 6,912 output tokens, `cost_tracker.summary()` confirms
+  `total_spend_usd: 0.0` throughout.
+
+This is real, local, first-ever verification that every piece of this
+replication's new code — `LocalTransformersClient`, `embedding_retrieval.py`,
+`kaggle_memory_store.py`, and `determinism_check.py` run against a genuinely
+different model — works correctly together against real ALFWorld. **Phase 0
+on actual Kaggle hardware is the next, still-unrun step** — this local run
+substitutes for it only as a wiring check (8GB VRAM vs. Kaggle's 16GB
+target; unknown whether Kaggle's own network hits the same CDN issue).
 
 ### Kaggle-specific open questions, not yet resolved
 
