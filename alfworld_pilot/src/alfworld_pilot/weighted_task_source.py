@@ -75,6 +75,26 @@ class WeightedRealTaskSource:
             raise RuntimeError("No game files found for any task type -- check config.yaml's dataset paths.")
         self._weight_list = [self.weights.get(tt, 1.0) for tt in self._types]
 
+        total_weight = sum(self._weight_list)
+        self._probabilities = {
+            tt: w / total_weight for tt, w in zip(self._types, self._weight_list)
+        }
+
+    def probability_for(self, task_type: str) -> float:
+        """The normalized sampling probability actually used for task_type
+        (weights are provided unnormalized -- e.g. DEFAULT_WEIGHTS_BY_MEAN_STEPS
+        are raw mean-step counts, not probabilities -- so callers that want to
+        log or report the real draw probability need this, not the raw weight)."""
+        return self._probabilities.get(task_type, 0.0)
+
+    def sampling_weight(self, task_id: int) -> float:
+        """The normalized sampling probability of the task type this task_id
+        draws (a pure function of task_id, like task_type() below) -- logged
+        per episode by run_logging_phase_checkpointed so a downstream analysis
+        can check the realized mix against the intended one without
+        re-deriving it from task_id."""
+        return self.probability_for(self._task_type_for(task_id))
+
     def _task_type_for(self, task_id: int) -> str:
         r = random.Random(_seed_for(task_id, "type"))
         return r.choices(self._types, weights=self._weight_list, k=1)[0]

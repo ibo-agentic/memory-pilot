@@ -37,6 +37,7 @@ def run_logged_episode(
     rng: random.Random,
     forced_inclusion: dict[str, int] | None = None,
     similarity_fn: SimilarityFn | None = None,
+    sampling_weight: float | None = None,
 ) -> dict:
     """forced_inclusion, if given, overrides the drawn `included` dict for
     the listed memory ids (used by the forced-in/forced-out ground-truth
@@ -48,7 +49,14 @@ def run_logged_episode(
     called with the real per-episode goal text `obs` -- free here since
     env.reset() has already produced it). Omit it to get the original,
     unchanged mock behavior (every existing test and the paid run's own
-    historical code path do exactly this)."""
+    historical code path do exactly this).
+
+    sampling_weight, if given, is the task source's normalized draw
+    probability for this episode's task_type (e.g.
+    weighted_task_source.WeightedRealTaskSource.sampling_weight(task_id)) --
+    logged alongside task_type so a downstream check can verify the realized
+    task-type mix matches the intended weights. Default None for every
+    caller using an unweighted task source (plain RealTaskSource/MockTaskSource)."""
     obs, info = env.reset(task_seed=task_id)
     task_type = info["task_type"]
 
@@ -70,6 +78,7 @@ def run_logged_episode(
     return {
         "task_id": task_id,
         "task_type": task_type,
+        "sampling_weight": sampling_weight,
         "candidate_ids": candidate_ids,
         "propensities": propensities,
         "included": included,

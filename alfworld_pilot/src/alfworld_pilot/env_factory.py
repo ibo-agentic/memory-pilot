@@ -46,7 +46,15 @@ def build_task_source(cfg: dict):
     """Returns a ground_truth_runner.TaskSource for config.yaml's
     env.backend, resolving the real ALFWorld config the same way
     build_env_factory does -- callers should never need to load
-    real_alfworld_config_path themselves."""
+    real_alfworld_config_path themselves.
+
+    If cfg["env"]["task_type_weights"] is set (a dict of task_type ->
+    weight), returns a weighted_task_source.WeightedRealTaskSource with
+    those weights instead of the plain, unweighted RealTaskSource -- used by
+    kaggle_config.yaml to favor easier task types (see its own comment for
+    the rationale) without touching config.yaml's paid-run behavior, which
+    has no such key and keeps getting the original unweighted RealTaskSource
+    exactly as before."""
     from .ground_truth_runner import MockTaskSource, RealTaskSource
 
     backend = cfg["env"]["backend"]
@@ -60,6 +68,11 @@ def build_task_source(cfg: dict):
             )
         real_cfg = load_real_alfworld_config(real_cfg_path)
         split = cfg["env"].get("real_split", "train")
+        task_type_weights = cfg["env"].get("task_type_weights")
+        if task_type_weights:
+            from .weighted_task_source import WeightedRealTaskSource
+
+            return WeightedRealTaskSource(real_cfg, split=split, task_type_weights=task_type_weights)
         return RealTaskSource(real_cfg, split=split)
     raise ValueError(f"Unknown env.backend: {backend!r} (expected 'mock' or 'real')")
 

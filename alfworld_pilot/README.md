@@ -1,5 +1,98 @@
 # Stage 2 — ALFWorld pilot
 
+## Task sampling weights (2026-09-28): weighted toward easy types, expected pooled success 45.6%
+
+The capability check found the natural (unweighted) task-type mix pools well below the
+40-70% target, since 4 of 6 task types individually sit at 0-30% success (n=10/type,
+zero-shot + memories, `capability_check_all_types_zeroshot_withmem.json`):
+
+| task type | success rate (n=10) |
+|---|---|
+| pick_and_place_simple | 0.50 |
+| look_at_obj_in_light | 0.60 |
+| pick_clean_then_place_in_recep | 0.20 |
+| pick_heat_then_place_in_recep | 0.20 |
+| pick_cool_then_place_in_recep | 0.30 |
+| pick_two_obj_and_place | 0.00 |
+
+New `kaggle_config.yaml` key `env.task_type_weights` sends 75% of episodes to the two
+easiest types and 25% to the other four, with `pick_two_obj_and_place` (0% success at
+n=10, also the hardest type by mean steps-to-solve) at the lowest weight of the six:
+
+| task type | weight |
+|---|---|
+| pick_and_place_simple | 0.40 |
+| look_at_obj_in_light | 0.35 |
+| pick_clean_then_place_in_recep | 0.07 |
+| pick_heat_then_place_in_recep | 0.07 |
+| pick_cool_then_place_in_recep | 0.06 |
+| pick_two_obj_and_place | 0.05 |
+
+**Expected pooled success rate under these weights: 45.6%** (`sum(weight_i * rate_i)`),
+comfortably inside the 40-70% target band. New `weighted_task_source.WeightedRealTaskSource`
+methods `probability_for(task_type)` / `sampling_weight(task_id)` expose the normalized
+draw probability; `episode_runner.run_logged_episode` now logs `sampling_weight` alongside
+the `task_type` it already logged, for every episode run through a weighted task source
+(`None` for the paid run's plain, unweighted `RealTaskSource` — `config.yaml` has no
+`task_type_weights` key, so its behavior is unchanged). `env_factory.build_task_source`
+picks `WeightedRealTaskSource` over the plain one only when `env.task_type_weights` is
+set, which only `kaggle_config.yaml` does.
+
+New script `task_sampling_check.py` verifies the mechanism against the real ALFWorld
+game-file listing (20,000 draws, no LLM calls): realized mix matched the intended
+weights to within 0.5 percentage points on every task type. A new test,
+`tests/test_weighted_task_source.py::test_sampled_mix_matches_weights_over_many_draws`,
+locks this in against regression (20,000 draws against a monkeypatched game-file list,
+asserting each type's realized frequency is within 0.02 of its intended weight, and that
+the two easy types combine to 70-80%).
+
+## Timing estimate (2026-09-28): no wall-clock data exists yet — script provided, not run
+
+**Checked first, as instructed: the logs don't have it.** Grepped
+`local_model_client.py`, `cache.py`, `cost_tracker.py`, and `capability_check.py` for
+any time/timestamp/duration/elapsed field — none exists anywhere in this pipeline, on
+any GPU. The `capability_check_*.json` files have no per-episode wall-clock field to
+read, so "average seconds per episode" cannot be computed from existing data; it has to
+be measured. File modification timestamps on `results_kaggle/*.json` were considered
+and rejected as a substitute: the gaps between them conflate real episode time with
+between-run idle/decision time and a documented mid-run CUDA crash-and-retry, and even a
+clean measurement from the local 8GB card wouldn't transfer to Kaggle's T4/P100 target
+GPU, which has different throughput.
+
+New script `timing_probe.py` (not run) measures real wall-clock seconds/episode for
+zero-shot + memories on `pick_and_place_simple`, separating one-time model-load time
+from per-episode time, and reports `episodes_per_30_gpu_hours` directly — intended to
+run once a real Kaggle GPU session is available.
+
+**What can be reported now without fabricating a throughput number**: the MDE (minimum
+detectable effect at 80% power, two-sided α=0.05) as a function of total episode budget,
+using this project's own `power_formula.py`, `n_memories=6` (`kaggle_config.yaml`'s
+provisional ground-truth subset size), `p=0.456` (the new pooled success rate above),
+and `rho=0.6355` — **borrowed from the paid run's measured GPT-5.6-Luna ground-truth
+correlation, explicitly not yet measured for Qwen** (Phase 4 hasn't run):
+
+| total episodes | pairs/memory | MDE (Δ, 80% power) |
+|---|---|---|
+| 1,000 | 83 | 0.131 |
+| 5,000 | 417 | 0.058 |
+| 10,000 | 833 | 0.041 |
+| 20,000 | 1,667 | 0.029 |
+| 30,000 | 2,500 | 0.024 |
+| 50,000 | 4,167 | 0.019 |
+| 85,463 (paid run's own budget) | 7,122 | 0.014 |
+
+To turn this into "1 week" / "2 weeks," once `timing_probe.py` reports real
+`seconds_per_episode`: `N_1week = 30*3600/seconds_per_episode`,
+`N_2weeks = 60*3600/seconds_per_episode`, then read (or interpolate) this same table at
+that `N`. Without that measurement, reporting a specific 1-week/2-week MDE number would
+be reverse-engineering a throughput figure that was never actually measured — exactly
+the kind of forced conclusion the pre-registered-predictions section above and the
+prompt-length check both explicitly avoid doing. Note also that `rho` itself is
+borrowed, not measured, for Qwen — per the pre-registered predictions above, a weaker
+model might plausibly show a *different* paired correlation than Luna's, which would
+shift every row of this table; that assumption should be revisited once Phase 4 (or even
+a handful of real paired episodes) gives a measured Qwen `rho`.
+
 ## Pre-registered predictions (2026-09-27), before any Phase 0 / Kaggle data exists
 
 Stated now, before any real Kaggle episode has been run, so later results can be

@@ -91,9 +91,10 @@ def run_logging_phase_checkpointed(
             env = task_source.build_env(task_id)
             try:
                 rng = random.Random(_seed_for_task(task_id))
+                sampling_weight = task_source.sampling_weight(task_id) if hasattr(task_source, "sampling_weight") else None
                 ep = run_logged_episode(
                     env, llm_client, memories, m, propensity_min, propensity_max, max_steps,
-                    task_id=task_id, rng=rng, similarity_fn=similarity_fn,
+                    task_id=task_id, rng=rng, similarity_fn=similarity_fn, sampling_weight=sampling_weight,
                 )
             finally:
                 env.close()
