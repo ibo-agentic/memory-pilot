@@ -1,5 +1,43 @@
 # Stage 2 — ALFWorld pilot
 
+## Pre-registered predictions (2026-09-27), before any Phase 0 / Kaggle data exists
+
+Stated now, before any real Kaggle episode has been run, so later results can be
+checked against a prediction made in advance rather than a story fitted after the
+fact.
+
+**Prediction**: Qwen2.5-7B-Instruct will show **larger** per-memory effects (larger
+|Δ| in success-probability terms) than `openai/gpt-5.6-luna` did on the paid run,
+where the largest gap actually found across the full 30-memory ground-truth study was
+**Δ≈0.03** (`results/paper_data.md` §5.2 — most other memories' gaps were smaller
+still and statistically indistinguishable from zero). Rationale: a weaker/smaller
+model has less capacity to notice and override a memory that's subtly wrong, or to
+recover the right behavior despite a memory that only helps partially — so both
+harmful and clearly-correct memories should move Qwen's success rate by more than
+they moved Luna's, which mostly shrugged off bad advice via its own reasoning.
+
+**What would count as support, stated in advance**: at least one memory with a clear
+a-priori category (correct or harmful, from `kaggle_memory_store.py`'s labeling) shows
+an estimated |Δ| noticeably larger than 0.03 (a reasonable bar: >0.05, i.e. comfortably
+outside where the paid run's own gaps clustered) with a confidence interval that
+excludes zero — not just a larger point estimate riding on a wide, zero-crossing CI.
+
+**What would count as against, stated in advance**: estimated per-memory gaps stay
+at or below the ~0.03 scale Luna showed, or come back with CIs crossing zero at a
+similar or higher rate than the paid run's own §5.2 findings — i.e., model capability
+differences don't materially change how sensitive success is to a single memory.
+
+**What would be inconclusive, not forced into either bucket**: if the achievable
+sample size (see the Kaggle GPU-hour budget in the Timing estimate section below)
+can't resolve effects anywhere near this scale — the paid run's own MDE analysis
+puts real per-memory resolution in the hundreds-to-thousands-of-episodes range per
+memory at this effect size (`paper_data.md` §5.3) — the honest outcome is "underpowered
+to tell," not a false confirmation or disconfirmation either way.
+
+**Recheck at larger n** (flagged in the [prompt-length confound check](#prompt-length-confound-check-2026-09-27-the-065-correlation-is-episode-length-not-memory-content--pass)
+below at n=5 each, not treated as a result there, but worth watching once real
+per-memory sample sizes grow): `irrelevant_3`, `two_correct`, `clean_harmful`.
+
 ## Prompt-length confound check (2026-09-27): the 0.65 correlation is episode length, not memory content — PASS
 
 The zero-shot+memories row above shows `corr(avg_prompt_tokens, parse_failures) = 0.647`
