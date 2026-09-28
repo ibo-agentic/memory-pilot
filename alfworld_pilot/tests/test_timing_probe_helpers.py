@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import pytest
 
-from alfworld_pilot.timing_probe import merge_worker_reports, split_episode_range, summarize
+from alfworld_pilot.timing_probe import check_no_cache_hits, merge_worker_reports, split_episode_range, summarize
 
 
 def test_split_episode_range_even():
@@ -83,6 +83,23 @@ def test_merge_worker_reports_speedup_reflects_parallel_wall_clock():
 def test_merge_worker_reports_rejects_empty():
     with pytest.raises(ValueError):
         merge_worker_reports([{"episode_timings": []}], parallel_wall_clock_seconds=1.0)
+
+
+def test_check_no_cache_hits_passes_when_clean():
+    timings = [{"task_id": 0, "n_cache_hits": 0}, {"task_id": 1, "n_cache_hits": 0}]
+    check_no_cache_hits(timings)  # should not raise
+
+
+def test_check_no_cache_hits_raises_on_any_cache_hit():
+    timings = [{"task_id": 0, "n_cache_hits": 0}, {"task_id": 1, "n_cache_hits": 3}]
+    with pytest.raises(RuntimeError, match="cache hit"):
+        check_no_cache_hits(timings)
+
+
+def test_check_no_cache_hits_missing_field_treated_as_zero():
+    # Older timing reports without n_cache_hits shouldn't spuriously raise.
+    timings = [{"task_id": 0}, {"task_id": 1}]
+    check_no_cache_hits(timings)  # should not raise
 
 
 def test_summarize_mean_and_median_diverge_on_a_skewed_episode():

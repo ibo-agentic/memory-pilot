@@ -1,5 +1,149 @@
 # Stage 2 — ALFWorld pilot
 
+## Kaggle timing results (2026-09-29) — real numbers, two bugs fixed, one open risk flagged
+
+### 1. Real throughput
+
+Mode B (2 workers, T4 x2, transformers backend, zero-shot + memories, `pick_and_place_simple`):
+**~136 s/episode per worker, 1.89x combined speedup, ~1,502 episodes per 30 GPU-hours.**
+(Mode A single-GPU and Mode C vLLM numbers aren't recorded here — vLLM was not tested,
+see below — Mode B is the throughput this project will actually plan around, since the
+real replication run is always multi-GPU on Kaggle's T4 x2.)
+
+Detectable effect (80% power, `power_formula.py`, `n_memories=6`, `p=0.456`, and — still
+**`rho=0.6355`, borrowed from the paid run's measured GPT-5.6-Luna correlation, not yet
+measured for Qwen** — same caveat as the Timing estimate section above, now with real
+throughput instead of an illustrative episode-budget table):
+
+| budget | total episodes | pairs/memory | MDE (Δ, 80% power) |
+|---|---|---|---|
+| 1 week (30 GPU-hr) | ~1,501 | 125 | 0.107 |
+| 2 weeks (60 GPU-hr) | ~3,002 | 250 | 0.075 |
+| 4 weeks (120 GPU-hr) | ~6,004 | 501 | 0.053 |
+
+vLLM: **not tested** — the notebook's compatibility probe requires a real pinned
+revision, and `llm_vllm.revision` was still the `null` placeholder, so `VLLMClient`
+correctly refused to construct rather than run against an unpinned model. Marked
+skipped, not failed — the AWQ-fits-comfortably reasoning in `vllm_client.py`'s
+docstring is unchanged and untested either way.
+
+### 2. Two real bugs found running this on Kaggle, both fixed
+
+- **Worker subprocess `PYTHONPATH`**: `timing_probe.py --workers 2` set
+  `CUDA_VISIBLE_DEVICES` on each subprocess's environment but inherited whatever
+  `PYTHONPATH` the parent had — and the parent was launched with `PYTHONPATH=src`
+  (relative to `alfworld_pilot/`, so only `alfworld_pilot`'s own `src/`, missing
+  repo-root `src/` where `memory_ope` lives). Every worker subprocess failed to
+  import `memory_ope.retrieval`. Fixed: `run_multi_worker` now builds each worker's
+  `PYTHONPATH` explicitly (`_worker_pythonpath()`, both source roots, absolute paths),
+  regardless of what the parent inherited. The notebook's four `PYTHONPATH=src` cells
+  (Mode A/B/C and the parity check) are fixed the same way (`PYTHONPATH=src:../src`).
+- **Cache hits silently faking timing**: rerunning with the same seeds replayed
+  cached `LLMCache` responses for some steps instead of doing a real generation,
+  making those episodes' wall-clock time meaningless — and nothing caught it; the
+  numbers just looked suspiciously fast. Fixed: every episode now records
+  `n_cache_hits` (from `StepRecord.cached`, already tracked per step but never
+  surfaced here before), and `check_no_cache_hits()` raises before any summary is
+  computed if even one call anywhere in the run was a cache hit — no silent partial
+  numbers, a hard refusal naming the affected episodes. Unit-tested
+  (`tests/test_timing_probe_helpers.py`).
+
+### 3. Step-cap check (existing logs only, no new runs)
+
+Pooled 70 zero-shot + memories capability-check episodes (6 task types x 10 from
+`capability_check_all_types_zeroshot_withmem.json`, plus 10 more
+`pick_and_place_simple` episodes — task_id 10-19 — from the dedicated file that
+aren't already in the all-types one). 27/70 (38.6%) succeeded.
+
+Steps-taken distribution among the 27 successes: min=3, p25=4, **median=7**, p75=18,
+p90=35, max=47.
+
+| threshold | successes needing more steps than this |
+|---|---|
+| >20 steps | 4 |
+| >25 steps | 4 |
+| >30 steps | 4 |
+| >40 steps | 3 |
+
+(No successful episode landed in (25, 30] — that's why caps 25 and 30 show identical
+success-rate impact below; it's a real gap in this data, not a bug.)
+
+**Seconds/step is approximate, stated plainly**: no dataset has both real Kaggle
+timing AND steps_taken for the *same* episodes (the capability check has no timing
+field; the Kaggle timing run used different task_ids with an unmeasured step-count
+distribution of their own). Derived `implied_seconds_per_step = 136s / 22.8 steps
+(capability check's own pick_and_place_simple mean, same condition) ≈ 5.96 s/step`,
+assuming per-step cost is roughly uniform across task instances — a bridged estimate,
+not a joint measurement.
+
+| cap | success rate | Δ success rate | lost successes | mean time saved/episode |
+|---|---|---|---|---|
+| 25 | 0.386 → 0.329 | −0.057 | 4 | 97.9 s |
+| 30 | 0.386 → 0.329 | −0.057 | 4 | 77.9 s |
+| 40 | 0.386 → 0.343 | −0.043 | 3 | 38.3 s |
+
+At this sample size, none of these caps look like a clear win: cap=40 gives the
+smallest success-rate loss but also the smallest time saved; cap=25/30 roughly
+double the time saved but at a larger, already-non-trivial success-rate cost (−0.057
+on a pooled base rate of 0.386 is proportionally large). **Recommendation: keep
+`max_steps=50` for now** — the time saved is modest relative to the successes it
+costs, and n=70 (4 lost successes) is too small to trust the exact trade-off point;
+revisit once a real run gives a much larger sample. Full numbers:
+`results_kaggle/kaggle_step_cap_check.json` (script: `kaggle_step_cap_check.py` —
+distinct from the existing, unrelated `step_cap_check.py`, a pre-Kaggle scripted-
+expert solvability sweep for the paid run's own config).
+
+### 4. OOM warnings on long episodes — explanation, no pipeline change
+
+Kaggle logs showed repeated PyTorch CUDA caching-allocator OOM messages on long
+episodes (60-86k *cumulative* input tokens across all of that episode's steps — this
+matches the same long, looping episodes already flagged in the prompt-length confound
+check and step-cap analysis above, e.g. a 46-50-step episode at ~1,700+ tokens/step
+compounds to exactly this range; no single request comes anywhere near 60k tokens).
+
+**Can this change model outputs or determinism?**
+- If PyTorch's caching allocator recovers internally (frees its own cached-but-unused
+  blocks and retries) — the normal case when the failure is fragmentation rather than
+  genuinely-full memory — this is pure memory bookkeeping and does not touch computed
+  values. Harmless to outputs.
+- If it does **not** recover, `model.generate()` raises, and nothing in this
+  pipeline currently catches it — the whole process crashes. This matches a real,
+  already-documented local crash earlier in this project (`CUBLAS_STATUS_EXECUTION_FAILED`
+  at episode 11/20 of the heaviest local condition, VRAM confirmed fully released
+  after, required restarting as a fresh process). This is **lost work, not corrupted
+  data** — `LLMCache.put()` only writes after a generation succeeds, so a crash mid-
+  generation can't leave a corrupted cache entry, and the in-progress episode's data
+  is simply never written rather than written wrong.
+- **The real determinism risk is narrower but genuine**: if memory pressure causes
+  PyTorch/cuDNN to select a *different* attention or matmul kernel/algorithm than it
+  would under low pressure (some backends are chosen heuristically based on available
+  memory), that's a different code path with different floating-point reduction
+  order — which can flip a near-tied greedy-decoding argmax, exactly the same
+  mechanism `local_model_client.py`'s own docstring already flags for ordinary GPU
+  non-determinism, except triggered by memory state specifically rather than being a
+  constant background risk. This would specifically threaten the longest, most
+  memory-pressured episodes — already the same tail that's noisiest in every other
+  check in this file — not the bulk of short, well-behaved episodes.
+
+**Suggested fixes (not applied)**, roughly in order of how directly they address the
+mechanism above:
+1. Lower `max_steps` (ties directly to the step-cap check above — cutting off long
+   episodes earlier removes them from the memory-pressure regime entirely, at the
+   success-rate cost quantified there).
+2. Set `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True` — the standard, well-
+   documented fix for allocator fragmentation causing OOM despite technically-enough
+   total free memory; likely the highest-value, lowest-risk single change.
+3. Periodic `torch.cuda.empty_cache()` in the episode loop (e.g. every N steps) to
+   reduce fragmentation buildup directly.
+4. Wrap `model.generate()` in a try/except for `torch.cuda.OutOfMemoryError` that
+   clears the cache and retries once, turning a fatal crash into a recoverable,
+   *logged* event — logging matters here specifically so a recovered-after-retry step
+   can be flagged and excluded from anything determinism-sensitive (e.g. a future
+   ground-truth ground pair), not silently treated as identical to a normal step.
+
+None of these are applied here, per instruction — this section is the explanation and
+recommendation only.
+
 ## Kaggle timing run, prepared (2026-09-29) — nothing run on Kaggle yet
 
 Extends the timing estimate above from "no data exists" to "a real probe is ready to

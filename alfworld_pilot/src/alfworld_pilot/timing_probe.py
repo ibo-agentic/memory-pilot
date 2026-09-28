@@ -122,6 +122,28 @@ def merge_worker_reports(reports: list[dict], parallel_wall_clock_seconds: float
     }
 
 
+def check_no_cache_hits(episode_timings: list[dict]) -> None:
+    """Raises if any episode's timing includes a cache hit. A real Kaggle
+    run hit this for real: rerunning with the same seeds (same task_id,
+    same retrieval draw, same prompts) replayed cached LLMCache responses
+    for some steps instead of doing a real generation, making those
+    episodes' wall-clock time far too fast to be a genuine throughput
+    measurement -- the bug wasn't caught until the numbers looked
+    suspiciously fast, so this is now checked unconditionally rather than
+    trusted to be noticed. Use a fresh --start-seed (task_ids this cache has
+    never seen) or clear the cache dir and rerun."""
+    affected = [e for e in episode_timings if e.get("n_cache_hits", 0) > 0]
+    if affected:
+        total_hits = sum(e["n_cache_hits"] for e in affected)
+        task_ids = [e["task_id"] for e in affected]
+        raise RuntimeError(
+            f"Refusing to report timing: {total_hits} LLM call(s) across {len(affected)} episode(s) "
+            f"(task_id in {task_ids}) were cache hits, not real generations -- their wall-clock time "
+            "is not a valid throughput measurement. Use a fresh --start-seed this cache has never seen, "
+            "or clear the cache dir, and rerun."
+        )
+
+
 def summarize(episode_timings: list[dict]) -> dict:
     seconds_list = [e["seconds"] for e in episode_timings]
     mean_seconds = statistics.mean(seconds_list)
@@ -188,6 +210,7 @@ def run_single_process(args: argparse.Namespace) -> dict:
         steps_taken = len(result.steps)
         total_input_tokens = sum(s.input_tokens for s in result.steps)
         total_output_tokens = sum(s.output_tokens for s in result.steps)
+        n_cache_hits = sum(1 for s in result.steps if s.cached)
         episode_timings.append(
             {
                 "task_id": task_id,
@@ -196,13 +219,16 @@ def run_single_process(args: argparse.Namespace) -> dict:
                 "input_tokens": total_input_tokens,
                 "output_tokens": total_output_tokens,
                 "seconds_per_step": elapsed / steps_taken if steps_taken else None,
+                "n_cache_hits": n_cache_hits,
             }
         )
+        cache_note = f", {n_cache_hits} CACHE HITS (timing will be refused)" if n_cache_hits else ""
         print(
             f"[worker {args.worker_id}] episode {i + 1}/{args.n_episodes}: {elapsed:.1f}s, {steps_taken} steps, "
-            f"{total_input_tokens} input tok, {total_output_tokens} output tok, {elapsed / max(steps_taken, 1):.2f}s/step"
+            f"{total_input_tokens} input tok, {total_output_tokens} output tok, {elapsed / max(steps_taken, 1):.2f}s/step{cache_note}"
         )
 
+    check_no_cache_hits(episode_timings)
     summary = summarize(episode_timings)
     print(
         f"[worker {args.worker_id}] mean={summary['mean_seconds_per_episode']:.1f}s, "
@@ -219,6 +245,19 @@ def run_single_process(args: argparse.Namespace) -> dict:
     }
 
 
+def _worker_pythonpath() -> str:
+    """Both source roots a worker subprocess needs: alfworld_pilot's own
+    src/ (for `import alfworld_pilot...`) AND the repo-root src/ (for
+    `import memory_ope...`, used by react_agent's retrieval calls). Built
+    explicitly rather than trusting an inherited PYTHONPATH -- a real
+    Kaggle run hit exactly this bug: the parent was launched with
+    PYTHONPATH=src (relative to alfworld_pilot/, so only alfworld_pilot's
+    own src/), and os.environ.copy() carried that same incomplete value
+    into every worker, which then failed to import memory_ope."""
+    repo_root = ALFWORLD_PILOT_DIR.parent
+    return os.pathsep.join([str(ALFWORLD_PILOT_DIR / "src"), str(repo_root / "src")])
+
+
 def run_multi_worker(args: argparse.Namespace) -> None:
     slices = split_episode_range(args.n_episodes, args.workers, args.start_seed)
     out_paths = []
@@ -229,6 +268,7 @@ def run_multi_worker(args: argparse.Namespace) -> None:
         out_paths.append(out_path)
         env = os.environ.copy()
         env["CUDA_VISIBLE_DEVICES"] = str(sl["worker_id"])
+        env["PYTHONPATH"] = _worker_pythonpath()
         cmd = [
             sys.executable, "-m", "alfworld_pilot.timing_probe",
             "--task-type", args.task_type,

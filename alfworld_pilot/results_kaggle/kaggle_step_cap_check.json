@@ -1,0 +1,138 @@
+{
+  "pooled_n": 70,
+  "steps_distribution": {
+    "n_episodes_total": 70,
+    "n_successful": 27,
+    "min": 3,
+    "p25": 4,
+    "median": 7,
+    "p75": 18,
+    "p90": 35,
+    "max": 47,
+    "all_success_steps_sorted": [
+      3,
+      3,
+      4,
+      4,
+      4,
+      4,
+      4,
+      5,
+      5,
+      5,
+      6,
+      6,
+      6,
+      7,
+      7,
+      7,
+      8,
+      11,
+      14,
+      15,
+      18,
+      18,
+      19,
+      35,
+      46,
+      46,
+      47
+    ],
+    "n_success_over_20": 4,
+    "n_success_over_25": 4,
+    "n_success_over_30": 4,
+    "n_success_over_40": 3
+  },
+  "implied_seconds_per_step": 5.964912280701754,
+  "caps": [
+    {
+      "cap": 25,
+      "n_total": 70,
+      "n_success_original": 27,
+      "success_rate_original": 0.38571428571428573,
+      "n_lost_successes": 4,
+      "lost_success_task_ids": [
+        [
+          "pick_and_place_simple",
+          7
+        ],
+        [
+          "pick_clean_then_place_in_recep",
+          0
+        ],
+        [
+          "pick_cool_then_place_in_recep",
+          0
+        ],
+        [
+          "pick_and_place_simple",
+          12
+        ]
+      ],
+      "n_shortened_failures": 43,
+      "n_unaffected": 23,
+      "n_success_new": 23,
+      "success_rate_new": 0.32857142857142857,
+      "change_in_success_rate": -0.05714285714285714,
+      "mean_seconds_saved_per_episode": 97.90977443609023
+    },
+    {
+      "cap": 30,
+      "n_total": 70,
+      "n_success_original": 27,
+      "success_rate_original": 0.38571428571428573,
+      "n_lost_successes": 4,
+      "lost_success_task_ids": [
+        [
+          "pick_and_place_simple",
+          7
+        ],
+        [
+          "pick_clean_then_place_in_recep",
+          0
+        ],
+        [
+          "pick_cool_then_place_in_recep",
+          0
+        ],
+        [
+          "pick_and_place_simple",
+          12
+        ]
+      ],
+      "n_shortened_failures": 43,
+      "n_unaffected": 23,
+      "n_success_new": 23,
+      "success_rate_new": 0.32857142857142857,
+      "change_in_success_rate": -0.05714285714285714,
+      "mean_seconds_saved_per_episode": 77.88471177944862
+    },
+    {
+      "cap": 40,
+      "n_total": 70,
+      "n_success_original": 27,
+      "success_rate_original": 0.38571428571428573,
+      "n_lost_successes": 3,
+      "lost_success_task_ids": [
+        [
+          "pick_clean_then_place_in_recep",
+          0
+        ],
+        [
+          "pick_cool_then_place_in_recep",
+          0
+        ],
+        [
+          "pick_and_place_simple",
+          12
+        ]
+      ],
+      "n_shortened_failures": 43,
+      "n_unaffected": 24,
+      "n_success_new": 24,
+      "success_rate_new": 0.34285714285714286,
+      "change_in_success_rate": -0.04285714285714286,
+      "mean_seconds_saved_per_episode": 38.26065162907268
+    }
+  ]
+}
