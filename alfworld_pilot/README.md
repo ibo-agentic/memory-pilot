@@ -151,7 +151,25 @@ both packages importable from any directory, no PYTHONPATH set. Every notebook n
 an import-check cell that raises (stopping Save & Run All) if either package fails to
 import, instead of failing confusingly three cells later.
 
+**Kaggle API auth, updated (2026-09-29)**: Kaggle now issues a single API token
+(`KAGGLE_API_TOKEN`, format `KGAT_...`) instead of the old `kaggle.json`
+username/key pair — required for `kaggle_session.py`'s `copy_in`/`copy_out_and_version`
+calls (they shell out to the `kaggle` CLI). Both `handoff_test.ipynb` and
+`orchestrated_pilot.ipynb` now read it from **Kaggle Secrets**
+(`kaggle_secrets.UserSecretsClient().get_secret('KAGGLE_API_TOKEN')`) and set it as the
+`KAGGLE_API_TOKEN` environment variable before any Kaggle API call — never hardcoded,
+never printed. The install cell upgrades the `kaggle` package
+(`pip install --upgrade kaggle`) so it actually supports the new token format. If the
+secret isn't attached, the cell raises `SystemExit` with a clear message instead of
+failing confusingly deep inside a later `kaggle` CLI call.
+
 **What to click on Kaggle, exact steps, for `kaggle/handoff_test.ipynb`**:
+
+*One-time, before session 1:*
+0. On kaggle.com, go to **Settings → Account → API tokens** and create a token if you
+   don't have one (format `KGAT_...`). In the notebook, open **Add-ons → Secrets**, add
+   a secret labeled exactly `KAGGLE_API_TOKEN` with that value, and toggle it **on**
+   for this notebook (Secrets are per-notebook opt-in on Kaggle).
 
 *Session 1:*
 1. Open `kaggle/handoff_test.ipynb` on Kaggle (upload it or create a notebook from it).
@@ -163,7 +181,7 @@ import, instead of failing confusingly three cells later.
 5. Read the output: it should say `IN PROGRESS (session 1): 3/5 done` (3 of 5 jobs,
    the `--max-new 3` cap) — this is expected, not a failure. `copy_out_and_version`
    will have created the Kaggle Dataset (via `kaggle datasets create`) if it didn't
-   exist yet.
+   exist yet. If instead you see the `KAGGLE_API_TOKEN` secret error, go back to step 0.
 
 *Between sessions:*
 6. Go to the Dataset `copy_out_and_version` just created/updated (Kaggle → Datasets →
@@ -171,7 +189,8 @@ import, instead of failing confusingly three cells later.
 
 *Session 2:*
 7. Back in the same notebook, click **Add Input** (right sidebar) → **Your Datasets**
-   → select the dataset from step 6 → attach it.
+   → select the dataset from step 6 → attach it. Confirm the `KAGGLE_API_TOKEN` secret
+   toggle from step 0 is still on for this notebook.
 8. In the settings cell, edit `SESSION = 2` (leave `DATASET_SLUG` the same).
 9. **Save Version → Save & Run All** again.
 10. Read the last cell's output: should be
