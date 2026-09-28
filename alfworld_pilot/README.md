@@ -1,5 +1,74 @@
 # Stage 2 — ALFWorld pilot
 
+## Pre-registered ground-truth memories (2026-09-29), before any Phase 0 data exists
+
+Chosen by design from `kaggle_memory_store.py`'s 21 memories, using each memory's real
+**natural top-10 candidacy rate** (how often real embedding retrieval actually places it
+in the top-M=10 set, not just its category label) measured against real ALFWorld goal
+text across all 6 task types (n=15/type), then pooled using the actual Phase 0
+task-type weights (0.40/0.35/0.07/0.07/0.06/0.05) — not by any outcome/effect data.
+
+| memory | category | pas | look | clean | heat | cool | two | **weighted** |
+|---|---|---|---|---|---|---|---|---|
+| pas_correct | correct | 100% | 100% | 100% | 100% | 100% | 100% | **100%** |
+| two_correct | correct | 67% | 80% | 13% | 0% | 0% | 93% | 60% |
+| clean_harmful | harmful | 40% | 0% | 100% | 80% | 73% | 40% | 35% |
+| light_harmful | harmful | 47% | 100% | 7% | 0% | 0% | 33% | 56% |
+| irrelevant_3 | irrelevant | 60% | 100% | 0% | 0% | 0% | 40% | 61% |
+
+**The 5 memories, with one-line reasons**:
+- **`pas_correct`** (helpful) — near-universal natural candidate (100% everywhere);
+  reliable anchor memory.
+- **`two_correct`** (helpful) — mid-range weighted rate (60%) with a large
+  difficulty-linked swing (93% in its own, hardest task type; 0% in heat/cool) — one of
+  the memories that makes the task-difficulty confound actually present in the data.
+- **`clean_harmful`** (harmful) — ties to the heat/cool/clean family; mid-range (35%)
+  with a large swing (0%→100%) across types.
+- **`light_harmful`** (harmful) — the best-populated harmful memory in the store (56%
+  weighted); large swing (0%→100%).
+- **`irrelevant_3`** (irrelevant) — the best-populated irrelevant memory (61%
+  weighted); covers `pick_two_obj_and_place`, the hardest/lowest-success task type;
+  large swing (0%→100%).
+
+**Pre-registered co-retrieved pair**: `pas_correct` + `irrelevant_3` — both hit 100%
+candidacy in `look_at_obj_in_light` (35% of all episodes) and 60-100% in
+`pick_and_place_simple` (40%), so for most of the episode volume both are
+simultaneously top-M candidates — a natural test of whether an irrelevant memory
+dampens a genuinely helpful one's effect when both are present.
+
+4 of the 5 memories (`two_correct`, `clean_harmful`, `light_harmful`, `irrelevant_3`)
+have both a mid-range weighted rate and a large swing across task types of different
+difficulty — comfortably clearing the "at least 2" bar for the task-difficulty
+confound to actually be present for IPS vs. Memory Worth to be tested on, not just
+assumed.
+
+**Known limitation, worth stating plainly**: this ranking is partly an artifact of
+writing style, not pure semantic relevance — every `_correct`/`_partial` memory in
+`kaggle_memory_store.py` shares a common procedural template ("X-ing an object
+requires Y specifically: after picking the object up, navigate to Y and issue 'action
+X with Y 1' before moving the object to its destination receptacle"), which several
+`_partial` memories ride to **100% candidacy on every single task type**, regardless
+of true relevance — real embedding similarity to a terse ALFWorld goal line is
+measurably influenced by matching this template's structure, not just topical content
+(see the harmful-memory rewrite section below for the same effect working in the
+opposite, previously-broken direction).
+
+### Pre-registered validation metrics
+
+For each of the 5 ground-truth memories, once Phase 0 data exists:
+- **Primary**: each estimator's (Memory Worth, IPS, SNIPS, doubly robust) point
+  estimate vs. the ground-truth forced-in/forced-out effect, reported as (a) signed
+  error (estimate − ground truth) and (b) whether ground truth falls inside the
+  estimator's own 95% CI — per memory, not just averaged away.
+- Reported **per task type** as well as pooled — a memory's effect (and an
+  estimator's ability to recover it) can differ by task type given the retrieval-rate
+  differences in the table above, and averaging across types would hide exactly the
+  kind of confound this design exists to surface.
+- **Secondary only**: Spearman rank correlation across the 5 memories (matches the
+  paid run's own headline metric, kept for comparability, but demoted here — the
+  primary question for 5 specific, pre-selected memories is "was each one's real
+  effect inside this estimator's CI," not whether their overall ranking correlates).
+
 ## Phase 0 design snapshot and gaps (2026-09-29), before anything is run
 
 **Current design** (`kaggle_config.yaml`, `kaggle_memory_store.py`, `kaggle_session.py`):
