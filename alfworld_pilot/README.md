@@ -1,5 +1,137 @@
 # Stage 2 — ALFWorld pilot
 
+## Orchestration for Phase 0 (2026-09-29): job list, resumable runner, Save & Run All notebook
+
+Closes the remaining Phase 0 gaps: a pre-generated deterministic job list, a runner
+that skips completed jobs and saves after every single one (stronger than "at the end
+of each session"), a notebook that needs no manual cell choices, and
+`success_within_25/30` wired into real estimator calls.
+
+**Fold-over ground-truth design — evaluated, adopted with one caveat.** The question:
+run each ground-truth task instance twice with complementary random inclusion masks
+over the 5 target memories (one task instance informs all 5 at once) instead of one
+memory at a time (`ground_truth_runner.run_ground_truth_pair`) — does this measure the
+same thing IPS/SNIPS/DR estimate from natural logging data?
+
+In plain words: `episode_runner.run_logged_episode`'s `forced_inclusion` override
+**already only overrides a memory's status if it was a natural top-M candidate for
+that specific task instance** (it looks the id up in `candidate_ids` first). That
+means forcing a mask over all 5 target memories, unconditionally, is *automatically*
+restricted to whichever of the 5 actually are natural candidates there — with zero new
+logic. That restriction is exactly the condition under which a fold-over pair's
+per-memory effect targets the same estimand as the one-at-a-time design (and hence
+IPS/SNIPS/DR): the average effect of forcing memory *i*, marginalizing over the
+natural distribution of everything else. Recovering each of the 5 memories' own effect
+from many fold-over pairs needs a regression decomposition (effect ~ sum of per-memory
+inclusion indicators, across many independently-drawn masks) and assumes the 5
+memories' effects are **additive** — no interaction. **Caveat, real and unresolved**:
+the pre-registered co-retrieved pair (`pas_correct` + `irrelevant_3`) was chosen
+*because* it's likely to interact, so this design will not cleanly separate their
+individual effects from their joint interaction. Accepted as a trade-off for the
+efficiency gain below, not silently ignored — a supplementary one-at-a-time check on
+that specific pair is the fallback if a clean interaction estimate becomes important.
+
+**Efficiency gain, measured against the real store, not assumed**: computed the
+expected number of the 5 target memories that are *simultaneously* natural candidates
+for a given (Phase-0-weighted) task instance, using the post-rewrite candidacy table
+above: **≈2.84** on average (weighted sum of each type's per-memory candidacy rates,
+Phase-0 task-type weights). Since each fold-over pair informs however many of the 5
+memories are candidates there, this is the realistic efficiency multiplier — not the
+naive 5x ceiling (all 5 always co-candidates, which the data above shows is false).
+At `n_pairs_needed(Δ=0.03, p=0.456, ρ=0.6355)≈1577`/memory, one-at-a-time would need
+`2×5×1577=15,770` episodes for that power on all 5; fold-over needs roughly
+`15,770/2.84≈5,553` — real, substantial, still short of a full campaign at Phase 0's
+own ~1,500-episode 1-week budget, which is exactly why Phase 0 is a pilot, not the
+full-powered run (see the split below).
+
+**Job list** (`job_list.py`): deterministic `(job_id, task_id, condition, mask, seed)`
+rows — `logging` jobs use the normal task_id space; `ground_truth_fold_a`/`_b` jobs use
+a disjoint id space (offset `1,000,000`+) and precompute each pair's mask and its exact
+complement up front, via the same seeded draw `fold_over_ground_truth.py` uses at
+execution time (auditable without re-deriving anything).
+
+**Runner** (`run_jobs.py`): reads the job list, skips any `job_id` already present in
+the results JSONL, executes the rest up to a time budget or `max_new` cap, flushing
+after every job (crash-safe to the single in-flight job, the same guarantee
+`checkpointed_runner.py` already gives the paid run). `fold_over_ground_truth.py`
+exposes `run_fold_over_arm` (one arm, independent of the other — the two arms of a
+pair don't need to run in the same process or even the same Kaggle session, since both
+derive the identical "everything else" natural-draw seed from
+`(target_memory_ids, pair_index, task_id)` alone).
+
+**Estimators, wired to the secondary outcomes** (`run_estimators.py`):
+`validate_against_ground_truth`/`validate_per_task_type` run Memory Worth, IPS, SNIPS,
+and doubly robust against the primary outcome and both `success_within_25/30` (via
+`secondary_outcomes.truncated_success`), reporting point estimate, a bootstrap 95% CI,
+signed error vs. the fold-over-derived ground truth, and CI coverage — per memory, per
+task type, and pooled, matching the pre-registered validation metrics above.
+**Correction made while wiring this up**: `memory_worth.compute()` returns a raw
+`P(success | included)` rate, not a Y1−Y0 gap — not on the same scale as IPS/SNIPS/DR
+or a ground-truth gap (this project's own existing tests compare it to ground truth via
+Spearman rank correlation only, never a numeric difference, for exactly this reason).
+The signed-error/CI-coverage table therefore uses a locally-computed **naive gap**
+(`P(success|included=1) − P(success|included=0)`, computed in `run_estimators.py`, not
+`memory_worth.py`) so "Memory Worth" is actually comparable to the other three rows —
+this is the naive/uncorrected contrast the "MW (randomized, uncorrected)" label in the
+paid run's own results already implies, not a new invention.
+
+**Notebook** (`kaggle/orchestrated_pilot.ipynb`), Save & Run All compatible: every cell
+runs unconditionally (no "only run this if X" cells, unlike `timing_probe.ipynb`'s vLLM
+probe) — the only edit is a `DATASET_SLUG` constant, once. Each run: copies in the last
+checkpoint, generates the job list only if missing, runs jobs for an 11-hour budget,
+writes validation metrics against whatever's done, pushes an updated checkpoint. The
+driver (`run_phase0_pilot.py`) reuses `kaggle_session.py`'s `copy_in`/
+`copy_out_and_version` unchanged — its Kaggle-Dataset-specific parts inherit that
+module's own documented "untested outside a real Kaggle session" limitation.
+
+**Handoff test** (`handoff_test.py`) — the literal script to run twice on Kaggle:
+```
+Session 1: PYTHONPATH=src python -m alfworld_pilot.handoff_test --max-new 3
+(end the session)
+Session 2: PYTHONPATH=src python -m alfworld_pilot.handoff_test --max-new 10
+```
+5 logging episodes total; session 2 should report `5/5 done, no duplicates, nothing
+lost`. Verified locally against the zero-cost mock backend (`--backend mock`) before
+this was ever meant to touch Kaggle — session 1 completed 3/5 and reported
+`IN PROGRESS`; session 2 (fresh call, same files) completed the remaining 2 and
+reported `PASS: all jobs done exactly once, nothing lost or duplicated`. **What to
+click on Kaggle**: GPU T4 x2, Internet ON, no dataset attachment needed for this tiny
+test (it's local to `/kaggle/working`, not checkpointed across sessions) — just run the
+first command, end the session, start a fresh one, run the second command, and read
+its printed verdict.
+
+## Phase 0 split (2026-09-29): ~1,500 episodes, 1 week, T4 x2
+
+**Current exploration rate** (unchanged, reported as asked): `retrieval.propensity_min
+= 0.3`, `retrieval.propensity_max = 0.7` — every top-M candidate memory's inclusion
+propensity is linearly scaled between 30% and 70% by similarity rank, never forced to
+0% or 100%, so every natural candidate has a real chance of either inclusion status.
+
+**Task-type weights**: unchanged from Task B — 0.40/0.35/0.07/0.07/0.06/0.05
+(`pick_and_place_simple`/`look_at_obj_in_light` dominant).
+
+**Proposed split**: **70% logging (1,050 episodes) / 30% ground truth (450 episodes =
+225 fold-over pairs)**. Logging needs enough volume for IPS/SNIPS/DR to produce
+non-degenerate estimates in the first place; ground truth needs enough pairs to give a
+real (if modest, pilot-scale) validation signal. Per-memory expected pairs and MDE at
+this split (80% power, using each memory's own post-rewrite weighted candidacy rate —
+recall a fold-over pair only informs a memory when it's a natural candidate there):
+
+| memory | weighted candidacy | expected pairs (of 225) | MDE at that n |
+|---|---|---|---|
+| pas_correct | 100% | 225 | 0.079 |
+| irrelevant_3 | 58% | 131 | 0.104 |
+| two_correct | 56% | 126 | 0.106 |
+| light_harmful | 41% | 92 | 0.124 |
+| clean_harmful | 28% | 63 | 0.150 |
+
+Consistent with everything else in this file: a 1-week pilot can only reliably detect
+fairly large per-memory effects (MDE 0.08-0.15 depending on the memory's own natural
+rarity), and the memories chosen partly *for* their varied reachability (Task 4's
+requirement) pay for that with uneven power — `clean_harmful`'s scarcity means it gets
+the pilot's weakest signal. This is a pilot to validate the pipeline and get a first
+real read, not a fully-powered campaign (see the decision rule for what happens next).
+
 ## Harmful-memory rewrite, applied (2026-09-29) — reachability after, whatever it shows
 
 Applied the approved fix: `heat_harmful`, `cool_harmful`, `two_harmful` rewritten to
