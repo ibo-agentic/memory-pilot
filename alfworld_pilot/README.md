@@ -1,5 +1,61 @@
 # Stage 2 — ALFWorld pilot
 
+## Harmful-memory rewrite, applied (2026-09-29) — reachability after, whatever it shows
+
+Applied the approved fix: `heat_harmful`, `cool_harmful`, `two_harmful` rewritten to
+use the same procedural template as their `_correct` counterparts ("X-ing an object
+[works/requires] Y: after picking the object up, navigate to Y and issue 'action X
+with Y 1' before moving the object to its destination receptacle"), keeping the wrong
+appliance/action as the actual content of the harm. One fixed rule, no further wording
+calibration (including on `heat_harmful`, which the earlier simulation left as a near
+statistical tie with `heat_correct`).
+
+Full weighted reachability table, recomputed after the rewrite (n=15/type):
+
+| memory | category | pas | look | clean | heat | cool | two | **weighted** |
+|---|---|---|---|---|---|---|---|---|
+| pas_correct | correct | 100% | 100% | 100% | 100% | 100% | 100% | **100%** |
+| pas_partial | partial | 100% | 100% | 100% | 100% | 100% | 100% | 100% |
+| clean_partial | partial | 100% | 100% | 100% | 100% | 100% | 100% | 100% |
+| two_partial | partial | 100% | 100% | 80% | 67% | 67% | 93% | 94% |
+| light_partial | partial | 93% | 100% | 93% | 93% | 80% | 100% | 95% |
+| light_correct | correct | 100% | 100% | 73% | 27% | 80% | 93% | 91% |
+| irrelevant_3 | irrelevant | 53% | 100% | 0% | 0% | 0% | 40% | 58% |
+| cool_correct | correct | 73% | 27% | 93% | 100% | 100% | 53% | 61% |
+| two_correct | correct | 67% | 73% | 0% | 0% | 0% | 80% | 56% |
+| cool_harmful | harmful | 33% | 53% | 100% | 100% | 100% | 27% | **53%** |
+| light_harmful | harmful | 13% | 100% | 7% | 0% | 0% | 13% | 41% |
+| two_harmful | harmful | 53% | 27% | 0% | 0% | 0% | 80% | **35%** |
+| clean_correct | correct | 47% | 20% | 53% | 0% | 7% | 40% | 32% |
+| clean_harmful | harmful | 33% | 0% | 100% | 60% | 40% | 27% | 28% |
+| cool_partial | partial | 7% | 0% | 40% | 100% | 93% | 20% | 19% |
+| heat_harmful | harmful | 7% | 0% | 47% | 67% | 67% | 13% | **15%** |
+| heat_correct | correct | 0% | 0% | 13% | 80% | 47% | 7% | 10% |
+| irrelevant_1 | irrelevant | 7% | 0% | 0% | 0% | 0% | 0% | 3% |
+| heat_partial | partial | 0% | 0% | 0% | 7% | 20% | 7% | 2% |
+| pas_harmful | harmful | 13% | 0% | 0% | 0% | 0% | 7% | 6% |
+| irrelevant_2 | irrelevant | 0% | 0% | 0% | 0% | 0% | 0% | 0% |
+
+**Whatever it shows, reported plainly**: `cool_harmful` (0%→53%) and `two_harmful`
+(0%→35%) land cleanly below their `_correct` counterpart (61%, 56%), the intended
+result. `heat_harmful` (0%→15%) **now exceeds `heat_correct` (10%)** — the inversion
+the earlier, smaller-sample simulation (n=8/type) showed as a near-tie is a real
+inversion at this larger sample (n=15/type). Per the fixed-rule instruction, this is
+not recalibrated further; it's recorded as-is. Practical effect: `heat_correct`'s
+already-low reachability means neither heat memory is a strong natural candidate, so
+this doesn't threaten the 5 approved ground-truth memories (`heat_correct`/
+`heat_harmful` aren't among them) — but it's a real, acknowledged imperfection in the
+store, not a fully-solved problem.
+
+**Side effect on the already-approved 5 memories' own numbers**: adding 3 newly-
+competitive harmful memories increases competition for the same top-10 slots, so
+`clean_harmful` (35%→28%), `light_harmful` (56%→41%), and `irrelevant_3` (61%→58%)
+all shifted down somewhat from the pre-rewrite table in the section above. The
+selection itself is unchanged (per instruction, no 6th memory added, no
+reconsideration of the approved 5) — this is just their reachability numbers no
+longer matching the pre-rewrite snapshot exactly, noted for the record rather than
+silently left inconsistent between the two README sections.
+
 ## Pre-registered ground-truth memories (2026-09-29), before any Phase 0 data exists
 
 Chosen by design from `kaggle_memory_store.py`'s 21 memories, using each memory's real
