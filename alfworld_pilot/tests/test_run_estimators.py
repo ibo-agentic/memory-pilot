@@ -121,12 +121,36 @@ def test_validate_against_ground_truth_structure():
 
     assert set(result["outcomes"].keys()) == {"primary", "success_within_25", "success_within_30"}
     for outcome_name, per_estimator in result["outcomes"].items():
-        assert set(per_estimator.keys()) == {"memory_worth", "ips", "snips", "doubly_robust"}
+        assert set(per_estimator.keys()) == {"memory_worth", "memory_worth_raw", "ips", "snips", "doubly_robust"}
         for est_name, per_memory in per_estimator.items():
             assert set(per_memory.keys()) == {"mem_a", "mem_b"}
+            if est_name == "memory_worth_raw":
+                # Author's-original-form reporting (README's Phase 0 plan
+                # dual-reporting note): no ground-truth comparison fields,
+                # since a raw P(success|included) rate isn't on the gap
+                # scale ground truth is.
+                for mid, row in per_memory.items():
+                    assert "point_estimate" in row and "ci_low" in row and "ci_high" in row
+                continue
             for mid, row in per_memory.items():
                 assert "point_estimate" in row and "ci_low" in row and "ci_high" in row
                 assert "ground_truth" in row and "error" in row and "ground_truth_in_ci" in row
+
+
+def test_memory_worth_dual_reporting_differs_from_naive_gap():
+    # README's Phase 0 plan: Memory Worth reported both in the author's
+    # original form (raw P(success|included) rate) and as the naive gap --
+    # these must actually be different quantities, not the same value twice.
+    logging_episodes, fold_episodes = _synthetic_logging_and_fold()
+    result = validate_against_ground_truth(logging_episodes, fold_episodes, ALL_IDS, target_memory_ids=["mem_a", "mem_b"], n_bootstrap=20)
+    primary = result["outcomes"]["primary"]
+    for mid in ["mem_a", "mem_b"]:
+        raw = primary["memory_worth_raw"][mid]["point_estimate"]
+        gap = primary["memory_worth"][mid]["point_estimate"]
+        assert raw is not None and gap is not None
+        assert raw != gap  # a rate (~0-1) is never equal to a gap (~-1 to 1) except by coincidence at 0
+        assert 0.0 <= raw <= 1.0  # raw is a probability
+        assert -1.0 <= gap <= 1.0  # gap is a difference of two probabilities
 
 
 def test_validate_per_task_type_has_pooled_and_per_type():

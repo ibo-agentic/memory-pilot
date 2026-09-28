@@ -177,6 +177,20 @@ def validate_against_ground_truth(
                     ),
                 }
             per_estimator[name] = per_memory
+
+        # Memory Worth reported a SECOND way, in the author's original form
+        # (Simsek 2026's own P(success|included) rate, memory_worth.py's
+        # unmodified return value) -- NOT comparable to ground truth's gap
+        # (different scale, see module docstring), so no error/CI-coverage
+        # fields here, just the point estimate and its own bootstrap CI.
+        # README's Phase 0 plan: report both forms, never substitute one for
+        # the other.
+        raw_estimates = memory_worth.compute(eps) if eps else {}
+        raw_per_memory = {}
+        for mid in target_memory_ids:
+            ci_low, ci_high = _bootstrap_ci(eps, memory_worth.compute, mid, n_bootstrap=n_bootstrap) if eps else (None, None)
+            raw_per_memory[mid] = {"point_estimate": raw_estimates.get(mid), "ci_low": ci_low, "ci_high": ci_high}
+        per_estimator["memory_worth_raw"] = raw_per_memory
         results["outcomes"][outcome_name] = per_estimator
 
     return results

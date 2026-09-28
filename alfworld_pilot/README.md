@@ -123,21 +123,62 @@ driver (`run_phase0_pilot.py`) reuses `kaggle_session.py`'s `copy_in`/
 `copy_out_and_version` unchanged — its Kaggle-Dataset-specific parts inherit that
 module's own documented "untested outside a real Kaggle session" limitation.
 
-**Handoff test** (`handoff_test.py`) — the literal script to run twice on Kaggle:
-```
-Session 1: PYTHONPATH=src python -m alfworld_pilot.handoff_test --max-new 3
-(end the session)
-Session 2: PYTHONPATH=src python -m alfworld_pilot.handoff_test --max-new 10
-```
-5 logging episodes total; session 2 should report `5/5 done, no duplicates, nothing
-lost`. Verified locally against the zero-cost mock backend (`--backend mock`) before
-this was ever meant to touch Kaggle — session 1 completed 3/5 and reported
-`IN PROGRESS`; session 2 (fresh call, same files) completed the remaining 2 and
-reported `PASS: all jobs done exactly once, nothing lost or duplicated`. **What to
-click on Kaggle**: GPU T4 x2, Internet ON, no dataset attachment needed for this tiny
-test (it's local to `/kaggle/working`, not checkpointed across sessions) — just run the
-first command, end the session, start a fresh one, run the second command, and read
-its printed verdict.
+### Handoff test — revised (2026-09-29): the first version didn't actually test anything
+
+**The gap, found before this touched Kaggle**: the original `handoff_test.py` called
+`run_jobs` twice in the same local process against files under `results_kaggle/` —
+that never exercises the thing that actually matters, since `/kaggle/working` is wiped
+when a real Kaggle session ends. A same-process rerun could "pass" by just running
+everything fresh in one place, proving nothing about cross-session persistence.
+
+**Fixed**: `handoff_test.py` now uses the exact mechanism `run_phase0_pilot.py` uses
+for the real campaign — `kaggle_session.copy_in`/`copy_out_and_version`, a real Kaggle
+Dataset round-trip, not a local bypass. `--session 2` **fails loudly**
+(`check_session2_precondition`, unit-tested) if `copy_in` finds zero prior completed
+jobs — that means the Dataset wasn't actually attached, or session 1's push failed —
+instead of silently generating a fresh job list and "passing" for the wrong reason.
+The Dataset-specific parts inherit `kaggle_session.py`'s own documented "untested
+outside a real Kaggle session" limitation; what's unit-tested locally is the
+fail-loudly precondition itself and the underlying skip/resume/no-duplicate logic
+(`run_jobs`, already covered).
+
+**No more `PYTHONPATH=src` anywhere** (this notebook and the other two): both packages
+are now `pip install -e`-able (`alfworld_pilot/pyproject.toml`, new) so
+`alfworld_pilot` and `memory_ope` import in every process — including `run_jobs.py`'s
+own worker subprocesses — regardless of cwd or how the process was spawned. Verified
+locally: a fresh venv, `pip install -e .` (repo root) + `pip install -e alfworld_pilot`,
+both packages importable from any directory, no PYTHONPATH set. Every notebook now has
+an import-check cell that raises (stopping Save & Run All) if either package fails to
+import, instead of failing confusingly three cells later.
+
+**What to click on Kaggle, exact steps, for `kaggle/handoff_test.ipynb`**:
+
+*Session 1:*
+1. Open `kaggle/handoff_test.ipynb` on Kaggle (upload it or create a notebook from it).
+2. Notebook settings: **Internet: ON** (Accelerator doesn't matter — this test uses the
+   zero-cost mock backend on purpose, it verifies orchestration, not model behavior).
+3. In the settings cell, edit `DATASET_SLUG` to `<your-kaggle-username>/memory-pilot-handoff-test`
+   (or any dataset name you own) — leave `SESSION = 1`.
+4. **Save Version → Save & Run All**. Wait for it to finish.
+5. Read the output: it should say `IN PROGRESS (session 1): 3/5 done` (3 of 5 jobs,
+   the `--max-new 3` cap) — this is expected, not a failure. `copy_out_and_version`
+   will have created the Kaggle Dataset (via `kaggle datasets create`) if it didn't
+   exist yet.
+
+*Between sessions:*
+6. Go to the Dataset `copy_out_and_version` just created/updated (Kaggle → Datasets →
+   the slug you chose) and confirm it has a version with today's timestamp.
+
+*Session 2:*
+7. Back in the same notebook, click **Add Input** (right sidebar) → **Your Datasets**
+   → select the dataset from step 6 → attach it.
+8. In the settings cell, edit `SESSION = 2` (leave `DATASET_SLUG` the same).
+9. **Save Version → Save & Run All** again.
+10. Read the last cell's output: should be
+    `PASS: final set equals the job list exactly, no duplicates, nothing lost.` If
+    instead you see the `FAIL: session 2 expected to find session 1's completed
+    jobs...` error, the Dataset wasn't actually attached in step 7 — go back and
+    confirm it shows under this notebook's Input panel, then re-save.
 
 ## Phase 0 split (2026-09-29): ~1,500 episodes, 1 week, T4 x2
 
@@ -163,6 +204,13 @@ recall a fold-over pair only informs a memory when it's a natural candidate ther
 | two_correct | 56% | 126 | 0.106 |
 | light_harmful | 41% | 92 | 0.124 |
 | clean_harmful | 28% | 63 | 0.150 |
+
+**Memory Worth reporting note**: for the 5 ground-truth memories, results will report
+Memory Worth both in the author's original form (`memory_worth.compute()`'s raw
+`P(success | included)` rate, Şimşek 2026's own definition) and as the naive gap
+(`run_estimators._memory_worth_naive_gap`) used for the signed-error/CI-coverage table
+above — the two answer different questions (a single-arm rate vs. an uncorrected
+contrast) and neither should be presented as if it were the other.
 
 Consistent with everything else in this file: a 1-week pilot can only reliably detect
 fairly large per-memory effects (MDE 0.08-0.15 depending on the memory's own natural
