@@ -1,5 +1,52 @@
 # Stage 2 — ALFWorld pilot
 
+## Pre-registered secondary outcome (2026-09-29): success_within_25 / success_within_30
+
+Checked first, before adding anything: does the agent's prompt ever show `max_steps`,
+remaining steps, or anything else that depends on the step limit? **No.**
+`react_agent.py`'s `_build_prompt` (the only place the prompt is assembled) takes
+`goal_obs, memory_texts, history, admissible_actions, few_shot_text` — no step count or
+budget anywhere in its signature or body. `run_episode`'s loop (`for _step_idx in
+range(max_steps):`, `react_agent.py:211`) uses `max_steps` only as a Python loop
+bound; `_step_idx` is never passed into `_build_prompt` (`react_agent.py:212`) or
+`SYSTEM_PROMPT` (`react_agent.py:26-32`, also step-count-free). The agent has no way
+to know how many steps it has left.
+
+Because of that, a **secondary outcome is worth pre-registering now, before any
+Phase 0 data exists**: `success_within_25` (and `success_within_30`) — did the episode
+succeed within the first 25 (or 30) steps of its already-logged trajectory, computed
+by truncating post-hoc (a pure function of `success` + `steps_taken`, needs no new
+logging fields, and can be applied retroactively to any already-logged episode,
+including the paid run's).
+
+**Prediction**: memory effects (per-memory Δ in success probability) will be **larger**
+under the 25-step secondary outcome than under the primary 50-step outcome, because an
+agent with no visibility into its remaining budget has less room to wander, recover
+from a bad early guess, and still land on the right sequence of actions by step 50 — a
+memory's guidance (or a harmful memory's misdirection) has comparatively more of its
+effect "locked in" by step 25, before self-correction has as much chance to wash it
+out. This is the same directional logic as the step-cap check above (long, looping
+episodes are exactly where the memory-vs-episode-length confound analysis found the
+most parse-failure noise), applied to effect size rather than parse-failure rate.
+
+**What would count as support**: per-memory |Δ| estimates under `success_within_25`
+are, on average across the ground-truthed set, larger than under the primary outcome,
+with confidence intervals that don't just track the primary outcome's own (wider
+CIs from lower absolute success rates at 25 steps could inflate point estimates
+without being real — support requires the *pattern* to hold, not one noisy memory).
+
+**What would count as against**: the two outcomes' per-memory effects are
+statistically indistinguishable, or the 50-step outcome shows larger/equal effects —
+i.e., the "self-correction" story is wrong or too small to matter at this model's
+scale.
+
+Implementation: `secondary_outcomes.py`'s `truncated_success(episodes, step_cap)`
+returns a copy of any episode list with `"success"` replaced by the truncated outcome,
+so every existing, unmodified OPE estimator (`src/memory_ope/estimators/`) can be run
+against it by just swapping which list it's given — no estimator code changes, and it
+works on already-logged episodes (this project's or the paid run's), not just future
+runs.
+
 ## Kaggle timing results (2026-09-29) — real numbers, two bugs fixed, one open risk flagged
 
 ### 1. Real throughput
