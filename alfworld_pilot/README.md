@@ -1,5 +1,49 @@
 # Stage 2 — ALFWorld pilot
 
+## Handoff test session 1, real bugs found and fixed (2026-09-29)
+
+Running session 1 on real Kaggle (before session 2 or any real Phase 0 data) surfaced
+three real bugs, all fixed:
+
+1. **Folders were silently never uploaded.** The `kaggle` CLI printed `Skipping
+   folder: logs; use '--dir-mode' to upload folders` — `copy_out_and_version` was
+   calling `kaggle datasets create/version -p <dir>` without `--dir-mode`, so the
+   `logs/`/`cache/` subfolders inside the staging directory were dropped entirely, not
+   just partially uploaded. Fixed: both commands now pass `--dir-mode zip`. On the
+   input side, `copy_in` now handles **either** form Kaggle might present a restored
+   folder in — a plain extracted directory, or a `<name>.zip` archive (checked either
+   way it could be laid out internally: contents at the zip root, or nested inside one
+   more folder) — via the new `restore_folder`, unit-tested for all four cases
+   (`tests/test_kaggle_session.py`).
+2. **A failed push was reported as successful.** The CLI printed `Dataset creation
+   error: Invalid Owner Id` but still exited 0, and the old code trusted the exit code
+   alone, printing `pushed checkpoint state` anyway. Fixed: `copy_out_and_version` now
+   captures stdout+stderr and treats the push as failed if the exit code is non-zero
+   **or** the output contains "error"/"traceback"/"exception" (case-insensitive) — and
+   **raises**, stopping the notebook, instead of printing a soft warning and letting
+   execution continue. A push that didn't happen is never reported as having happened.
+3. **`DATASET_SLUG` was left as the placeholder** (`your-kaggle-username/...`), so the
+   run proceeded anyway using a slug that could never resolve to anything real. Fixed:
+   both `handoff_test.ipynb` and `orchestrated_pilot.ipynb` now have a guard cell right
+   after the settings cell that refuses to run (`SystemExit`) if `DATASET_SLUG` still
+   contains `your-kaggle-username`. Also: session 1 needed a **manual** cell to fix
+   imports (Kaggle's kernel `sys.path` is snapshotted before `pip install -e` runs, and
+   a stale/partial import can get cached in `sys.modules`) — that fix is now a
+   permanent cell in **all three** notebooks, re-scanning site-packages for new `.pth`
+   files and clearing any cached `alfworld_pilot`/`memory_ope` modules, placed right
+   before each notebook's import-check cell.
+
+Also: `handoff_test.py`'s session summary now says a pending job is **"not yet run
+(expected in session 1)"** rather than "lost" — "lost" is reserved for session 2,
+where everything should be done and anything still missing is a real problem, not an
+expected mid-run state.
+
+**When to rerun**: session 1 can be rerun now with these fixes in place — start clean
+(a fresh `DATASET_SLUG` you haven't used yet, or delete the old Kaggle Dataset from the
+failed attempt first, since it may exist in a broken/incomplete state from the "Invalid
+Owner Id" error). Double-check the `KAGGLE_API_TOKEN` secret is toggled on and the
+`DATASET_SLUG` doesn't still say `your-kaggle-username` before clicking Save & Run All.
+
 ## Pre-registered decision rule after Phase 0 (2026-09-29), before any runs
 
 Stated in advance so the decision isn't fitted to whatever Phase 0 happens to show.

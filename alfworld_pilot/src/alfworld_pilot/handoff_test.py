@@ -114,15 +114,21 @@ def main() -> None:
     with open(results_path, "r", encoding="utf-8") as f:
         counts = Counter(json.loads(line)["job_id"] for line in f if line.strip())
     duplicates = {jid: c for jid, c in counts.items() if c > 1}
-    lost = all_job_ids - all_done
+    remaining = all_job_ids - all_done
+    # Session 1 is only expected to run --max-new jobs, so a non-empty
+    # `remaining` there is the normal, planned outcome, not a problem --
+    # "lost" is reserved for session 2, where everything should be done.
+    remaining_label = "not yet run (expected in session 1)" if args.session == 1 else "lost/missing (unexpected)"
 
-    print(f"Session {args.session} summary: {len(all_done)}/{len(all_job_ids)} done, duplicates={duplicates or 'none'}, lost={lost or 'none'}")
+    print(f"Session {args.session} summary: {len(all_done)}/{len(all_job_ids)} done, duplicates={duplicates or 'none'}, {remaining_label}={remaining or 'none'}")
     if all_done == all_job_ids and not duplicates:
         print("PASS: final set equals the job list exactly, no duplicates, nothing lost.")
     elif duplicates:
         print("FAIL: at least one job ran more than once -- resume logic is broken.")
+    elif args.session == 2:
+        print(f"FAIL: session 2 finished but {len(remaining)} job(s) are still missing: {remaining} -- something was lost.")
     else:
-        print(f"IN PROGRESS (session {args.session}): {len(all_done)}/{len(all_job_ids)} done -- run session 2 (if this was session 1) to continue.")
+        print(f"IN PROGRESS (session {args.session}): {len(all_done)}/{len(all_job_ids)} done -- run session 2 to continue.")
 
 
 if __name__ == "__main__":

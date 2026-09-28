@@ -32,22 +32,67 @@ import pathlib
 import shutil
 import subprocess
 import sys
+import tempfile
+import zipfile
 
 KAGGLE_INPUT_ROOT = pathlib.Path("/kaggle/input")
 KAGGLE_WORKING = pathlib.Path("/kaggle/working")
 
 DEFAULT_TIME_BUDGET_SECONDS = 39_600.0  # 11h, leaving a real margin under Kaggle's 12h session cap
 
+# Real Kaggle CLI output observed to contain an error message ("Dataset
+# creation error: Invalid Owner Id") while still exiting 0 -- exit code alone
+# is not a trustworthy success signal for this CLI. Checked case-insensitively
+# against combined stdout+stderr; a false positive (failing on benign output
+# that happens to mention "error") is far cheaper than a false negative
+# (silently reporting a push that never happened).
+_ERROR_MARKERS = ("error", "traceback", "exception")
+
 
 def _find_attached_dataset(slug: str) -> pathlib.Path | None:
     """Kaggle mounts an attached input dataset at /kaggle/input/<name>/, where
     <name> is the LAST path segment of the dataset slug (not the full
-    'username/dataset-name' slug) -- confirm this matches what an actual
-    Kaggle session shows (Phase 0/1), this is documented Kaggle behavior but
-    unverified against this specific setup."""
+    'username/dataset-name' slug) -- confirmed against a real Kaggle session
+    (2026-09-29 handoff test)."""
     dataset_name = slug.split("/")[-1]
     candidate = KAGGLE_INPUT_ROOT / dataset_name
     return candidate if candidate.exists() else None
+
+
+def restore_folder(src_root: pathlib.Path, name: str, dest: pathlib.Path) -> bool:
+    """Restores `name` (e.g. "logs") from src_root into dest, handling BOTH
+    ways Kaggle can end up storing it: a plain extracted directory
+    (src_root/name/), or a zip archive (src_root/name.zip -- produced by
+    `kaggle datasets create/version --dir-mode zip`, required because the
+    plain `kaggle datasets create -p <dir>` silently SKIPPED subfolders
+    entirely ("Skipping folder: logs; use '--dir-mode' to upload folders"),
+    confirmed on a real Kaggle session). A zip's internal layout isn't
+    assumed either way (contents at the zip root, or nested inside one more
+    `name/` folder) -- both are handled. Returns True if anything was
+    restored, False if neither form was found (not an error -- the first
+    session has nothing to restore)."""
+    plain_dir = src_root / name
+    zip_path = src_root / f"{name}.zip"
+
+    if plain_dir.is_dir():
+        dest.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(plain_dir, dest, dirs_exist_ok=True)
+        print(f"[kaggle_session] copied in {plain_dir} -> {dest} (plain directory)")
+        return True
+
+    if zip_path.is_file():
+        dest.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as tmp:
+            with zipfile.ZipFile(zip_path) as zf:
+                zf.extractall(tmp)
+            tmp_path = pathlib.Path(tmp)
+            nested = tmp_path / name
+            source_dir = nested if nested.is_dir() else tmp_path
+            shutil.copytree(source_dir, dest, dirs_exist_ok=True)
+        print(f"[kaggle_session] extracted {zip_path} -> {dest} (zip archive)")
+        return True
+
+    return False
 
 
 def copy_in(slug: str, logs_dir: pathlib.Path, cache_dir: pathlib.Path) -> None:
@@ -63,21 +108,19 @@ def copy_in(slug: str, logs_dir: pathlib.Path, cache_dir: pathlib.Path) -> None:
         )
         return
     for name, dest in (("logs", logs_dir), ("cache", cache_dir)):
-        src_sub = src / name
-        if src_sub.exists():
-            dest.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(src_sub, dest, dirs_exist_ok=True)
-            print(f"[kaggle_session] copied in {src_sub} -> {dest}")
+        if not restore_folder(src, name, dest):
+            print(f"[kaggle_session] no {name} found at {src} (neither {name}/ nor {name}.zip) -- nothing to restore")
 
 
 def copy_out_and_version(slug: str, logs_dir: pathlib.Path, cache_dir: pathlib.Path, message: str) -> None:
     """Packages the updated logs/cache into a new Kaggle Dataset version via
-    the `kaggle` CLI. Kaggle notebooks running ON Kaggle's own infrastructure
-    are documented to have this pre-authenticated -- VERIFY this in an actual
-    session rather than assuming it; if it fails, this session's own progress
-    is still safe on /kaggle/working (or as the notebook's own committed
-    output), but the cross-session handoff will not have updated, and the
-    next session needs a manual fix before it can resume correctly."""
+    the `kaggle` CLI (`--dir-mode zip`, since subfolders are silently skipped
+    otherwise -- see restore_folder's docstring). Raises RuntimeError (does
+    NOT just print a warning and continue) if the CLI reports any failure --
+    confirmed on a real Kaggle session that this CLI can print an error
+    message ("Dataset creation error: Invalid Owner Id") while still exiting
+    0, so both the exit code AND the output text are checked; a push that
+    didn't happen must never be reported as having happened."""
     staging = KAGGLE_WORKING / "_kaggle_session_staging"
     if staging.exists():
         shutil.rmtree(staging)
@@ -95,19 +138,23 @@ def copy_out_and_version(slug: str, logs_dir: pathlib.Path, cache_dir: pathlib.P
 
     dataset_exists = subprocess.run(["kaggle", "datasets", "status", slug], capture_output=True).returncode == 0
     if dataset_exists:
-        cmd = ["kaggle", "datasets", "version", "-p", str(staging), "-m", message, "-d"]
+        cmd = ["kaggle", "datasets", "version", "-p", str(staging), "-m", message, "-d", "--dir-mode", "zip"]
     else:
-        cmd = ["kaggle", "datasets", "create", "-p", str(staging)]
+        cmd = ["kaggle", "datasets", "create", "-p", str(staging), "--dir-mode", "zip"]
 
-    result = subprocess.run(cmd)
-    if result.returncode != 0:
-        print(
-            "[kaggle_session] WARNING: dataset push failed (see output above). This session's "
-            "checkpoint progress is still on /kaggle/working, but the cross-session handoff did "
-            "NOT update -- fix this before the next session, or it will start over."
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    output = (result.stdout or "") + (result.stderr or "")
+    print(output)
+
+    failed = result.returncode != 0 or any(marker in output.lower() for marker in _ERROR_MARKERS)
+    if failed:
+        raise RuntimeError(
+            f"[kaggle_session] FAIL: dataset push failed (exit code {result.returncode}; see CLI output above). "
+            "This session's checkpoint progress is still on /kaggle/working, but the cross-session handoff did "
+            "NOT update. NOT reporting a push that didn't happen -- fix the Dataset/permissions issue before "
+            "the next session, or it will start over."
         )
-    else:
-        print(f"[kaggle_session] pushed checkpoint state to Kaggle Dataset {slug}")
+    print(f"[kaggle_session] pushed checkpoint state to Kaggle Dataset {slug}")
 
 
 def main() -> None:
