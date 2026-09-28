@@ -1,5 +1,62 @@
 # Stage 2 — ALFWorld pilot
 
+## Kaggle timing run, prepared (2026-09-29) — nothing run on Kaggle yet
+
+Extends the timing estimate above from "no data exists" to "a real probe is ready to
+run on Kaggle." Everything in this section was written and, where possible, smoke-
+tested locally; nothing was run on Kaggle.
+
+**`timing_probe.py` extended**: now records, per episode, wall-clock seconds,
+steps_taken, total input tokens, total output tokens, and seconds/step, and reports
+both mean AND median seconds/episode (median matters because this project's own
+capability check already found a few long, looping episodes that pull the mean well
+above the typical case). Smoke-tested locally (2 episodes, the local 8GB card, not a
+Kaggle timing number) — script runs correctly end to end.
+
+**`--workers N` (multi-GPU)**: spawns N subprocesses, one per GPU
+(`CUDA_VISIBLE_DEVICES=0..N-1`), on disjoint episode slices (`split_episode_range`),
+then merges results and reports combined throughput vs. single-worker throughput
+(`merge_worker_reports`, using the orchestrator's own measured parallel wall-clock,
+not a derived estimate). These two functions are pure and GPU-free, and are unit-
+tested (`tests/test_timing_probe_helpers.py`, 9 tests: disjoint/contiguous slicing,
+remainder handling, and a synthetic 2-worker case asserting ~2x speedup from
+concurrent wall-clock). **The actual subprocess/multi-GPU execution path itself could
+not be tested here** — this development machine has exactly one GPU, and spawning a
+second worker against a nonexistent `CUDA_VISIBLE_DEVICES=1` would just fail (or, on
+a machine with 2 GPUs of insufficient combined VRAM, risk OOM) — so this must be
+verified for real on Kaggle's T4 x2 session; that's what the notebook's Mode B cell
+is for.
+
+**vLLM backend — added, not yet verified on real T4 hardware**: researched (not
+tested — no T4 available here) whether vLLM can run Qwen2.5-7B-Instruct on a T4 within
+Kaggle's limits. Findings: vLLM's default dtype (bfloat16) hard-fails on a T4
+(compute capability 7.5, needs >=8.0) — long-documented, fixed by forcing
+`dtype="half"`, which `vllm_client.py`'s `VLLMClient` always does. Full fp16 for a 7B
+model on a 16GB T4 is tight (~14GB of weights alone) and multiple public reports
+describe needing hand-tuned `gpu_memory_utilization`/`max_model_len` to avoid OOM —
+plausible but not a safe default. The official AWQ checkpoint
+(`Qwen/Qwen2.5-7B-Instruct-AWQ`) drops weight VRAM to ~4-5GB with comfortable
+headroom, and is well-supported by vLLM — **added as the recommended default**, with
+fp16 available but flagged as unverified/risky. `kaggle_config.yaml`'s new
+`llm_vllm.revision` is a placeholder (`null`) — `VLLMClient` refuses to construct
+until it's a real pinned commit hash, same hard rule as every other model in this
+project; the notebook's Section 1 cell resolves and prints the real hash to paste in.
+**The actual "does it fit" answer is empirical and can only come from Kaggle's T4** —
+this module makes the backend available to that probe, it isn't the probe itself.
+
+New `vllm_parity_check.py` (not run) compares the PARSED ACTION sequence (not raw
+completion text — different backends can legitimately diverge at the token level even
+under greedy decoding) between the transformers and vLLM backends on 5 episodes with
+identical seeds.
+
+**New notebook**: [`kaggle/timing_probe.ipynb`](kaggle/timing_probe.ipynb) — installs
+dependencies, clones this repo, runs the vLLM compatibility probe, runs the timing
+probe in three modes (single GPU, 2 workers, vLLM if the probe passed) at 20 episodes
+each, prints one combined results table, runs the parity check if applicable, then
+prints the MDE-at-1-week/MDE-at-2-weeks table (this repo's `power_formula.py`) for
+each measured throughput. Exact settings and click order are in the notebook's own
+first two cells (GPU: T4 x2, Internet: ON — see "What to click on Kaggle" below).
+
 ## Task sampling weights (2026-09-28): weighted toward easy types, expected pooled success 45.6%
 
 The capability check found the natural (unweighted) task-type mix pools well below the

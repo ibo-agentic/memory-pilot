@@ -54,6 +54,27 @@ llm:
   quantize_4bit: true                        # nf4 via bitsandbytes; see plan for VRAM rationale
   device: cuda
 
+# Optional vLLM backend (2026-09-29, Task 3 of the Kaggle timing prep) -- see
+# vllm_client.py's module docstring for the full compatibility assessment
+# (AWQ recommended, fp16 unverified/risky on a 16GB T4). Kept as its OWN
+# section (not a mode switch inside `llm:`) so it never accidentally shares
+# settings, cache, or revision with the transformers backend above.
+llm_vllm:
+  model_id: Qwen/Qwen2.5-7B-Instruct-AWQ     # official Qwen-published AWQ checkpoint
+  # UNVERIFIED PLACEHOLDER -- unlike llm.revision above, this has NOT been
+  # confirmed against the actual repo (no live fetch from this environment).
+  # VLLMClient hard-requires a real pinned commit hash (raises otherwise) --
+  # the Kaggle notebook's install/probe cell MUST record and set this before
+  # the vLLM backend can be used for anything beyond that probe.
+  revision: null
+  temperature: 0.0
+  max_output_tokens: 100
+  quantization: awq
+  gpu_memory_utilization: 0.85               # conservative; tune down further if OOM on Kaggle's T4
+  max_model_len: 2048                        # covers this project's real prompt lengths (measured up to ~1750 tokens) with headroom
+  dtype: half                                # NEVER bfloat16 -- T4 (compute capability 7.5) can't run it; VLLMClient enforces this
+  cache_dir: cache_kaggle_vllm                # separate from cache_kaggle/ (transformers backend) -- never share a cache dir across backends
+
 embedding:
   model_name: BAAI/bge-small-en-v1.5
   # NOT pinned yet -- HuggingFace's page didn't expose the exact commit hash to
