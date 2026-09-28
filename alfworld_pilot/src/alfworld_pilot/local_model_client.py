@@ -31,6 +31,19 @@ is doing that the paid run never did.
 
 from __future__ import annotations
 
+import os
+
+# Must be set before CUDA initializes in this process (module import time is
+# early enough; torch itself is only lazily imported inside __init__/complete
+# below, so this always runs first). Standard, well-documented fix for the
+# PyTorch CUDA caching allocator's OOM-from-fragmentation failure mode (real
+# Kaggle logs showed repeated "CUDACachingAllocator ... memory allocation
+# failed with OOM" on long, memory-pressured episodes -- see
+# README.md's "OOM warnings" section for the full analysis). setdefault, not
+# a hard overwrite, so an explicit external setting (e.g. the Kaggle notebook
+# or a worker subprocess's own env) always wins.
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
 from .cache import LLMCache
 from .cost_tracker import CostTracker
 from .llm_client import LLMResponse
@@ -135,8 +148,24 @@ class LocalTransformersClient:
             gen_kwargs["top_p"] = None
             gen_kwargs["top_k"] = None
 
+        # torch.cuda.memory_stats()["num_alloc_retries"] is a cumulative
+        # per-process counter the caching allocator increments every time an
+        # allocation initially fails and it recovers by freeing its own
+        # cached-but-unused blocks and retrying -- exactly the "OOM warning"
+        # signal seen in real Kaggle logs, but countable per call via a
+        # before/after delta instead of scraping a log message (which isn't
+        # interceptable from Python -- it's a C++-level log, not an
+        # exception). A HARD, unrecovered OOM instead raises
+        # torch.cuda.OutOfMemoryError from generate() itself, which is not
+        # caught here -- that's a crash, not a count (see README.md's OOM
+        # section: a crash loses work but cannot corrupt already-cached
+        # data, since cache.put() below only runs after a successful call).
+        retries_before = torch.cuda.memory_stats().get("num_alloc_retries", 0) if torch.cuda.is_available() else 0
         with torch.no_grad():
             output_ids = self.model.generate(**inputs, **gen_kwargs)
+        oom_retries = (
+            torch.cuda.memory_stats().get("num_alloc_retries", 0) - retries_before if torch.cuda.is_available() else 0
+        )
 
         new_tokens = output_ids[0][input_tokens:]
         text = self.tokenizer.decode(new_tokens, skip_special_tokens=True)
@@ -156,7 +185,10 @@ class LocalTransformersClient:
             payload,
             {"text": text, "input_tokens": input_tokens, "output_tokens": output_tokens, "finish_reason": finish_reason},
         )
-        return LLMResponse(text=text, input_tokens=input_tokens, output_tokens=output_tokens, cached=False, finish_reason=finish_reason)
+        return LLMResponse(
+            text=text, input_tokens=input_tokens, output_tokens=output_tokens, cached=False,
+            finish_reason=finish_reason, oom_retries=oom_retries,
+        )
 
     def complete_no_cache(self, messages: list[dict], stop: list[str] | None = None) -> LLMResponse:
         """Forces a fresh real generation even if an identical request is

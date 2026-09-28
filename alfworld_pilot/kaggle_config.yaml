@@ -77,12 +77,12 @@ llm_vllm:
 
 embedding:
   model_name: BAAI/bge-small-en-v1.5
-  # NOT pinned yet -- HuggingFace's page didn't expose the exact commit hash to
-  # a simple fetch during planning. Phase 0 MUST record the exact revision it
-  # actually downloads and set it here before any real run (see
-  # embedding_retrieval.SentenceEmbedder's docstring -- it warns loudly if
-  # constructed with revision=None).
-  revision: null
+  # Exact commit hash of the snapshot actually downloaded and used throughout this
+  # project's local embedding work (verified 2026-09-29 directly from the local
+  # HuggingFace cache: ~/.cache/huggingface/hub/models--BAAI--bge-small-en-v1.5/
+  # snapshots/, matching refs/main at download time) -- same "pin what was actually
+  # downloaded, never main/latest" rule as llm.revision above.
+  revision: 5c38ec7c405ec4b44b94cc5a9bb96e735b38267a
   device: cpu                                # trivial compute cost; keeps GPU free for the LLM
 
 cost_control:

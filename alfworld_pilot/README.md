@@ -1,5 +1,65 @@
 # Stage 2 — ALFWorld pilot
 
+## Phase 0 design snapshot and gaps (2026-09-29), before anything is run
+
+**Current design** (`kaggle_config.yaml`, `kaggle_memory_store.py`, `kaggle_session.py`):
+- **Main logging episodes**: `episode_plan.main_randomized_logging: 500` — **stale**,
+  set before any real throughput was known; real Mode B throughput (~1,502
+  episodes/30 GPU-hr) means 500 is a significant underuse of a single week's quota
+  and should be recalibrated before Phase 3, not treated as fixed.
+- **Task-type weights**: `env.task_type_weights` — 75% `pick_and_place_simple` +
+  `look_at_obj_in_light`, 25% the other four, `pick_two_obj_and_place` lowest (Task B
+  above); expected pooled success 45.6%.
+- **Exploration/randomization**: `retrieval.M=10`, `propensity_min/max=0.3/0.7` (top-M
+  real-embedding retrieval + randomized Bernoulli inclusion, unchanged from the paid
+  run's mechanism); `env.max_steps=50` (confirmed identical to the paid run's own
+  `config.yaml` by direct inspection — both say 50, the Kaggle run needed no change);
+  memory store = `kaggle_memory_store.build_kaggle_store()` (21 memories, 4
+  categories x 6 task types + 3 irrelevant).
+- **Ground truth**: `ground_truth.n_memories: 6`, `pairs_per_memory: 30` — both
+  **provisional placeholders**, not yet backed by a selection or a power check against
+  real throughput/rho.
+- **Cross-session resume**: `kaggle_session.py` — copy in from an attached Kaggle
+  Dataset, run `run_chunked.py` time-boxed (default 11h, under the 12h session cap),
+  copy out + push a new Dataset version. Explicitly documented in its own docstring as
+  **untested outside a real Kaggle session** — a real, unverified risk for any
+  multi-session campaign.
+
+**Gaps flagged for the actual goal (validating IPS/SNIPS/DR against ground truth on a
+real agent)**:
+1. **No selection mechanism exists for which 6 memories to ground-truth.** The paid
+   run's `mini_ground_truth_selection.py` (stratified + disagreement-oversampled, by
+   memory_worth-vs-ips rank disagreement) is hard-wired to the paid run's own
+   `small_pilot.jsonl` and can't run before a Kaggle main-logging dataset exists —
+   this is a real chicken-and-egg gap: selection needs logging data, but which
+   memories to prioritize is normally decided before running the full campaign. Needs
+   a Kaggle-pointed equivalent, or an explicit decision to select post-hoc from
+   Phase 3's own logs.
+2. **500-episode logging budget is stale** (above) — should be recalibrated against
+   real Mode B throughput before Phase 3, the same way the paid run rescaled its own
+   `episode_plan` after `measure_mode`.
+3. **No orchestration for running ground truth across multiple memories** —
+   `run_chunked.py ground_truth` takes one `--memory-id` per invocation; getting all 6
+   selected memories ground-truthed means 6 separate manually-tracked invocations
+   (and re-invocations across sessions), with no single command or script tying them
+   together yet.
+4. **`rho` for Qwen is still unmeasured** (same caveat as the Timing results section
+   below) — `ground_truth.pairs_per_memory: 30` was set before any real Qwen rho or
+   throughput number existed, so its own implied power hasn't been checked against
+   what's now known.
+5. **`success_within_25/30` (this file's next section) isn't wired into any
+   ground-truth or estimator invocation yet** — the secondary outcome is implemented
+   and tested, but running the estimators against it is a manual step (call
+   `truncated_success()` on a logged dataset before passing it to an estimator), not
+   yet part of any Phase 3/4 script.
+6. **`kaggle_session.py`'s Dataset-versioning handoff is untested** (above) — Phase
+   0/1 should verify this specifically, since a silent failure there would look like
+   "the next session started fresh" rather than an obvious error.
+
+None of these block Phase 0 itself (an environment/compatibility probe), but several
+(#1, #2, #3) should be resolved before Phase 3 (main logging) is actually launched,
+and #6 before relying on any multi-session campaign.
+
 ## Pre-registered secondary outcome (2026-09-29): success_within_25 / success_within_30
 
 Checked first, before adding anything: does the agent's prompt ever show `max_steps`,

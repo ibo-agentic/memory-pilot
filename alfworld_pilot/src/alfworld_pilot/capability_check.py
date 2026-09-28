@@ -154,6 +154,7 @@ def run_episodes(
             _classify_fallback(idx, actions) for idx, s in enumerate(steps) if not s["action_was_admissible"]
         ]
         avg_input_tokens = float(np.mean([s["input_tokens"] for s in steps])) if steps else 0.0
+        total_oom_retries = sum(s["oom_retries"] for s in steps)
         ep = {
             "task_id": task_id,
             "task_type": task_type,
@@ -163,6 +164,7 @@ def run_episodes(
             "parse_failures": result.parse_failures,
             "n_included": n_included,
             "avg_input_tokens": avg_input_tokens,
+            "total_oom_retries": total_oom_retries,
             "fallback_classes": fallback_classes,
             "failure_mode": None,
             "actions": actions,

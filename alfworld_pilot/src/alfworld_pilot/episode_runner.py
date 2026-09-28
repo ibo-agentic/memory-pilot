@@ -74,6 +74,7 @@ def run_logged_episode(
 
     total_input_tokens = sum(s.input_tokens for s in result.steps)
     total_output_tokens = sum(s.output_tokens for s in result.steps)
+    total_oom_retries = sum(s.oom_retries for s in result.steps)
 
     return {
         "task_id": task_id,
@@ -88,6 +89,7 @@ def run_logged_episode(
         "parse_failures": result.parse_failures,
         "total_input_tokens": total_input_tokens,
         "total_output_tokens": total_output_tokens,
+        "total_oom_retries": total_oom_retries,
         "n_llm_calls": len(result.steps),
         "n_cache_hits": sum(1 for s in result.steps if s.cached),
         "steps": [asdict(s) for s in result.steps],

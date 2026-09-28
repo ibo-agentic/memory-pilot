@@ -127,6 +127,7 @@ class StepRecord:
     input_tokens: int
     output_tokens: int
     cached: bool
+    oom_retries: int = 0
 
 
 @dataclass
@@ -224,6 +225,7 @@ def run_episode(
             input_tokens=response.input_tokens,
             output_tokens=response.output_tokens,
             cached=response.cached,
+            oom_retries=response.oom_retries,
         )
         history.append(step_record)
 

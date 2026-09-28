@@ -28,6 +28,13 @@ class LLMResponse:
     output_tokens: int
     cached: bool
     finish_reason: str | None = None
+    # Number of PyTorch CUDA caching-allocator alloc-retries (torch.cuda.memory_stats()
+    # ["num_alloc_retries"], sampled before/after the call) triggered by THIS call --
+    # 0 for a remote API call (OpenRouterClient, no local GPU involved) or a cache hit
+    # (no real generation happened). See local_model_client.py's docstring for why
+    # this is the right signal (a real Kaggle run hit OOM allocator warnings on long
+    # episodes; this counts them per call instead of guessing from a log message).
+    oom_retries: int = 0
 
 
 class LLMClient(Protocol):

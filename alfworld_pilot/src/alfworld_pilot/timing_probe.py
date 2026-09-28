@@ -211,6 +211,7 @@ def run_single_process(args: argparse.Namespace) -> dict:
         total_input_tokens = sum(s.input_tokens for s in result.steps)
         total_output_tokens = sum(s.output_tokens for s in result.steps)
         n_cache_hits = sum(1 for s in result.steps if s.cached)
+        total_oom_retries = sum(s.oom_retries for s in result.steps)
         episode_timings.append(
             {
                 "task_id": task_id,
@@ -220,12 +221,14 @@ def run_single_process(args: argparse.Namespace) -> dict:
                 "output_tokens": total_output_tokens,
                 "seconds_per_step": elapsed / steps_taken if steps_taken else None,
                 "n_cache_hits": n_cache_hits,
+                "total_oom_retries": total_oom_retries,
             }
         )
         cache_note = f", {n_cache_hits} CACHE HITS (timing will be refused)" if n_cache_hits else ""
+        oom_note = f", {total_oom_retries} OOM allocator retries" if total_oom_retries else ""
         print(
             f"[worker {args.worker_id}] episode {i + 1}/{args.n_episodes}: {elapsed:.1f}s, {steps_taken} steps, "
-            f"{total_input_tokens} input tok, {total_output_tokens} output tok, {elapsed / max(steps_taken, 1):.2f}s/step{cache_note}"
+            f"{total_input_tokens} input tok, {total_output_tokens} output tok, {elapsed / max(steps_taken, 1):.2f}s/step{cache_note}{oom_note}"
         )
 
     check_no_cache_hits(episode_timings)
@@ -269,6 +272,7 @@ def run_multi_worker(args: argparse.Namespace) -> None:
         env = os.environ.copy()
         env["CUDA_VISIBLE_DEVICES"] = str(sl["worker_id"])
         env["PYTHONPATH"] = _worker_pythonpath()
+        env.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
         cmd = [
             sys.executable, "-m", "alfworld_pilot.timing_probe",
             "--task-type", args.task_type,
