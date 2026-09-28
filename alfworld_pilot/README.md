@@ -1,5 +1,44 @@
 # Stage 2 — ALFWorld pilot
 
+## Pre-registered decision rule after Phase 0 (2026-09-29), before any runs
+
+Stated in advance so the decision isn't fitted to whatever Phase 0 happens to show.
+
+**What gets measured from Phase 0's real data** (not assumed values):
+1. **Real Qwen ρ** — the paired correlation between the two arms' outcomes across the
+   fold-over ground-truth pairs (same quantity the paid run measured as ρ=0.6355 for
+   GPT-5.6-Luna, borrowed as a placeholder everywhere in this file until now).
+2. **Real per-memory effect sizes** — the 5 ground-truth memories' fold-over-derived
+   gaps (`run_estimators.ground_truth_effects`), and their spread (smallest/largest
+   |effect|).
+3. **Real observed success rate** — from the logging episodes, replacing the 45.6%
+   planning assumption.
+
+**Then**: recompute the MDE-vs-episode-budget table (`power_formula.py`) using these
+three real values in place of the borrowed/assumed ones used everywhere above.
+
+**How Phase 1's length is decided**: run Phase 1 for however many weeks are needed to
+reach 80% power to detect the **smallest real |effect size| Phase 0's ground truth
+actually found** among the 5 memories, using the recomputed table — capped at **6
+weeks** of the 30-GPU-hour/week quota. If the 6-week cap binds first, Phase 1 runs the
+full 6 weeks and reports the MDE actually achieved at that budget, rather than
+silently pretending full power was reached.
+
+**What would make us stop instead of proceeding to Phase 1**:
+- **A real null, not just an inconclusive one.** If Phase 0's ground truth finds all 5
+  memories' effects statistically indistinguishable from zero *with CIs narrow enough
+  to rule out anything but a small effect* (not just wide, underpowered CIs that
+  happen to include zero) — stop; there's no detected effect to scale up a campaign
+  around.
+- **Infeasibility.** If the real measured ρ makes the episode count needed for even a
+  modest target effect (Δ=0.05) exceed what the 6-week cap can reach even in
+  principle — stop and report infeasibility explicitly, rather than running an
+  under-powered campaign anyway and hoping.
+- **Recalibration needed.** If the real observed success rate diverges sharply from
+  the 45.6% planning assumption (below ~15% or above ~85%, a floor/ceiling risk) —
+  stop before Phase 1, recalibrate `env.task_type_weights`, and re-run a short check
+  rather than continuing a campaign built on a wrong success-rate assumption.
+
 ## Orchestration for Phase 0 (2026-09-29): job list, resumable runner, Save & Run All notebook
 
 Closes the remaining Phase 0 gaps: a pre-generated deterministic job list, a runner
