@@ -1,5 +1,41 @@
 # Stage 2 — ALFWorld pilot
 
+## Fixed the flat-layout fix at the source, before Phase 0 (2026-09-29)
+
+The session-2 flat-layout fallback (previous section) was itself unsafe the moment a
+real run has a non-trivial cache: if both `logs` and `cache` end up flattened into the
+same dataset root, their files are indistinguishable, and the old fallback would have
+silently mixed them (or restored the same files into both).
+
+**Root-caused and fixed at the source**: `kaggle datasets create/version --dir-mode
+zip` zips each subfolder's *contents* without prefixing the archive's internal paths
+with the folder's own name — that's *why* Kaggle's mount-time extraction landed
+`logs.zip`'s files flat at the dataset root in the first place, not a Kaggle quirk to
+work around downstream. Fixed: `copy_out_and_version` no longer uses `--dir-mode` at
+all. It zips each non-empty folder itself (`_zip_folder`), baking the folder's name in
+as the archive's own top-level directory (`logs/results.jsonl`, never bare
+`results.jsonl`), so the prefix survives however Kaggle extracts or displays it. The
+staging directory then contains only flat files (`logs.zip`, `cache.zip`,
+`dataset-metadata.json`) — no real subfolders left for any CLI flag to mishandle.
+
+**The flat-layout fallback still exists, but only as a documented last resort** for
+datasets pushed before this fix, gated by a new `allow_flat_fallback` flag.
+`copy_in` now runs two passes: first, restore whatever has a proper (`name/` or
+`name.zip`) form for every known folder with the flat fallback disabled; only if
+**exactly one** folder is still missing does it retry that one folder with the flat
+fallback allowed (safe — anything left over once the other folder's proper form is
+already accounted for can only belong to the missing one). **If more than one folder
+is simultaneously missing its proper form, `copy_in` raises instead of guessing** —
+a flat layout with two folders' files mixed together is genuinely unresolvable from
+the filesystem alone, and failing loudly beats silently mixing or duplicating data.
+
+Tested against exactly this (`tests/test_kaggle_session.py`, 5 new tests):
+`_zip_folder`'s archive layout, a full zip→restore round trip, `copy_in` correctly
+separating a non-empty `logs` and a non-empty `cache` pushed with the new format,
+`copy_in` raising when both are ambiguously flat (simulating an old-format dataset),
+and the single-folder fallback still working when only one side is actually
+ambiguous (the other has a proper form).
+
 ## Handoff test session 2, two more real bugs found and fixed (2026-09-29)
 
 The session-2 safety check itself worked correctly — it failed loudly, as designed —
