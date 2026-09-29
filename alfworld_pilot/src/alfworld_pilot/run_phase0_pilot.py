@@ -1,15 +1,15 @@
-"""Phase 0 pilot driver (2026-09-29, extended 2026-09-30 with a time guard
-and periodic checkpointing) -- the one script kaggle/orchestrated_pilot.ipynb
-calls, designed for Kaggle's "Save & Run All" (every cell runs
-unconditionally, no manual choices): copies in any existing checkpoint from
-the attached Kaggle Dataset (kaggle_session.copy_in -- a no-op printing
-"first session" if there's nothing to copy in yet), generates the job list
-if it doesn't already exist (idempotent -- a later session reuses the same
-file rather than regenerating it), runs jobs in checkpoint_interval_seconds
-chunks -- pushing an updated checkpoint after EVERY chunk, not just at the
-end, so a crash loses at most about one interval's worth of work -- until
-either the overall time_budget_seconds is exhausted or the job list has
-nothing left to run.
+"""Phase 0 pilot driver (2026-09-29, extended 2026-09-30 with a time guard,
+periodic checkpointing, and 2-GPU support) -- the one script
+kaggle/orchestrated_pilot.ipynb calls, designed for Kaggle's "Save & Run All"
+(every cell runs unconditionally, no manual choices): copies in any existing
+checkpoint from the attached Kaggle Dataset (kaggle_session.copy_in -- a
+no-op printing "first session" if there's nothing to copy in yet), generates
+the job list if it doesn't already exist (idempotent -- a later session
+reuses the same file rather than regenerating it), runs jobs in
+checkpoint_interval_seconds chunks -- pushing an updated checkpoint after
+EVERY chunk, not just at the end, so a crash loses at most about one
+interval's worth of work -- until either the overall time_budget_seconds is
+exhausted or the job list has nothing left to run.
 
 Time guard: `--time-budget-seconds` defaults to 10.5h (37,800s), under
 Kaggle's 12h session cap, leaving ~1.5h margin for the last chunk's own
@@ -19,13 +19,22 @@ BEFORE starting a new job (not mid-episode), so an in-flight episode can run
 a bit past either boundary -- accepted, not fought, since ALFWorld episodes
 are capped at env.max_steps=50 and can't run indefinitely.
 
+2-GPU support: `--workers` defaults to 2 (matching Kaggle's T4 x2). With
+`--workers 2`, each chunk is run via multi_worker_phase0.run_multi_gpu_chunk
+(one subprocess per GPU, the same pattern timing_probe.py's --workers
+already verified on real Kaggle, 1.89x combined speedup), and this process
+itself never loads the model (only `memories`, needed cheaply for
+validation metrics). `--workers 1` runs everything in-process instead
+(no subprocess spawned), matching the original single-GPU driver exactly.
+
 The Kaggle-Dataset-specific parts (copy_in/copy_out_and_version) inherit
 kaggle_session.py's own documented limitation: untestable outside a real
 Kaggle session. `run_session_with_checkpoints` (the chunking/stopping logic)
-is deliberately factored out from `main()` so it IS unit-testable against
-the mock backend, with `checkpoint_fn` injected as a fake
-(tests/test_run_phase0_pilot.py) -- everything else this script calls
-(job_list.py, run_jobs.py, run_estimators.py) is unit-tested too.
+takes an injectable `run_chunk_fn`, so the SAME loop covers both the
+single-worker (calls run_jobs in-process) and multi-worker (spawns
+subprocesses via multi_worker_phase0) cases, and is unit-tested against the
+mock backend either way (tests/test_run_phase0_pilot.py,
+tests/test_multi_worker_phase0.py).
 """
 
 from __future__ import annotations
@@ -39,10 +48,10 @@ from typing import Callable
 from . import config as config_mod
 from .capability_check import build_local_client
 from .env_factory import load_real_alfworld_config
-from .ground_truth_runner import TaskSource
 from .job_list import TARGET_MEMORY_IDS, generate_job_list, load_job_list, write_job_list
 from .kaggle_memory_store import build_kaggle_store
 from .kaggle_session import copy_in, copy_out_and_version
+from .multi_worker_phase0 import merge_worker_results, run_multi_gpu_chunk
 from .run_estimators import validate_per_task_type
 from .run_jobs import run_jobs
 from .weighted_task_source import WeightedRealTaskSource
@@ -52,31 +61,26 @@ KAGGLE_WORKING = pathlib.Path("/kaggle/working")
 
 DEFAULT_TIME_BUDGET_SECONDS = 37_800.0  # 10.5h, under Kaggle's 12h session cap
 DEFAULT_CHECKPOINT_INTERVAL_SECONDS = 7_200.0  # 2h -- a crash loses at most about this much work
+DEFAULT_WORKERS = 2  # matches Kaggle's T4 x2
 
 
 def run_session_with_checkpoints(
-    job_list_path: str | pathlib.Path,
-    results_path: str | pathlib.Path,
-    task_source: TaskSource,
-    llm_client,
-    memories: list,
-    m: int,
-    propensity_min: float,
-    propensity_max: float,
-    max_steps: int,
+    run_chunk_fn: Callable[[float], int],
     time_budget_seconds: float,
     checkpoint_interval_seconds: float,
     checkpoint_fn: Callable[[], None],
-    similarity_fn=None,
 ) -> int:
-    """Runs jobs in checkpoint_interval_seconds-sized chunks (via
-    run_jobs.run_jobs, already resumable/crash-safe per-job), calling
-    checkpoint_fn() after EVERY chunk -- not just at the end -- so a crash
-    loses at most about one interval's worth of work, not the whole session.
-    Stops when either time_budget_seconds is exhausted (checked BEFORE
-    starting a new chunk, so this never starts a chunk that couldn't
-    possibly begin) or a chunk completes zero new jobs (the job list is
-    exhausted, or nothing was runnable -- no point looping again).
+    """Runs work in checkpoint_interval_seconds-sized chunks via
+    `run_chunk_fn(chunk_budget_seconds) -> n_new_completed` -- deliberately
+    generic over HOW a chunk gets run (in-process run_jobs for 1 worker, or
+    multi_worker_phase0.run_multi_gpu_chunk spawning subprocesses for N),
+    so this loop's own time-guard/checkpoint semantics are identical either
+    way. Calls checkpoint_fn() after EVERY chunk -- not just at the end --
+    so a crash loses at most about one interval's worth of work, not the
+    whole session. Stops when either time_budget_seconds is exhausted
+    (checked BEFORE starting a new chunk, so this never starts a chunk that
+    couldn't possibly begin) or a chunk completes zero new jobs (the job
+    list is exhausted, or nothing was runnable -- no point looping again).
 
     checkpoint_fn takes no arguments and is called purely for its side
     effect (typically writing validation metrics and pushing a Kaggle
@@ -96,10 +100,7 @@ def run_session_with_checkpoints(
         chunk_budget = min(checkpoint_interval_seconds, remaining)
         chunk_index += 1
         print(f"[run_phase0_pilot] chunk {chunk_index}: running for up to {chunk_budget:.0f}s ({remaining:.0f}s left in the overall budget)")
-        n_new = run_jobs(
-            job_list_path, results_path, task_source, llm_client, memories, m, propensity_min, propensity_max, max_steps,
-            time_budget_seconds=chunk_budget, similarity_fn=similarity_fn,
-        )
+        n_new = run_chunk_fn(chunk_budget)
         total_new += n_new
         print(f"[run_phase0_pilot] chunk {chunk_index}: completed {n_new} new job(s) ({total_new} total this session)")
 
@@ -145,6 +146,10 @@ def main() -> None:
         "--checkpoint-interval-seconds", type=float, default=DEFAULT_CHECKPOINT_INTERVAL_SECONDS,
         help="Push to the checkpoint Dataset this often WHILE running, not just at the end (default 2h), so a crash loses at most about this much work.",
     )
+    p.add_argument(
+        "--workers", type=int, default=DEFAULT_WORKERS,
+        help="Number of GPU worker processes (default 2, matching Kaggle's T4 x2). 1 runs everything in-process, no subprocess spawned.",
+    )
     args = p.parse_args()
 
     logs_dir = KAGGLE_WORKING / "logs_kaggle"
@@ -162,28 +167,48 @@ def main() -> None:
         jobs = load_job_list(job_list_path)
         print(f"Resuming existing job list ({len(jobs)} jobs)")
 
-    cfg_path = ALFWORLD_PILOT_DIR / "kaggle_config.yaml"
-    cfg = config_mod.load_config(cfg_path)
-    cfg["cache"]["dir"] = str(cache_dir)  # session-local cache, persisted via copy_out_and_version
-    real_cfg = load_real_alfworld_config(cfg["env"]["real_alfworld_config_path"])
-    task_source = WeightedRealTaskSource(
-        real_cfg, split=cfg["env"]["real_split"], task_type_weights=cfg["env"]["task_type_weights"]
-    )
-    llm_client, cost_tracker = build_local_client(cfg)
-    memories = build_kaggle_store()
-    m = cfg["retrieval"]["M"]
-    prop_min, prop_max = cfg["retrieval"]["propensity_min"], cfg["retrieval"]["propensity_max"]
-    max_steps = cfg["env"]["max_steps"]
+    memories = build_kaggle_store()  # cheap, no GPU -- needed for validation metrics either way
 
-    def _checkpoint() -> None:
-        _write_validation_metrics(results_path, memories, logs_dir)
-        copy_out_and_version(args.dataset_slug, logs_dir, cache_dir, message="Phase 0 pilot: periodic checkpoint")
+    if args.workers > 1:
+        worker_results_paths = [logs_dir / f"phase0_results_worker{i}.jsonl" for i in range(args.workers)]
+        work_dir = logs_dir / "_multi_worker_chunks"
 
-    total_new = run_session_with_checkpoints(
-        job_list_path, results_path, task_source, llm_client, memories, m, prop_min, prop_max, max_steps,
-        args.time_budget_seconds, args.checkpoint_interval_seconds, _checkpoint,
-    )
-    print(f"[run_phase0_pilot] session finished: {total_new} new job(s) completed this session (cost tracker: {cost_tracker.summary()}).")
+        def _run_chunk(chunk_budget: float) -> int:
+            n_new = run_multi_gpu_chunk(job_list_path, worker_results_paths, chunk_budget, work_dir, backend="real")
+            merge_worker_results(worker_results_paths, results_path)
+            return n_new
+
+        def _checkpoint() -> None:
+            _write_validation_metrics(results_path, memories, logs_dir)
+            copy_out_and_version(args.dataset_slug, logs_dir, cache_dir, message="Phase 0 pilot: periodic checkpoint")
+
+        total_new = run_session_with_checkpoints(_run_chunk, args.time_budget_seconds, args.checkpoint_interval_seconds, _checkpoint)
+        print(f"[run_phase0_pilot] session finished ({args.workers} workers): {total_new} new job(s) completed this session.")
+    else:
+        cfg_path = ALFWORLD_PILOT_DIR / "kaggle_config.yaml"
+        cfg = config_mod.load_config(cfg_path)
+        cfg["cache"]["dir"] = str(cache_dir)  # session-local cache, persisted via copy_out_and_version
+        real_cfg = load_real_alfworld_config(cfg["env"]["real_alfworld_config_path"])
+        task_source = WeightedRealTaskSource(
+            real_cfg, split=cfg["env"]["real_split"], task_type_weights=cfg["env"]["task_type_weights"]
+        )
+        llm_client, cost_tracker = build_local_client(cfg)
+        m = cfg["retrieval"]["M"]
+        prop_min, prop_max = cfg["retrieval"]["propensity_min"], cfg["retrieval"]["propensity_max"]
+        max_steps = cfg["env"]["max_steps"]
+
+        def _run_chunk(chunk_budget: float) -> int:
+            return run_jobs(
+                job_list_path, results_path, task_source, llm_client, memories, m, prop_min, prop_max, max_steps,
+                time_budget_seconds=chunk_budget,
+            )
+
+        def _checkpoint() -> None:
+            _write_validation_metrics(results_path, memories, logs_dir)
+            copy_out_and_version(args.dataset_slug, logs_dir, cache_dir, message="Phase 0 pilot: periodic checkpoint")
+
+        total_new = run_session_with_checkpoints(_run_chunk, args.time_budget_seconds, args.checkpoint_interval_seconds, _checkpoint)
+        print(f"[run_phase0_pilot] session finished (1 worker): {total_new} new job(s) completed this session (cost tracker: {cost_tracker.summary()}).")
 
 
 if __name__ == "__main__":

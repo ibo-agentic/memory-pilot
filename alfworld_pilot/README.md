@@ -38,9 +38,65 @@ Kaggle-Dataset push/pull itself still inherits `kaggle_session.py`'s own "untest
 outside a real session" limitation, but the chunking/stopping logic around it doesn't
 need to.
 
-## Phase 0 launch checklist (2026-09-30)
+## 2-GPU support, built before launch (2026-09-30)
 
-**Notebook**: [`kaggle/orchestrated_pilot.ipynb`](kaggle/orchestrated_pilot.ipynb).
+`run_phase0_pilot.py` previously ran on a single GPU — the second T4 in "T4 x2" sat
+idle. Fixed, reusing the exact worker pattern `timing_probe.py --workers` already
+verified on real Kaggle (1.89x combined speedup): one subprocess per GPU
+(`CUDA_VISIBLE_DEVICES=0`/`1`), each running `run_jobs.py`'s own new CLI
+(`python -m alfworld_pilot.run_jobs`) against its own job-list subset and its own
+results file.
+
+- **Split** (`multi_worker_phase0.group_into_units` /
+  `split_units_across_workers`): pending jobs are grouped into indivisible units first
+  — a `ground_truth_fold_a`/`_b` pair (same `pair_index`) is ONE unit, so both arms
+  always land on the same worker — then units are round-robin assigned across
+  workers. **Recomputed fresh from whatever's currently pending every chunk**, never a
+  persisted assignment, so a restart with a different pending set (one worker made
+  more progress than the other, or one crashed) always gets a freshly (re)balanced
+  split.
+- **Resume, per worker and after a restart**: a job counts as done if it's in
+  *either* worker's results file (`run_multi_gpu_chunk` unions both before computing
+  what's still pending) — verified with a test that pre-seeds one worker's file as if
+  it already finished 8 of 10 jobs and confirms the next chunk only assigns the
+  genuinely-remaining 2.
+- **Time guard + periodic checkpoint cover both workers**: `run_session_with_checkpoints`
+  (previously specific to the single-worker path) now takes an injectable
+  `run_chunk_fn`, so the identical time-guard/2h-checkpoint loop drives either 1
+  worker (in-process `run_jobs`) or 2 (`run_multi_gpu_chunk`, which spawns both
+  subprocesses for the chunk and **waits for both** — even if one exits early — before
+  merging and returning). The 2-hour checkpoint pushes whatever both workers have so
+  far, merged into one combined log (`merge_worker_results`).
+- **One worker crashing**: `run_multi_gpu_chunk` waits for every spawned subprocess
+  regardless of exit code, prints a warning for a non-zero one, and does **not** abort
+  or retry it — the other worker's chunk still completes, and the crashed worker's
+  already-flushed jobs (its own file, written per-job like the single-worker path)
+  are kept, not lost. The session still checkpoints and continues.
+- **GPU logging**: every episode's record now includes `worker_id` (0 or 1 for a
+  2-GPU chunk, `None` for a plain single-worker run) — set at the source in
+  `run_jobs._run_one_job`, not reconstructed after the fact.
+
+12 new tests (`tests/test_multi_worker_phase0.py`) — the pure split/grouping logic,
+and, using `--backend mock` (zero GPU/ALFWorld dependency), REAL subprocess-spawning
+tests of the actual mechanism: a full split-run-merge, GPU tagging, resume after a
+partial session, resume with a rebalanced (not stale) split, and a worker crashing
+while its sibling keeps going and the session still finishes. Plus 1 new test
+confirming `run_session_with_checkpoints` passes the chunk budget, not the overall
+one, to `run_chunk_fn`.
+
+**Real-GPU sanity check, before the first real session**:
+[`kaggle/multi_gpu_sanity_check.ipynb`](kaggle/multi_gpu_sanity_check.ipynb) — 10 jobs
+(8 logging + 1 ground-truth pair) split across both T4s, checks both workers actually
+produced episodes, the fold pair stayed on one worker, and the merge exactly matches
+the job list with no duplicates. No Dataset round-trip, no secret needed — just GPU +
+Internet. Should finish in well under 30 minutes.
+
+## Phase 0 launch checklist (2026-09-30, updated for 2-GPU support)
+
+**Notebook**: [`kaggle/orchestrated_pilot.ipynb`](kaggle/orchestrated_pilot.ipynb) —
+but run [`kaggle/multi_gpu_sanity_check.ipynb`](kaggle/multi_gpu_sanity_check.ipynb)
+**first**, once, to confirm both GPUs actually get used before committing to a full
+session.
 
 **Settings to click**:
 - Accelerator: **GPU T4 x2**.
@@ -50,35 +106,33 @@ need to.
   distinct from the handoff test's (`memory-pilot-handoff-test`), so Phase 0's real
   data never shares a Dataset with that throwaway test.
 - Leave `N_LOGGING=1050`, `N_GT_PAIRS=225`, `TIME_BUDGET_SECONDS=37_800`,
-  `CHECKPOINT_INTERVAL_SECONDS=7_200` at their defaults unless you have a specific
-  reason to change them.
+  `CHECKPOINT_INTERVAL_SECONDS=7_200`, `WORKERS=2` at their defaults unless you have a
+  specific reason to change them.
 - **First session only**: nothing to attach as Input yet (the Dataset doesn't exist).
   From the second session on: **Add Input → Your Datasets → `memory-pilot-phase0`**.
 
-**⚠️ Flag before launching, not after**: `run_phase0_pilot.py` runs on a **single
-GPU** — `run_jobs.py` has no multi-worker/multi-GPU support (unlike
-`timing_probe.py`'s `--workers N`), so the second T4 in "T4 x2" currently sits idle.
-Expected session count below uses the real single-GPU throughput (~136 s/episode),
-**not** the ~2x-faster combined T4 x2 rate the original "Phase 0 split" section's
-1-week framing assumed. If you'd rather have `run_phase0_pilot.py` actually use both
-GPUs (roughly halving the session count below), say so before the first session —
-adding that is a real, separate piece of work, not a settings change.
-
 **Expected number of sessions**: 1,500 total jobs (1,050 logging + 225 ground-truth
-pairs × 2) ÷ ~278 episodes/session (10.5h × 3,600s ÷ ~136s/episode, single GPU) ≈
-**5-6 sessions**, run one **Save & Run All** at a time.
+pairs × 2) ÷ ~525 episodes/session (10.5h at the real, measured combined T4 x2 rate —
+~1,502 episodes per 30 GPU-hours, i.e. ~50/wall-clock-hour) ≈ **3 sessions**, run one
+**Save & Run All** at a time — about half the single-GPU estimate this section
+previously gave, now that both T4s are actually used.
 
 **What to check after each session**:
-1. The cell output ends with `[run_phase0_pilot] session finished: N new job(s)
-   completed this session` — if it instead raised (a `FAIL` from `copy_out_and_version`
-   or the session-2-style precondition), the checkpoint did **not** update; fix
-   whatever it reports before the next session, don't just retry blindly.
+1. The cell output ends with `[run_phase0_pilot] session finished (2 workers): N new
+   job(s) completed this session` — if it instead raised (a `FAIL` from
+   `copy_out_and_version` or the session-2-style precondition), the checkpoint did
+   **not** update; fix whatever it reports before the next session, don't just retry
+   blindly.
 2. On kaggle.com, the `memory-pilot-phase0` Dataset has a new version with a recent
    timestamp.
 3. Progress: the final cell prints `Progress: X/1500 jobs done` — should strictly
    increase session to session; if it doesn't move at all, the Dataset likely wasn't
    attached as Input (check the notebook's Input panel).
-4. Once `X == 1500` (or you decide to stop earlier — this is a pilot, not a
+4. Spot-check `phase0_results.jsonl` (the merged log) has episodes tagged
+   `worker_id: 0` **and** `worker_id: 1` — if only one ever appears across a whole
+   session, one GPU silently isn't being used and it's worth re-running the sanity
+   check before continuing.
+5. Once `X == 1500` (or you decide to stop earlier — this is a pilot, not a
    commitment to run all 1,500), pull `phase0_validation.json` from the Dataset and
    move to the pre-registered decision rule.
 
