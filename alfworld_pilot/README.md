@@ -1,5 +1,36 @@
 # Stage 2 — ALFWorld pilot
 
+## Handoff test session 2, two more real bugs found and fixed (2026-09-29)
+
+The session-2 safety check itself worked correctly — it failed loudly, as designed —
+but for the wrong deeper reason: `copy_in` never actually found session 1's data.
+
+1. **Wrong mount path assumed.** `find_attached_dataset` (renamed from
+   `_find_attached_dataset`) only checked `/kaggle/input/<name>/`. The real session
+   mounted the attached dataset at `/kaggle/input/datasets/<owner>/<name>/` instead —
+   confirmed by the user directly running `find /kaggle/input -maxdepth 5` on Kaggle.
+   Fixed: now checks both paths (derived from `DATASET_SLUG`), then falls back to a
+   recursive search of `/kaggle/input` for a directory named exactly `<name>` if
+   neither matches, and always prints which path was used (or that none was) so a
+   future layout change is visible in the notebook's own output.
+2. **Flat layout, not a subfolder.** Even with the right path, the actual mounted
+   contents were `handoff_test_jobs.json` and `handoff_test_results.jsonl` sitting
+   directly at the dataset root — Kaggle had auto-extracted the uploaded `logs.zip`
+   flat, not into a `logs/` subfolder as `restore_folder` assumed. Fixed:
+   `restore_folder` now has a third fallback (after checking `name/` and `name.zip`):
+   if neither exists, copy everything at the dataset root except entries matching
+   another known folder name (so restoring "logs" doesn't also pull in a separate,
+   properly-named `cache/`). **Known residual limitation, stated plainly**: if two or
+   more folders ever get flattened into the same root simultaneously (not hit here,
+   since `cache` was empty), their files would be indistinguishable and could mix —
+   worth revisiting before a real run with a non-trivial cache.
+
+Both fixes are unit-tested against the exact structures the real session
+produced/would produce (`tests/test_kaggle_session.py`, 7 new tests) — `find_attached_dataset`'s path discovery no longer depends on a real Kaggle session to verify (only the actual `kaggle` CLI calls in `copy_out_and_version` still do). `run_phase0_pilot.py`
+imports `copy_in`/`copy_out_and_version` directly from `kaggle_session.py`, so
+`orchestrated_pilot.ipynb` gets both fixes automatically, with no separate notebook
+change needed.
+
 ## Handoff test session 1, real bugs found and fixed (2026-09-29)
 
 Running session 1 on real Kaggle (before session 2 or any real Phase 0 data) surfaced

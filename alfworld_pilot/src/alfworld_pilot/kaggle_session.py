@@ -9,10 +9,20 @@ session ends, unlike this project's WSL2 environment, which has a persistent
 home directory. It is a thin layer ON TOP OF checkpointed_runner.py/
 run_chunked.py, which already handle intra-session crash/restart
 resumability unchanged and are exercised by this project's existing (passing)
-test suite. The copy-in/copy-out/dataset-version logic below is Kaggle-API-
-specific and CANNOT be tested outside an actual Kaggle session -- it is
-untested by construction until run there; verify it in Phase 0/1 before
-relying on it for a real multi-session campaign.
+test suite.
+
+Two things ARE unit-tested locally despite the above (tests/test_kaggle_session.py):
+`find_attached_dataset`'s path discovery and `restore_folder`'s layout
+detection -- both were wrong on the first real Kaggle run (2026-09-29
+handoff test session 2 found the dataset at /kaggle/input/datasets/<owner>/
+<name>/, not the originally assumed /kaggle/input/<name>/, and Kaggle had
+auto-extracted the uploaded zip flat into the dataset root rather than
+preserving a subfolder), fixed, and now covered by real filesystem-based
+tests reproducing those exact layouts. What's still genuinely untestable
+outside a real Kaggle session is anything that shells out to the actual
+`kaggle` CLI (`copy_out_and_version`'s create/version calls, and the
+`datasets status` existence check) -- verify those in Phase 0/1 before
+relying on this for a real multi-session campaign.
 
 Usage (inside a Kaggle notebook cell, after Phase 0/1 pass):
     python -m alfworld_pilot.kaggle_session logging \\
@@ -49,28 +59,71 @@ DEFAULT_TIME_BUDGET_SECONDS = 39_600.0  # 11h, leaving a real margin under Kaggl
 _ERROR_MARKERS = ("error", "traceback", "exception")
 
 
-def _find_attached_dataset(slug: str) -> pathlib.Path | None:
-    """Kaggle mounts an attached input dataset at /kaggle/input/<name>/, where
-    <name> is the LAST path segment of the dataset slug (not the full
-    'username/dataset-name' slug) -- confirmed against a real Kaggle session
-    (2026-09-29 handoff test)."""
-    dataset_name = slug.split("/")[-1]
-    candidate = KAGGLE_INPUT_ROOT / dataset_name
-    return candidate if candidate.exists() else None
+def find_attached_dataset(slug: str) -> pathlib.Path | None:
+    """Kaggle's mount path for an attached input dataset has been observed to
+    vary across sessions: originally assumed /kaggle/input/<name>/, but a
+    real session (2026-09-29 handoff test) actually mounted it at
+    /kaggle/input/datasets/<owner>/<name>/ instead. Both are checked
+    explicitly (derived from `slug`), with a recursive fallback search of
+    /kaggle/input for a directory named exactly <name> if neither matches,
+    in case the layout varies again. Always prints which path was used (or
+    that none was found), so a future layout change shows up in the
+    notebook's own output instead of silently doing nothing."""
+    owner, sep, name = slug.partition("/")
+    if not sep:  # slug had no "/" -- treat the whole thing as the name, no owner
+        name, owner = owner, ""
+
+    candidates = [KAGGLE_INPUT_ROOT / name]
+    if owner:
+        candidates.append(KAGGLE_INPUT_ROOT / "datasets" / owner / name)
+
+    for candidate in candidates:
+        if candidate.is_dir():
+            print(f"[kaggle_session] found attached dataset at {candidate}")
+            return candidate
+
+    if KAGGLE_INPUT_ROOT.is_dir():
+        for path in KAGGLE_INPUT_ROOT.rglob(name):
+            if path.is_dir():
+                print(f"[kaggle_session] found attached dataset via recursive search at {path}")
+                return path
+
+    print(
+        f"[kaggle_session] no attached dataset found for slug {slug!r} "
+        f"(checked {[str(c) for c in candidates]}, and recursively searched {KAGGLE_INPUT_ROOT})"
+    )
+    return None
 
 
-def restore_folder(src_root: pathlib.Path, name: str, dest: pathlib.Path) -> bool:
-    """Restores `name` (e.g. "logs") from src_root into dest, handling BOTH
-    ways Kaggle can end up storing it: a plain extracted directory
-    (src_root/name/), or a zip archive (src_root/name.zip -- produced by
-    `kaggle datasets create/version --dir-mode zip`, required because the
-    plain `kaggle datasets create -p <dir>` silently SKIPPED subfolders
-    entirely ("Skipping folder: logs; use '--dir-mode' to upload folders"),
-    confirmed on a real Kaggle session). A zip's internal layout isn't
-    assumed either way (contents at the zip root, or nested inside one more
-    `name/` folder) -- both are handled. Returns True if anything was
-    restored, False if neither form was found (not an error -- the first
-    session has nothing to restore)."""
+def restore_folder(src_root: pathlib.Path, name: str, dest: pathlib.Path, other_names: tuple[str, ...] = ()) -> bool:
+    """Restores `name` (e.g. "logs") from src_root into dest, handling THREE
+    ways Kaggle can end up storing it:
+      1. a plain extracted directory (src_root/name/);
+      2. a zip archive (src_root/name.zip -- produced by `kaggle datasets
+         create/version --dir-mode zip`, required because the plain `kaggle
+         datasets create -p <dir>` silently SKIPPED subfolders entirely
+         ("Skipping folder: logs; use '--dir-mode' to upload folders")).
+         A zip's internal layout isn't assumed either way (contents at the
+         zip root, or nested inside one more `name/` folder) -- both handled.
+      3. a FLAT layout: on a real Kaggle session (2026-09-29), Kaggle
+         auto-extracted the uploaded logs.zip directly into the dataset
+         ROOT rather than preserving it as logs/ or logs.zip -- the pushed
+         files (e.g. handoff_test_jobs.json) ended up as direct siblings at
+         src_root. When neither form 1 nor 2 is found, this copies
+         everything at src_root EXCEPT entries matching another known
+         folder name (`other_names`, its own dir or .zip) into dest.
+
+    Known residual limitation of form 3: if TWO OR MORE folders (e.g. both
+    logs/ and a non-empty cache/) ever get flattened into the same dataset
+    root simultaneously, their files would be indistinguishable and could
+    mix -- `other_names` only excludes entries that are STILL a named
+    dir/zip, not ones that were ALSO flattened. Not hit in the handoff test
+    (cache was empty, so only logs.zip existed to flatten) but worth
+    revisiting before relying on this for a real run with a non-trivial
+    cache.
+
+    Returns True if anything was restored, False if nothing was found at
+    all (not an error -- the first session has nothing to restore)."""
     plain_dir = src_root / name
     zip_path = src_root / f"{name}.zip"
 
@@ -92,6 +145,23 @@ def restore_folder(src_root: pathlib.Path, name: str, dest: pathlib.Path) -> boo
         print(f"[kaggle_session] extracted {zip_path} -> {dest} (zip archive)")
         return True
 
+    excluded_names = set(other_names) | {f"{o}.zip" for o in other_names} | {"dataset-metadata.json"}
+    flat_entries = [p for p in src_root.iterdir() if p.name not in excluded_names]
+    if flat_entries:
+        dest.mkdir(parents=True, exist_ok=True)
+        for entry in flat_entries:
+            target = dest / entry.name
+            if entry.is_dir():
+                shutil.copytree(entry, target, dirs_exist_ok=True)
+            else:
+                shutil.copy2(entry, target)
+        print(
+            f"[kaggle_session] copied in {src_root} -> {dest} (flat layout -- "
+            "Kaggle auto-extracted the zip directly into the dataset root instead of preserving "
+            f"{name}/ or {name}.zip)"
+        )
+        return True
+
     return False
 
 
@@ -100,16 +170,15 @@ def copy_in(slug: str, logs_dir: pathlib.Path, cache_dir: pathlib.Path) -> None:
     LLM cache) from the attached input dataset into writable working
     directories. A first-ever session has nothing to copy in -- expected, not
     an error."""
-    src = _find_attached_dataset(slug)
+    src = find_attached_dataset(slug)
     if src is None:
-        print(
-            f"[kaggle_session] no attached dataset found at /kaggle/input/{slug.split('/')[-1]}/ "
-            f"-- assuming this is the FIRST session for this campaign, starting fresh."
-        )
+        print(f"[kaggle_session] assuming this is the FIRST session for this campaign, starting fresh.")
         return
-    for name, dest in (("logs", logs_dir), ("cache", cache_dir)):
-        if not restore_folder(src, name, dest):
-            print(f"[kaggle_session] no {name} found at {src} (neither {name}/ nor {name}.zip) -- nothing to restore")
+    names = ("logs", "cache")
+    for name, dest in zip(names, (logs_dir, cache_dir)):
+        other_names = tuple(n for n in names if n != name)
+        if not restore_folder(src, name, dest, other_names=other_names):
+            print(f"[kaggle_session] no {name} found at {src} (checked {name}/, {name}.zip, and a flat layout) -- nothing to restore")
 
 
 def copy_out_and_version(slug: str, logs_dir: pathlib.Path, cache_dir: pathlib.Path, message: str) -> None:
