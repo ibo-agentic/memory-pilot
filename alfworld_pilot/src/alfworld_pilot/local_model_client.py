@@ -95,8 +95,17 @@ class LocalTransformersClient:
             quant_kwargs["quantization_config"] = BitsAndBytesConfig(
                 load_in_4bit=True, bnb_4bit_compute_dtype=torch.float16, bnb_4bit_quant_type="nf4",
             )
+        # low_cpu_mem_usage=True (2026-09-30, after a real Kaggle hang):
+        # loads the state dict directly onto `device` shard-by-shard instead
+        # of materializing a full fp32 copy in CPU RAM first -- reduces CPU
+        # memory pressure and (per the fix this hang required) staggered
+        # loading, matters most exactly when two worker processes are
+        # loading onto two different GPUs at the same time and would
+        # otherwise compete for the same CPU cores/RAM during
+        # deserialization and 4-bit quantization.
         self.model = AutoModelForCausalLM.from_pretrained(
-            model_id, revision=revision, torch_dtype=torch.float16, device_map=device, **quant_kwargs,
+            model_id, revision=revision, torch_dtype=torch.float16, device_map=device,
+            low_cpu_mem_usage=True, **quant_kwargs,
         )
         self.model.eval()
 

@@ -13,10 +13,13 @@ from __future__ import annotations
 
 import time
 
+import pytest
+
 from alfworld_pilot.ground_truth_runner import MockTaskSource
 from alfworld_pilot.job_list import generate_job_list, write_job_list
 from alfworld_pilot.memory_store import build_mock_store
 from alfworld_pilot.mock_llm import MockLLMClient
+from alfworld_pilot.multi_worker_phase0 import WatchdogTimeoutError
 from alfworld_pilot.run_jobs import completed_job_ids, run_jobs
 from alfworld_pilot.run_phase0_pilot import run_session_with_checkpoints
 
@@ -127,6 +130,18 @@ def test_resuming_a_second_call_does_not_duplicate_or_lose_jobs(tmp_path):
     with open(results_path, "r", encoding="utf-8") as f:
         job_ids_in_results = [json.loads(line)["job_id"] for line in f if line.strip()]
     assert len(job_ids_in_results) == len(set(job_ids_in_results)) == 6
+
+
+def test_watchdog_timeout_still_checkpoints_before_reraising():
+    checkpoint = _CountingCheckpoint()
+
+    def _run_chunk(chunk_budget: float) -> int:
+        raise WatchdogTimeoutError("worker(s) [0] hung for over 1s with no progress (0 job(s) completed)")
+
+    with pytest.raises(WatchdogTimeoutError):
+        run_session_with_checkpoints(_run_chunk, time_budget_seconds=100.0, checkpoint_interval_seconds=10.0, checkpoint_fn=checkpoint)
+
+    assert checkpoint.calls == 1  # saved whatever was done before the exception propagated
 
 
 def test_run_chunk_fn_receives_the_chunk_budget_not_the_overall_budget():

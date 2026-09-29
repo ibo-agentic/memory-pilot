@@ -51,7 +51,7 @@ from .env_factory import load_real_alfworld_config
 from .job_list import TARGET_MEMORY_IDS, generate_job_list, load_job_list, write_job_list
 from .kaggle_memory_store import build_kaggle_store
 from .kaggle_session import copy_in, copy_out_and_version
-from .multi_worker_phase0 import merge_worker_results, run_multi_gpu_chunk
+from .multi_worker_phase0 import WatchdogTimeoutError, merge_worker_results, predownload_model, run_multi_gpu_chunk
 from .run_estimators import validate_per_task_type
 from .run_jobs import run_jobs
 from .weighted_task_source import WeightedRealTaskSource
@@ -87,7 +87,13 @@ def run_session_with_checkpoints(
     Dataset version) -- injected so this function's own chunking/stopping
     logic is unit-testable with a fake, without touching a real Kaggle
     Dataset. Returns the total number of newly completed jobs across the
-    whole session."""
+    whole session.
+
+    If run_chunk_fn raises WatchdogTimeoutError (multi_worker_phase0's
+    watchdog killed a hung worker), this still calls checkpoint_fn() ONE
+    more time before re-raising -- "kill the workers, save whatever is
+    done, print a clear FAIL, end the session" means the save has to happen
+    even though the chunk itself failed, not only on a clean chunk."""
     t_start = time.monotonic()
     total_new = 0
     chunk_index = 0
@@ -100,7 +106,12 @@ def run_session_with_checkpoints(
         chunk_budget = min(checkpoint_interval_seconds, remaining)
         chunk_index += 1
         print(f"[run_phase0_pilot] chunk {chunk_index}: running for up to {chunk_budget:.0f}s ({remaining:.0f}s left in the overall budget)")
-        n_new = run_chunk_fn(chunk_budget)
+        try:
+            n_new = run_chunk_fn(chunk_budget)
+        except WatchdogTimeoutError as e:
+            print(f"[run_phase0_pilot] FAIL: {e} -- saving whatever is done and ending the session.")
+            checkpoint_fn()
+            raise
         total_new += n_new
         print(f"[run_phase0_pilot] chunk {chunk_index}: completed {n_new} new job(s) ({total_new} total this session)")
 
@@ -168,6 +179,14 @@ def main() -> None:
         print(f"Resuming existing job list ({len(jobs)} jobs)")
 
     memories = build_kaggle_store()  # cheap, no GPU -- needed for validation metrics either way
+
+    # Pre-download the model ONCE, here, before any worker subprocess is
+    # spawned -- a real Kaggle sanity-check run had two workers race each
+    # other over the same cold ~15GB download/load and hang for 2+ hours
+    # with no error. Cheap even when already cached (only fetches whatever's
+    # missing); the point is this is the ONLY process that ever downloads.
+    cfg_for_download = config_mod.load_config(ALFWORLD_PILOT_DIR / "kaggle_config.yaml")
+    predownload_model(cfg_for_download)
 
     if args.workers > 1:
         worker_results_paths = [logs_dir / f"phase0_results_worker{i}.jsonl" for i in range(args.workers)]

@@ -1,5 +1,79 @@
 # Stage 2 — ALFWorld pilot
 
+## Multi-GPU sanity check froze on Kaggle — diagnosed and fixed (2026-09-30)
+
+The first real run of `multi_gpu_sanity_check.ipynb` hung: both workers fetched the
+model at the same time, then loading stalled at 42% (layer 11) for 2+ hours with no
+error. `timing_probe.py --workers` had worked earlier, but only against
+already-downloaded weights — this was a cold run.
+
+**Comparison with `timing_probe.py`'s worker launch path (requested explicitly)**:
+`timing_probe.run_multi_worker` spawns both workers essentially simultaneously
+(a tight loop of `subprocess.Popen` calls, no staggering, no `-u`, no readiness
+coordination) and sets `PYTHONPATH` explicitly per worker. `multi_worker_phase0.py`'s
+original version matched that shape almost exactly (simultaneous spawn, no `-u`), with
+one real difference: it relies on `pip install -e` instead of `timing_probe.py`'s
+explicit `PYTHONPATH` (not the cause here — an import failure would raise immediately,
+not stall mid-load). The one difference that *does* explain the hang isn't in the
+launch code at all: every `timing_probe.py --workers` run on record happened with the
+weights already cached: two workers loading a warm cache in parallel is cheap (no
+network, minimal CPU work); two workers cold-downloading and loading a ~15GB model
+into 4-bit quantized tensors at the same time is not — most likely CPU/disk
+contention on Kaggle's limited cores, though the exact mechanism was never confirmed
+(nothing errored; progress just stopped).
+
+**Three fixes, independent of the exact mechanism holding**:
+1. **Pre-download once** (`multi_worker_phase0.predownload_model`): the parent process
+   calls `huggingface_hub.snapshot_download` for the pinned model before spawning any
+   worker, so no two workers can ever race each other over the same cold download.
+   Cheap even when already cached (checks ETags, skips unchanged files).
+2. **Staggered loading**: worker N now waits for worker N-1's ready marker
+   (`run_jobs.wait_for_ready_marker`/`write_ready_marker`, a plain file in the chunk's
+   work directory, written the instant that worker's model finishes loading onto its
+   GPU) before starting its own `from_pretrained` call — so the two heaviest phases
+   (deserialization + 4-bit quantization) never happen on both GPUs at once, only
+   episode-running does. Markers are deleted at the start of every chunk so staggering
+   re-arms fresh each time, never short-circuited by a stale marker from a previous
+   chunk. `low_cpu_mem_usage=True` added to `local_model_client.py`'s
+   `from_pretrained` call too, reducing peak CPU RAM during loading.
+3. **Watchdog** (`run_multi_gpu_chunk`'s polling loop, replacing a blocking `.wait()`):
+   tracks each running worker's last-progress timestamp (its ready marker or its
+   results file, whichever is newer — a job completing counts as progress, same as
+   finishing a load). If a worker shows no progress for `watchdog_timeout_seconds`
+   (default 20 min), **all** workers are killed, the chunk's actual completed-job count
+   is preserved, and `WatchdogTimeoutError` propagates up through
+   `run_session_with_checkpoints` — which pushes one final checkpoint of whatever was
+   done before re-raising, so the session ends loudly with data saved, never hanging
+   silently for a full 12-hour session. (Under staggering, a hang in worker 0 leaves
+   worker 1 looking equally stuck — since it's genuinely blocked waiting — so the
+   watchdog reports and kills *all* currently-stuck workers, not just the first one,
+   confirmed by a test with both workers simultaneously flagged.)
+
+**Diagnostics**: every worker now prints, at start, its `CUDA_VISIBLE_DEVICES`,
+`nvidia-smi -L`, and free RAM (`/proc/meminfo`), all with `print(..., flush=True)`.
+Worker subprocesses are also launched with `-u` (unbuffered). The hang produced *no*
+visible output at all, including `nvidia-smi -L` — most likely Python's default block
+buffering (active whenever stdout is piped rather than a TTY) simply never flushed
+during a 2+ hour stall with no full buffer and no process exit.
+
+8 new tests: `predownload_model` calls `snapshot_download` with the pinned
+model/revision (skipped under the project's fast `.venv`, runs for real under
+`.venv-kaggle` where `huggingface_hub` actually lives); `local_model_client.py` passes
+`low_cpu_mem_usage=True` to `from_pretrained` (same skip/run split); the watchdog
+kills a simulated hang (`--simulate-hang-seconds`, a stand-in for a real stuck load)
+and reports every currently-stuck worker; the watchdog does *not* false-positive on a
+normal fast chunk; and `run_session_with_checkpoints` still checkpoints once before
+re-raising a `WatchdogTimeoutError`. All tests use `--backend mock` so the actual
+subprocess-spawning/staggering/watchdog mechanics are exercised for real, at zero
+GPU/ALFWorld cost.
+
+**Before rerunning `multi_gpu_sanity_check.ipynb`**: no notebook changes were needed —
+it already calls `run_multi_gpu_chunk` with `backend="real"`, so all three fixes apply
+automatically. Loading is now sequential rather than parallel (worker 1 waits for
+worker 0), roughly doubling total load time versus the original (buggy) parallel
+design — still comfortably under the 30-minute target for 10 jobs, since a single
+load has taken well under a minute in this project's own local measurements.
+
 ## Handoff test: PASS on real Kaggle (2026-09-30)
 
 Session 2 found the dataset at the real mount path

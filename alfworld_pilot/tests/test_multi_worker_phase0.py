@@ -13,14 +13,47 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from alfworld_pilot.job_list import generate_job_list, write_job_list
 from alfworld_pilot.multi_worker_phase0 import (
+    WatchdogTimeoutError,
     group_into_units,
     merge_worker_results,
-    run_multi_gpu_chunk,
+    predownload_model,
+    run_multi_gpu_chunk as _run_multi_gpu_chunk_prod_defaults,
     split_units_across_workers,
 )
 from alfworld_pilot.run_jobs import completed_job_ids
+
+
+def test_predownload_model_calls_snapshot_download_with_pinned_revision(monkeypatch):
+    # huggingface_hub is a heavy dependency of the .venv-kaggle environment,
+    # not the fast/lightweight .venv this project's standard test suite
+    # otherwise runs in -- skipped there, runs for real under .venv-kaggle.
+    huggingface_hub = pytest.importorskip("huggingface_hub")
+
+    calls = []
+
+    def _fake_snapshot_download(repo_id, revision):
+        calls.append((repo_id, revision))
+
+    monkeypatch.setattr(huggingface_hub, "snapshot_download", _fake_snapshot_download)
+
+    cfg = {"llm": {"model_id": "Qwen/Qwen2.5-7B-Instruct", "revision": "abc123"}}
+    predownload_model(cfg)
+
+    assert calls == [("Qwen/Qwen2.5-7B-Instruct", "abc123")]
+
+
+def run_multi_gpu_chunk(*args, **kwargs):
+    """Test wrapper: forces a fast watchdog poll interval (the production
+    default, 15s, is fine for a real multi-hour Kaggle session but makes
+    these mock-backend tests -- where a whole chunk finishes in
+    milliseconds -- needlessly slow, since the poll loop still sleeps a full
+    interval whenever it catches both workers mid-flight)."""
+    kwargs.setdefault("watchdog_poll_interval_seconds", 0.05)
+    return _run_multi_gpu_chunk_prod_defaults(*args, **kwargs)
 
 
 def _logging_job(i):
@@ -197,6 +230,53 @@ def test_run_multi_gpu_chunk_one_worker_crashing_keeps_the_others_progress(tmp_p
     assert len(worker1_done) >= 1  # the other worker kept going
     assert n_new == len(worker0_done) + len(worker1_done)
     assert worker0_done.isdisjoint(worker1_done)
+
+
+def test_run_multi_gpu_chunk_watchdog_kills_a_hung_worker_and_raises(tmp_path):
+    # Reproduces the real Kaggle hang's shape: worker 0 never makes progress
+    # (simulated -- a real hang was a stuck model load; here it's a plain
+    # sleep standing in for "no progress for a long time"). Because loading
+    # is staggered (worker 1 waits for worker 0's ready marker first, by
+    # design -- see run_jobs.wait_for_ready_marker), worker 1 can't make
+    # independent progress either while worker 0 is stuck -- exactly why the
+    # watchdog kills BOTH and ends the session, rather than assuming the
+    # other worker is fine.
+    jobs = generate_job_list(n_logging=10, n_gt_pairs=0)
+    job_list_path = tmp_path / "jobs.json"
+    write_job_list(jobs, job_list_path)
+    worker_results = [tmp_path / "worker0.jsonl", tmp_path / "worker1.jsonl"]
+
+    # Both workers show no progress here (worker 0 is genuinely hanging;
+    # worker 1 is blocked waiting for worker 0's ready marker, by design --
+    # see the test's own docstring above) -- the watchdog reports both, not
+    # just one, since naming only one would hide that from the log.
+    with pytest.raises(WatchdogTimeoutError, match=r"worker\(s\) \[0, 1\]"):
+        run_multi_gpu_chunk(
+            job_list_path, worker_results, chunk_budget_seconds=60.0, work_dir=tmp_path / "work", backend="mock",
+            extra_worker_args=[["--simulate-hang-seconds", "30"], []],
+            watchdog_timeout_seconds=1.0,
+        )
+
+    # No jobs should have completed at all (worker 0 never got past its
+    # simulated hang; worker 1 never got past waiting for worker 0).
+    assert completed_job_ids(worker_results[0]) == set()
+    assert completed_job_ids(worker_results[1]) == set()
+
+
+def test_run_multi_gpu_chunk_watchdog_does_not_fire_on_healthy_workers(tmp_path):
+    # A short watchdog timeout should NOT trip for a normal, fast-completing
+    # chunk -- the progress signal (ready markers + per-job flushes) must
+    # keep resetting the watchdog's clock as real work happens.
+    jobs = generate_job_list(n_logging=10, n_gt_pairs=0)
+    job_list_path = tmp_path / "jobs.json"
+    write_job_list(jobs, job_list_path)
+    worker_results = [tmp_path / "worker0.jsonl", tmp_path / "worker1.jsonl"]
+
+    n_new = run_multi_gpu_chunk(
+        job_list_path, worker_results, chunk_budget_seconds=60.0, work_dir=tmp_path / "work", backend="mock",
+        watchdog_timeout_seconds=5.0,
+    )
+    assert n_new == 10
 
 
 def test_run_multi_gpu_chunk_session_still_progresses_after_a_crash_on_next_call(tmp_path):

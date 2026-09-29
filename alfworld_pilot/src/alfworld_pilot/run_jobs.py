@@ -23,8 +23,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import pathlib
 import random
+import subprocess
+import sys
 import time
 
 from . import config as config_mod
@@ -38,6 +41,74 @@ from .kaggle_memory_store import build_kaggle_store
 from .weighted_task_source import WeightedRealTaskSource
 
 ALFWORLD_PILOT_DIR = pathlib.Path(__file__).resolve().parents[2]
+
+DEFAULT_READY_WAIT_TIMEOUT_SECONDS = 1200.0  # 20 min -- matches multi_worker_phase0's watchdog
+READY_POLL_INTERVAL_SECONDS = 2.0
+
+
+def _print_startup_diagnostics(worker_id: int | None) -> None:
+    """Prints CUDA_VISIBLE_DEVICES, `nvidia-smi -L`, and free RAM, all
+    explicitly flushed -- a real Kaggle hang showed NO per-worker output at
+    all (Python's default block buffering when stdout isn't a TTY, i.e. when
+    piped/redirected by a subprocess parent, only flushes on a full buffer or
+    process exit -- neither happened during a 2+ hour hang). print(...,
+    flush=True) here, plus -u on the subprocess's own python invocation
+    (multi_worker_phase0.py), together make sure this always shows up
+    immediately in the notebook instead of vanishing into an unflushed
+    buffer during exactly the kind of hang this is meant to help diagnose."""
+    print(f"[worker {worker_id}] CUDA_VISIBLE_DEVICES={os.environ.get('CUDA_VISIBLE_DEVICES', '(not set)')}", flush=True)
+    try:
+        result = subprocess.run(["nvidia-smi", "-L"], capture_output=True, text=True, timeout=30)
+        print(f"[worker {worker_id}] nvidia-smi -L:\n{result.stdout.strip()}", flush=True)
+    except Exception as e:  # noqa: BLE001 -- diagnostics must never block a real run
+        print(f"[worker {worker_id}] nvidia-smi -L failed: {e!r}", flush=True)
+    try:
+        with open("/proc/meminfo", "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("MemAvailable"):
+                    print(f"[worker {worker_id}] {line.strip()}", flush=True)
+                    break
+    except Exception as e:  # noqa: BLE001 -- e.g. not on Linux; diagnostics must never block a real run
+        print(f"[worker {worker_id}] could not read /proc/meminfo: {e!r}", flush=True)
+
+
+def ready_marker_path(ready_dir: str | pathlib.Path, worker_id: int) -> pathlib.Path:
+    return pathlib.Path(ready_dir) / f"worker{worker_id}.ready"
+
+
+def write_ready_marker(ready_dir: str | pathlib.Path, worker_id: int) -> None:
+    path = ready_marker_path(ready_dir, worker_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(str(time.time()), encoding="utf-8")
+    print(f"[worker {worker_id}] model loaded onto its GPU -- wrote ready marker {path}", flush=True)
+
+
+def wait_for_ready_marker(
+    ready_dir: str | pathlib.Path, wait_for_worker_id: int, this_worker_id: int | None, timeout_seconds: float = DEFAULT_READY_WAIT_TIMEOUT_SECONDS
+) -> None:
+    """Staggered loading (2026-09-30, after a real Kaggle hang): a real
+    session had both workers fetch/load the ~15GB model at the same moment,
+    and loading stalled at 42% for 2+ hours with no error -- most likely CPU/
+    disk contention between two simultaneous cold loads, since a LATER run
+    against already-downloaded weights (timing_probe.py's --workers) worked
+    fine. Worker N waits here for worker N-1's ready marker (written by
+    write_ready_marker once ITS model is fully loaded) before starting its
+    own load. Gives up and proceeds anyway after `timeout_seconds` (default
+    20 min, matching multi_worker_phase0's watchdog) rather than waiting
+    forever if the marker never appears -- the watchdog is the real
+    backstop for a genuinely hung sibling, not this wait."""
+    path = ready_marker_path(ready_dir, wait_for_worker_id)
+    print(f"[worker {this_worker_id}] waiting for worker {wait_for_worker_id} to finish loading before starting my own load...", flush=True)
+    t_start = time.monotonic()
+    while not path.exists():
+        if time.monotonic() - t_start > timeout_seconds:
+            print(
+                f"[worker {this_worker_id}] WARNING: gave up waiting for worker {wait_for_worker_id}'s ready "
+                f"marker after {timeout_seconds:.0f}s -- proceeding with my own load anyway.", flush=True,
+            )
+            return
+        time.sleep(READY_POLL_INTERVAL_SECONDS)
+    print(f"[worker {this_worker_id}] worker {wait_for_worker_id} finished loading -- starting my own load now.", flush=True)
 
 
 def completed_job_ids(results_path: str | pathlib.Path) -> set[str]:
@@ -152,8 +223,24 @@ def main() -> None:
     p.add_argument("--max-new", type=int, default=None)
     p.add_argument("--worker-id", type=int, default=None)
     p.add_argument("--backend", choices=["real", "mock"], default="real")
+    p.add_argument("--ready-dir", type=str, default=None, help="Directory for staggered-loading ready markers (multi-GPU only)")
+    p.add_argument("--wait-for-worker-id", type=int, default=None, help="Wait for this worker's ready marker before loading the model")
     p.add_argument("--fail-after", type=int, default=None, help=argparse.SUPPRESS)  # test-only: simulate a crash after N completed jobs
+    p.add_argument("--simulate-hang-seconds", type=float, default=None, help=argparse.SUPPRESS)  # test-only: simulate a hung load
     args = p.parse_args()
+
+    _print_startup_diagnostics(args.worker_id)
+
+    if args.simulate_hang_seconds is not None:
+        # Test-only: stands in for a real hung model load, so the watchdog
+        # in multi_worker_phase0.py can be exercised without needing a real
+        # GPU/model to actually hang.
+        print(f"[worker {args.worker_id}] SIMULATING A HANG for {args.simulate_hang_seconds:.0f}s", flush=True)
+        time.sleep(args.simulate_hang_seconds)
+        print(f"[worker {args.worker_id}] hang simulation finished", flush=True)
+
+    if args.wait_for_worker_id is not None and args.ready_dir is not None:
+        wait_for_ready_marker(args.ready_dir, args.wait_for_worker_id, args.worker_id)
 
     if args.backend == "mock":
         from .ground_truth_runner import MockTaskSource
@@ -176,6 +263,9 @@ def main() -> None:
         m = cfg["retrieval"]["M"]
         prop_min, prop_max = cfg["retrieval"]["propensity_min"], cfg["retrieval"]["propensity_max"]
         max_steps = cfg["env"]["max_steps"]
+
+    if args.ready_dir is not None and args.worker_id is not None:
+        write_ready_marker(args.ready_dir, args.worker_id)
 
     if args.fail_after is not None:
         # Test-only crash simulation: run in small increments, exiting
