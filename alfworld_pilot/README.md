@@ -1,5 +1,87 @@
 # Stage 2 — ALFWorld pilot
 
+## Handoff test: PASS on real Kaggle (2026-09-30)
+
+Session 2 found the dataset at the real mount path
+(`/kaggle/input/datasets/iboooh/memory-pilot-handoff-test/`), restored `logs` as a
+**plain directory** (not even needing the flat-layout last resort this time — the
+`_zip_folder` fix's baked-in `logs/` prefix survived Kaggle's mount-time extraction
+exactly as intended), and reported **`5/5 done, no duplicates, nothing lost`**. The
+cross-session resume mechanism `run_phase0_pilot.py` depends on is now verified for
+real, not just unit-tested against the mock backend.
+
+## Pre-Phase-0 hardening: time guard and periodic checkpointing (2026-09-30)
+
+Two gaps closed before launch, both in `run_phase0_pilot.py`:
+
+- **Time guard**: `--time-budget-seconds` default lowered from 11h to **10.5h**
+  (37,800s), leaving more margin under Kaggle's 12h cap for the last chunk's
+  in-flight episode, the final checkpoint push, and this process's own startup
+  overhead. `run_jobs.py`'s existing check (before starting each new job, not
+  mid-episode) already stops cleanly at the boundary — episodes are capped at
+  `env.max_steps=50` so an in-flight one can't run away.
+- **Periodic checkpointing**: previously only pushed to the Dataset once, at the very
+  end of the session — a crash anywhere in an 10.5-hour run lost the whole session's
+  work. `run_session_with_checkpoints` (new, factored out of `main()` specifically to
+  be unit-testable) now runs jobs in `--checkpoint-interval-seconds`-sized chunks
+  (default 2h) via the existing `run_jobs`, pushing an updated checkpoint (validation
+  metrics + Dataset version) after **every** chunk, not just the last one — a crash
+  now loses at most about one interval's worth of work. Stops when either the overall
+  time budget is exhausted or a chunk completes zero new jobs (the list is exhausted).
+
+Both are unit-tested against the mock backend with `checkpoint_fn` injected as a fake
+(`tests/test_run_phase0_pilot.py`, 4 new tests): completes-and-checkpoints with a
+generous budget, stops immediately without checkpointing if the budget is already
+exhausted, checkpoints multiple times (not just once) across several chunks, and a
+second call resumes correctly with no duplicates or lost jobs — the real
+Kaggle-Dataset push/pull itself still inherits `kaggle_session.py`'s own "untested
+outside a real session" limitation, but the chunking/stopping logic around it doesn't
+need to.
+
+## Phase 0 launch checklist (2026-09-30)
+
+**Notebook**: [`kaggle/orchestrated_pilot.ipynb`](kaggle/orchestrated_pilot.ipynb).
+
+**Settings to click**:
+- Accelerator: **GPU T4 x2**.
+- Internet: **ON**.
+- **Add-ons → Secrets**: `KAGGLE_API_TOKEN` (format `KGAT_...`) added and toggled on.
+- Settings cell: `DATASET_SLUG = "iboooh/memory-pilot-phase0"` — a **new** slug,
+  distinct from the handoff test's (`memory-pilot-handoff-test`), so Phase 0's real
+  data never shares a Dataset with that throwaway test.
+- Leave `N_LOGGING=1050`, `N_GT_PAIRS=225`, `TIME_BUDGET_SECONDS=37_800`,
+  `CHECKPOINT_INTERVAL_SECONDS=7_200` at their defaults unless you have a specific
+  reason to change them.
+- **First session only**: nothing to attach as Input yet (the Dataset doesn't exist).
+  From the second session on: **Add Input → Your Datasets → `memory-pilot-phase0`**.
+
+**⚠️ Flag before launching, not after**: `run_phase0_pilot.py` runs on a **single
+GPU** — `run_jobs.py` has no multi-worker/multi-GPU support (unlike
+`timing_probe.py`'s `--workers N`), so the second T4 in "T4 x2" currently sits idle.
+Expected session count below uses the real single-GPU throughput (~136 s/episode),
+**not** the ~2x-faster combined T4 x2 rate the original "Phase 0 split" section's
+1-week framing assumed. If you'd rather have `run_phase0_pilot.py` actually use both
+GPUs (roughly halving the session count below), say so before the first session —
+adding that is a real, separate piece of work, not a settings change.
+
+**Expected number of sessions**: 1,500 total jobs (1,050 logging + 225 ground-truth
+pairs × 2) ÷ ~278 episodes/session (10.5h × 3,600s ÷ ~136s/episode, single GPU) ≈
+**5-6 sessions**, run one **Save & Run All** at a time.
+
+**What to check after each session**:
+1. The cell output ends with `[run_phase0_pilot] session finished: N new job(s)
+   completed this session` — if it instead raised (a `FAIL` from `copy_out_and_version`
+   or the session-2-style precondition), the checkpoint did **not** update; fix
+   whatever it reports before the next session, don't just retry blindly.
+2. On kaggle.com, the `memory-pilot-phase0` Dataset has a new version with a recent
+   timestamp.
+3. Progress: the final cell prints `Progress: X/1500 jobs done` — should strictly
+   increase session to session; if it doesn't move at all, the Dataset likely wasn't
+   attached as Input (check the notebook's Input panel).
+4. Once `X == 1500` (or you decide to stop earlier — this is a pilot, not a
+   commitment to run all 1,500), pull `phase0_validation.json` from the Dataset and
+   move to the pre-registered decision rule.
+
 ## Fixed the flat-layout fix at the source, before Phase 0 (2026-09-29)
 
 The session-2 flat-layout fallback (previous section) was itself unsafe the moment a
