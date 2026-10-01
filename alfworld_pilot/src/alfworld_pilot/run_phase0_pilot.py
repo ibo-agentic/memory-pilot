@@ -19,6 +19,17 @@ BEFORE starting a new job (not mid-episode), so an in-flight episode can run
 a bit past either boundary -- accepted, not fought, since ALFWorld episodes
 are capped at env.max_steps=50 and can't run indefinitely.
 
+Checkpoint schedule (2026-10-02, after session 1 was lost -- see README's
+"Session 1 lost" section): an initial checkpoint containing just the job
+list is pushed immediately after the job list is generated/loaded, BEFORE
+model pre-download or any chunk ever runs, so the Dataset exists (and the
+push path is proven working) within minutes of starting, not after the
+first full chunk. The first chunk of a session is then only
+`--first-checkpoint-interval-seconds` long (default 30 min) so the second
+checkpoint -- the first one with any actual episode results -- also lands
+early; every chunk after that uses the longer
+`--checkpoint-interval-seconds` (default 1h).
+
 2-GPU support: `--workers` defaults to 2 (matching Kaggle's T4 x2). With
 `--workers 2`, each chunk is run via multi_worker_phase0.run_multi_gpu_chunk
 (one subprocess per GPU, the same pattern timing_probe.py's --workers
@@ -60,7 +71,8 @@ ALFWORLD_PILOT_DIR = pathlib.Path(__file__).resolve().parents[2]
 KAGGLE_WORKING = pathlib.Path("/kaggle/working")
 
 DEFAULT_TIME_BUDGET_SECONDS = 37_800.0  # 10.5h, under Kaggle's 12h session cap
-DEFAULT_CHECKPOINT_INTERVAL_SECONDS = 7_200.0  # 2h -- a crash loses at most about this much work
+DEFAULT_FIRST_CHECKPOINT_INTERVAL_SECONDS = 1_800.0  # 30 min -- gets the first real (non-job-list-only) checkpoint out fast
+DEFAULT_CHECKPOINT_INTERVAL_SECONDS = 3_600.0  # 1h thereafter -- a crash loses at most about this much work
 DEFAULT_WORKERS = 2  # matches Kaggle's T4 x2
 
 
@@ -69,6 +81,7 @@ def run_session_with_checkpoints(
     time_budget_seconds: float,
     checkpoint_interval_seconds: float,
     checkpoint_fn: Callable[[], None],
+    first_checkpoint_interval_seconds: float | None = None,
 ) -> int:
     """Runs work in checkpoint_interval_seconds-sized chunks via
     `run_chunk_fn(chunk_budget_seconds) -> n_new_completed` -- deliberately
@@ -82,6 +95,15 @@ def run_session_with_checkpoints(
     couldn't possibly begin) or a chunk completes zero new jobs (the job
     list is exhausted, or nothing was runnable -- no point looping again).
 
+    first_checkpoint_interval_seconds, if given, sizes ONLY the first chunk
+    of the session (e.g. 30 min instead of the usual 1h) -- after a real
+    session was lost with no checkpoint ever pushed (see README), getting
+    the first real checkpoint out fast matters more than usual, since it's
+    the one most likely to not happen at all if the session dies early.
+    Every chunk after the first uses checkpoint_interval_seconds as before.
+    Defaults to checkpoint_interval_seconds (i.e. no special-cased first
+    chunk) when omitted, matching the old single-interval behavior exactly.
+
     checkpoint_fn takes no arguments and is called purely for its side
     effect (typically writing validation metrics and pushing a Kaggle
     Dataset version) -- injected so this function's own chunking/stopping
@@ -94,6 +116,9 @@ def run_session_with_checkpoints(
     more time before re-raising -- "kill the workers, save whatever is
     done, print a clear FAIL, end the session" means the save has to happen
     even though the chunk itself failed, not only on a clean chunk."""
+    if first_checkpoint_interval_seconds is None:
+        first_checkpoint_interval_seconds = checkpoint_interval_seconds
+
     t_start = time.monotonic()
     total_new = 0
     chunk_index = 0
@@ -103,7 +128,8 @@ def run_session_with_checkpoints(
         if remaining <= 0:
             print(f"[run_phase0_pilot] overall time budget ({time_budget_seconds:.0f}s) reached -- stopping before starting another chunk.")
             break
-        chunk_budget = min(checkpoint_interval_seconds, remaining)
+        this_interval = first_checkpoint_interval_seconds if chunk_index == 0 else checkpoint_interval_seconds
+        chunk_budget = min(this_interval, remaining)
         chunk_index += 1
         print(f"[run_phase0_pilot] chunk {chunk_index}: running for up to {chunk_budget:.0f}s ({remaining:.0f}s left in the overall budget)")
         try:
@@ -155,7 +181,11 @@ def main() -> None:
     )
     p.add_argument(
         "--checkpoint-interval-seconds", type=float, default=DEFAULT_CHECKPOINT_INTERVAL_SECONDS,
-        help="Push to the checkpoint Dataset this often WHILE running, not just at the end (default 2h), so a crash loses at most about this much work.",
+        help="Push to the checkpoint Dataset this often WHILE running, not just at the end (default 1h, after the first chunk), so a crash loses at most about this much work.",
+    )
+    p.add_argument(
+        "--first-checkpoint-interval-seconds", type=float, default=DEFAULT_FIRST_CHECKPOINT_INTERVAL_SECONDS,
+        help="Size of ONLY the first chunk of the session (default 30 min) -- gets the first real checkpoint out fast, before falling back to --checkpoint-interval-seconds.",
     )
     p.add_argument(
         "--workers", type=int, default=DEFAULT_WORKERS,
@@ -174,6 +204,13 @@ def main() -> None:
         jobs = generate_job_list(n_logging=args.n_logging, n_gt_pairs=args.n_gt_pairs)
         write_job_list(jobs, job_list_path)
         print(f"Generated new Phase 0 job list: {args.n_logging} logging + {args.n_gt_pairs} ground-truth fold pairs ({len(jobs)} total jobs)")
+        # Push immediately, before model pre-download or any episode ever
+        # runs -- a real session ran for 1h+ (both GPUs busy) and was lost
+        # entirely because it died before the FIRST checkpoint, so no
+        # Dataset ever existed. This proves the push path works and gives
+        # every later checkpoint something to version, within minutes of
+        # starting rather than after the first full chunk.
+        copy_out_and_version(args.dataset_slug, logs_dir, cache_dir, message="Phase 0 pilot: initial checkpoint (job list only, no episodes yet)")
     else:
         jobs = load_job_list(job_list_path)
         print(f"Resuming existing job list ({len(jobs)} jobs)")
@@ -201,7 +238,10 @@ def main() -> None:
             _write_validation_metrics(results_path, memories, logs_dir)
             copy_out_and_version(args.dataset_slug, logs_dir, cache_dir, message="Phase 0 pilot: periodic checkpoint")
 
-        total_new = run_session_with_checkpoints(_run_chunk, args.time_budget_seconds, args.checkpoint_interval_seconds, _checkpoint)
+        total_new = run_session_with_checkpoints(
+            _run_chunk, args.time_budget_seconds, args.checkpoint_interval_seconds, _checkpoint,
+            first_checkpoint_interval_seconds=args.first_checkpoint_interval_seconds,
+        )
         print(f"[run_phase0_pilot] session finished ({args.workers} workers): {total_new} new job(s) completed this session.")
     else:
         cfg_path = ALFWORLD_PILOT_DIR / "kaggle_config.yaml"
@@ -226,7 +266,10 @@ def main() -> None:
             _write_validation_metrics(results_path, memories, logs_dir)
             copy_out_and_version(args.dataset_slug, logs_dir, cache_dir, message="Phase 0 pilot: periodic checkpoint")
 
-        total_new = run_session_with_checkpoints(_run_chunk, args.time_budget_seconds, args.checkpoint_interval_seconds, _checkpoint)
+        total_new = run_session_with_checkpoints(
+            _run_chunk, args.time_budget_seconds, args.checkpoint_interval_seconds, _checkpoint,
+            first_checkpoint_interval_seconds=args.first_checkpoint_interval_seconds,
+        )
         print(f"[run_phase0_pilot] session finished (1 worker): {total_new} new job(s) completed this session (cost tracker: {cost_tracker.summary()}).")
 
 

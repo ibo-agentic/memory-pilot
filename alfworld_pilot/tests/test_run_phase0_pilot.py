@@ -11,7 +11,9 @@ them at all (checkpoint_fn is injected)."""
 
 from __future__ import annotations
 
+import sys
 import time
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -154,3 +156,131 @@ def test_run_chunk_fn_receives_the_chunk_budget_not_the_overall_budget():
     run_session_with_checkpoints(_run_chunk, time_budget_seconds=100.0, checkpoint_interval_seconds=10.0, checkpoint_fn=lambda: None)
 
     assert seen_budgets == [10.0]  # the interval, not the full 100s budget
+
+
+def test_first_chunk_uses_its_own_shorter_interval_then_falls_back(tmp_path):
+    seen_budgets = []
+    checkpoint = _CountingCheckpoint()
+
+    def _run_chunk(chunk_budget: float) -> int:
+        seen_budgets.append(chunk_budget)
+        return 1 if len(seen_budgets) < 4 else 0  # keep going for 3 chunks, then stop
+
+    run_session_with_checkpoints(
+        _run_chunk, time_budget_seconds=1000.0, checkpoint_interval_seconds=100.0, checkpoint_fn=checkpoint,
+        first_checkpoint_interval_seconds=5.0,
+    )
+
+    # Only the FIRST chunk uses the short 30-min-style interval -- every chunk
+    # after that falls back to the normal (longer) checkpoint_interval_seconds.
+    assert seen_budgets == [5.0, 100.0, 100.0, 100.0]
+    assert checkpoint.calls == 4
+
+
+def test_omitting_first_checkpoint_interval_matches_old_single_interval_behavior():
+    seen_budgets = []
+
+    def _run_chunk(chunk_budget: float) -> int:
+        seen_budgets.append(chunk_budget)
+        return 1 if len(seen_budgets) < 2 else 0
+
+    run_session_with_checkpoints(_run_chunk, time_budget_seconds=1000.0, checkpoint_interval_seconds=10.0, checkpoint_fn=lambda: None)
+
+    assert seen_budgets == [10.0, 10.0]  # no special-cased first chunk when omitted
+
+
+def test_main_pushes_an_initial_checkpoint_right_after_generating_the_job_list(tmp_path, monkeypatch):
+    """Session 1 was lost on real Kaggle because no checkpoint existed until
+    the first full chunk finished -- it died before that ever happened, and
+    no Dataset was ever created. This confirms main() now pushes a checkpoint
+    of the job list ALONE, before predownload_model or any episode ever runs,
+    with every heavy dependency (model download, real ALFWorld, real episode
+    running) mocked out so this runs in milliseconds."""
+    import alfworld_pilot.run_phase0_pilot as rpp
+
+    calls = []
+    monkeypatch.setattr(rpp, "KAGGLE_WORKING", tmp_path)
+
+    def _fake_copy_in(slug, logs_dir, cache_dir):
+        calls.append(("copy_in", slug))
+
+    def _fake_copy_out(slug, logs_dir, cache_dir, message):
+        calls.append(("copy_out", message))
+        # The job list must already be on disk by the time the FIRST push happens.
+        assert (logs_dir / "phase0_job_list.json").exists()
+
+    def _fake_predownload(cfg):
+        calls.append(("predownload_model", None))
+
+    def _fake_run_jobs(*args, **kwargs):
+        calls.append(("run_jobs", None))
+        return 0  # nothing new -- ends the session after one (empty) chunk
+
+    with patch.object(rpp, "copy_in", _fake_copy_in), \
+         patch.object(rpp, "copy_out_and_version", _fake_copy_out), \
+         patch.object(rpp, "predownload_model", _fake_predownload), \
+         patch.object(rpp, "load_real_alfworld_config", MagicMock()), \
+         patch.object(rpp, "WeightedRealTaskSource", MagicMock()), \
+         patch.object(rpp, "build_local_client", MagicMock(return_value=(MagicMock(), MagicMock(summary=lambda: "n/a")))), \
+         patch.object(rpp, "run_jobs", _fake_run_jobs):
+        monkeypatch.setattr(sys, "argv", [
+            "run_phase0_pilot",
+            "--dataset-slug", "someone/some-dataset",
+            "--n-logging", "2",
+            "--n-gt-pairs", "0",
+            "--time-budget-seconds", "5",
+            "--first-checkpoint-interval-seconds", "5",
+            "--checkpoint-interval-seconds", "5",
+            "--workers", "1",
+        ])
+        rpp.main()
+
+    call_names = [c[0] for c in calls]
+    # The initial job-list-only push happens before predownload_model AND
+    # before any job ever runs -- not just "a checkpoint happened eventually".
+    assert call_names.index("copy_out") < call_names.index("predownload_model")
+    assert call_names.index("copy_out") < call_names.index("run_jobs")
+    assert calls[call_names.index("copy_out")][1] == "Phase 0 pilot: initial checkpoint (job list only, no episodes yet)"
+
+
+def test_main_does_not_push_a_second_initial_checkpoint_when_resuming(tmp_path, monkeypatch):
+    """On a later session the job list already exists -- the initial,
+    job-list-only push should only ever happen on the FIRST session that
+    generates it, not be repeated every time main() runs."""
+    import alfworld_pilot.run_phase0_pilot as rpp
+    from alfworld_pilot.job_list import generate_job_list, write_job_list
+
+    monkeypatch.setattr(rpp, "KAGGLE_WORKING", tmp_path)
+    logs_dir = tmp_path / "logs_kaggle"
+    logs_dir.mkdir(parents=True)
+    write_job_list(generate_job_list(n_logging=2, n_gt_pairs=0), logs_dir / "phase0_job_list.json")
+
+    copy_out_calls = []
+
+    def _fake_copy_out(slug, logs_dir, cache_dir, message):
+        copy_out_calls.append(message)
+
+    def _fake_run_jobs(*args, **kwargs):
+        return 0
+
+    with patch.object(rpp, "copy_in", MagicMock()), \
+         patch.object(rpp, "copy_out_and_version", _fake_copy_out), \
+         patch.object(rpp, "predownload_model", MagicMock()), \
+         patch.object(rpp, "load_real_alfworld_config", MagicMock()), \
+         patch.object(rpp, "WeightedRealTaskSource", MagicMock()), \
+         patch.object(rpp, "build_local_client", MagicMock(return_value=(MagicMock(), MagicMock(summary=lambda: "n/a")))), \
+         patch.object(rpp, "run_jobs", _fake_run_jobs):
+        monkeypatch.setattr(sys, "argv", [
+            "run_phase0_pilot",
+            "--dataset-slug", "someone/some-dataset",
+            "--n-logging", "2",
+            "--n-gt-pairs", "0",
+            "--time-budget-seconds", "5",
+            "--first-checkpoint-interval-seconds", "5",
+            "--checkpoint-interval-seconds", "5",
+            "--workers", "1",
+        ])
+        rpp.main()
+
+    assert "Phase 0 pilot: initial checkpoint (job list only, no episodes yet)" not in copy_out_calls
+    assert copy_out_calls.count("Phase 0 pilot: periodic checkpoint") == 1  # the one regular (empty) chunk's checkpoint

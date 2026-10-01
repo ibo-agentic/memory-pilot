@@ -201,10 +201,24 @@ def run_jobs(
                 break
             if time_budget_seconds is not None and (time.monotonic() - t_start) >= time_budget_seconds:
                 break
+            ep_t_start = time.monotonic()
             ep = _run_one_job(job, task_source, llm_client, memories, m, propensity_min, propensity_max, max_steps, similarity_fn, worker_id)
+            ep_seconds = time.monotonic() - ep_t_start
             f.write(json.dumps(ep) + "\n")
             f.flush()
             n_new += 1
+            # One line per finished episode, flushed immediately -- a real
+            # Kaggle session sat silent for 1h+ with no per-episode signal
+            # that anything was actually happening (only a final summary at
+            # chunk end). print(..., flush=True) plus -u on the subprocess's
+            # own python invocation (multi_worker_phase0.py) together
+            # guarantee this shows up right away instead of sitting in an
+            # unflushed buffer.
+            print(
+                f"[worker {worker_id}] episode done: job_id={job['job_id']} success={ep.get('success')} "
+                f"steps={ep.get('steps_taken')} seconds={ep_seconds:.1f}",
+                flush=True,
+            )
     return n_new
 
 

@@ -1,5 +1,62 @@
 # Stage 2 — ALFWorld pilot
 
+## Session 1 lost, and a stale import failure — fixed before relaunching (2026-10-02)
+
+**Session 1 was lost entirely.** It ran interactively (not Save & Run All) for 1h+ with
+both GPUs busy and workers loaded, then the session ended before the old schedule's
+first checkpoint (2h) — so no Dataset was ever created and all progress was lost. Two
+root causes, both fixed:
+
+1. **No checkpoint existed until the first full chunk finished.** The job list itself
+   was never pushed, and the first real checkpoint was up to 2h away. Fixed: `main()`
+   now calls `copy_out_and_version` **immediately** after generating the job list,
+   before model pre-download or any episode runs — the Dataset exists, and the push
+   path is proven working, within minutes of starting every campaign. The chunk
+   schedule is also now **30 minutes for the first chunk**
+   (`--first-checkpoint-interval-seconds`, new `run_session_with_checkpoints`
+   parameter), then **1 hour** (`--checkpoint-interval-seconds`, lowered from 2h)
+   for every chunk after that — a lost session now loses at most ~30–60 minutes, not
+   up to 2 hours, and the window between "nothing saved yet" and "first real
+   checkpoint" is as short as reasonably possible.
+2. **The notebook gave no sign anything was happening.** `run_jobs.py` only printed a
+   summary at the end of a chunk; during a 1-2 hour chunk the notebook looked
+   identical whether it was working or hung. Fixed: `run_jobs`'s loop now prints one
+   `flush=True` line per finished episode (`job_id`, `success`, `steps_taken`, wall
+   seconds) immediately after each one completes, so the notebook is never silent for
+   more than a single episode's duration.
+
+**Also fixed**: a fresh Kaggle session separately reported `Import check FAILED:
+No module named 'memory_ope'` even though the previous import-fix cell (a
+`site.addsitedir` refresh) was already in place — meaning that fix didn't actually
+address the real cause. Local reproduction (a fresh venv + fresh clone, both a plain
+fresh-process install and a simulated persistent-kernel install-then-import) could
+not reproduce the failure, so the exact Kaggle-specific mechanism remains unconfirmed.
+Rather than keep guessing, `orchestrated_pilot.ipynb`'s setup cells were made robust
+regardless of the exact cause:
+- The clone cell now does `!rm -rf memory-pilot` before cloning, so a stale/partial
+  directory from an earlier attempt in the same session can never cause `git clone` to
+  silently fail or leave the notebook `%cd`'d into old code.
+- The install cell now runs every pip command via `sys.executable -m pip` (THIS
+  kernel's own interpreter) instead of bare `!pip`, which can resolve to a
+  *different* Python/pip than the kernel on some images — a strong, concrete
+  candidate for a "looks installed, doesn't import" failure. It also raises loudly
+  (`SystemExit`) on any non-zero exit code instead of silently continuing, since
+  Jupyter's `!pip install` does not stop the notebook on failure by itself.
+- The import-fix cell no longer relies on `site.addsitedir`/pip's editable-install
+  internals at all. It inserts both packages' `src/` directories directly onto
+  `sys.path`, computed from `pathlib.Path.cwd()` (the clone cell already `%cd
+  memory-pilot`'d into the repo root) — fully deterministic, no dependency on
+  Kaggle's site-packages layout working correctly.
+- The import-check cell, if it ever fails again, now prints `sys.path` and `pip show`
+  output for both packages before raising, so a recurrence is diagnosable from the
+  notebook's own output instead of requiring another guess-and-reproduce round.
+
+**Phase 0 sessions must always use Save & Run All, never an interactive session.**
+An interactive session left idle, or navigated away from, can be torn down by Kaggle
+without warning — session 1's loss happened during an interactive run. Save & Run All
+runs unattended to completion and isn't subject to that failure mode; this is now
+stated explicitly at the top of `orchestrated_pilot.ipynb`.
+
 ## Multi-GPU sanity check froze on Kaggle — diagnosed and fixed (2026-09-30)
 
 The first real run of `multi_gpu_sanity_check.ipynb` hung: both workers fetched the
@@ -180,8 +237,11 @@ session.
   distinct from the handoff test's (`memory-pilot-handoff-test`), so Phase 0's real
   data never shares a Dataset with that throwaway test.
 - Leave `N_LOGGING=1050`, `N_GT_PAIRS=225`, `TIME_BUDGET_SECONDS=37_800`,
-  `CHECKPOINT_INTERVAL_SECONDS=7_200`, `WORKERS=2` at their defaults unless you have a
-  specific reason to change them.
+  `FIRST_CHECKPOINT_INTERVAL_SECONDS=1_800`, `CHECKPOINT_INTERVAL_SECONDS=3_600`,
+  `WORKERS=2` at their defaults unless you have a specific reason to change them.
+- **Always Save & Run All — never run this notebook's cells interactively one at a
+  time.** An interactive session can be torn down by Kaggle without warning; this is
+  exactly how session 1 was lost (see the top-of-file section on this).
 - **First session only**: nothing to attach as Input yet (the Dataset doesn't exist).
   From the second session on: **Add Input → Your Datasets → `memory-pilot-phase0`**.
 

@@ -115,6 +115,25 @@ def test_run_jobs_calling_again_with_nothing_left_is_a_noop(tmp_path):
     assert n_again == 0
 
 
+def test_run_jobs_prints_one_flushed_line_per_finished_episode(tmp_path, capsys):
+    jobs = generate_job_list(n_logging=3, n_gt_pairs=0)
+    job_list_path = tmp_path / "jobs.json"
+    write_job_list(jobs, job_list_path)
+    results_path = tmp_path / "results.jsonl"
+    llm = MockLLMClient(strategy="scripted_success", seed=0)
+
+    run_jobs(job_list_path, results_path, MockTaskSource(), llm, _memories(), M, P_MIN, P_MAX, MAX_STEPS, worker_id=1)
+
+    out = capsys.readouterr().out
+    printed_lines = [line for line in out.splitlines() if "episode done" in line]
+    assert len(printed_lines) == 3  # one per finished episode, not just a final summary
+    for job in jobs:
+        assert any(f"job_id={job['job_id']}" in line for line in printed_lines)
+    for line in printed_lines:
+        assert line.startswith("[worker 1]")
+        assert "success=" in line and "steps=" in line and "seconds=" in line
+
+
 def test_run_jobs_handles_ground_truth_fold_jobs(tmp_path):
     jobs = generate_job_list(n_logging=0, n_gt_pairs=2)
     job_list_path = tmp_path / "jobs.json"
